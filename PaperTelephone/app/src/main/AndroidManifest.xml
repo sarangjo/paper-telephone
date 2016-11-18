@@ -3,6 +3,9 @@
     package="com.cse461.a16au.papertelephone">
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-sdk android:minSdkVersion="11"
+        android:targetSdkVersion="22"
+        android:maxSdkVersion="25" />
     
     <application
         android:allowBackup="true"

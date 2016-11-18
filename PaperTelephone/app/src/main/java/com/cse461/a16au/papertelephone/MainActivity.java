@@ -14,14 +14,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDegaultAdapter();
-
-        // Display error message in the case that the device does not support bluetooth
-        if(bluetoothAdapter == null) {
-            // TODO: The device doesn't support bluetooth so we should display some message
-            // that the game won't work on their device
-        }
-
         // Enable bluetooth simply by enabling bluetooth discoverability
         Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
         discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
