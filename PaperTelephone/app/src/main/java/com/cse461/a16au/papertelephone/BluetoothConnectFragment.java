@@ -4,6 +4,7 @@ import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class BluetoothConnectFragment extends Fragment {
 
         // Display error message in the case that the device does not support bluetooth
         if(bluetoothAdapter == null) {
-            FragmentActivity activity = getActivity();
+            FragmentActivity activity = (FragmentActivity) getActivity();
             Toast.makeText(activity, "Bluetooth is not available." +
                     "Our game needs bluetooth to work... Sorry", Toast.LENGTH_LONG).show();
             activity.finish();

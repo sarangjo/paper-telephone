@@ -3,7 +3,7 @@ package com.cse461.a16au.papertelephone;
 import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
 import java.lang.Override;
