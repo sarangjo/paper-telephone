@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.view.View;
 
 import java.lang.Override;
 
@@ -22,5 +23,10 @@ public class MainActivity extends FragmentActivity {
 
         // TODO: Maybe implement onActivityResult()? I'm not entirely sure
         // https://developer.android.com/guide/topics/connectivity/bluetooth.html#EnablingDiscoverability
+    }
+
+    public void startDrawing(View view) {
+        Intent intent = new Intent(this, DrawingActivity.class);
+        startActivity(intent);
     }
 }
