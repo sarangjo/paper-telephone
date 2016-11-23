@@ -31,7 +31,7 @@
         <activity
             android:name=".DrawingActivity"
             android:label="@string/title_activity_drawing"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>

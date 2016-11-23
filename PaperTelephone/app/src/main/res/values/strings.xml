@@ -3,4 +3,5 @@
     <string name="bt_not_enabled_exit">Bluetooth not enabled, exiting...</string>
     <string name="title_activity_drawing">DrawingActivity</string>
     <string name="draw">Draw</string>
+    <string name="title_activity_main2">Main2Activity</string>
 </resources>
