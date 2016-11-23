@@ -6,6 +6,7 @@ package com.cse461.a16au.papertelephone;
 
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.os.Handler;
 
 /**
@@ -16,8 +17,10 @@ import android.os.Handler;
  *
  */
 public class BluetoothConnectService {
+    public static final int STOPPED = 0;
     private final BluetoothAdapter myAdapater;
     private final Handler myHandler;
+    private int state;
 
     public BluetoothConnectService(Handler handler) {
         myAdapater = BluetoothAdapter.getDefaultAdapter();
@@ -25,4 +28,19 @@ public class BluetoothConnectService {
     }
 
 
+    public void stop() {
+        // TODO implement
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public void start() {
+        // TODO: implement
+    }
+
+    public void connect(BluetoothDevice device) {
+        // TODO: implement
+    }
 }

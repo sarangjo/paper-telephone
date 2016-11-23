@@ -21,4 +21,10 @@
         android:layout_height="wrap_content"
         android:text="@string/draw"
         android:onClick="startDrawing"/>
+
+    <fragment
+        android:name="com.cse461.a16au.papertelephone.BluetoothManagerFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/bluetooth_start" />
 </LinearLayout>

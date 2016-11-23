@@ -11,10 +11,6 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
-    <android:uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <android:uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <android:uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -31,6 +27,10 @@
         <activity
             android:name=".DrawingActivity"
             android:label="@string/title_activity_drawing"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ListDeviceActivity"
+            android:label="@string/title_activity_list_device"
             android:theme="@style/AppTheme.NoActionBar" />
     </application>
 

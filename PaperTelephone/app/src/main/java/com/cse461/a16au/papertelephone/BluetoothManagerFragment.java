@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -14,9 +16,11 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by jsunde on 11/18/2016.
@@ -25,16 +29,17 @@ import java.util.ArrayList;
  * TODO: Add discoverability logic maybe?
  */
 
-public class BluetoothStartFragment extends Fragment {
+public class BluetoothManagerFragment extends Fragment {
 
     private static final String TAG = "BluetoothStartFragment";
 
     // Intent request codes
     private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
+    private static final int REQUEST_MAKE_DISCOVERABLE = 3;
 
     // Names of connected devices
-    private ArrayList<String> connectedDeviceNames = new ArrayList<String>();
+    private List<String> connectedDeviceNames = new ArrayList<String>();
 
     // Local Bluetooth adapter
     private BluetoothAdapter bluetoothAdapter = null;
@@ -50,7 +55,7 @@ public class BluetoothStartFragment extends Fragment {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         // Display error message in the case that the device does not support bluetooth
-        if(bluetoothAdapter == null) {
+        if (bluetoothAdapter == null) {
             FragmentActivity activity = (FragmentActivity) getActivity();
             Toast.makeText(activity, "Bluetooth is not available." +
                     "Our game needs bluetooth to work... Sorry", Toast.LENGTH_LONG).show();
@@ -62,10 +67,11 @@ public class BluetoothStartFragment extends Fragment {
     public void onStart() {
         super.onStart();
         // Request that bluetooth be enabled if it is disabled, otherwise connect to other devices
-        if(!bluetoothAdapter.isEnabled()) {
+        if (!bluetoothAdapter.isEnabled()) {
+            Toast.makeText(getActivity(), "Requesting to enable Bluetooth...", Toast.LENGTH_LONG).show();
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        } else if(connectService == null) {
+        } else if (connectService == null) {
             setupGame();
         }
     }
@@ -75,7 +81,7 @@ public class BluetoothStartFragment extends Fragment {
         super.onDestroy();
 
         // Stop connect service to stop connections and shut down
-        if(connectService != null) {
+        if (connectService != null) {
             connectService.stop();
         }
     }
@@ -87,8 +93,8 @@ public class BluetoothStartFragment extends Fragment {
         // In the case that Bluetooth was disabled to start, onResume() will
         // be called when the ACTION_REQUEST_ENABLE activity has returned
         // TODO: connect to other devices here
-        if(connectService != null) {
-            if(connectService.getState() == BluetoothConnectService.STOPPED) {
+        if (connectService != null) {
+            if (connectService.getState() == BluetoothConnectService.STOPPED) {
                 // Start our BluetoothConnectionService
                 connectService.start();
             }
@@ -98,9 +104,21 @@ public class BluetoothStartFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_bluetooth_start, container, false);
+        View view = inflater.inflate(R.layout.fragment_bluetooth_start, container, false);
+
+        Button showDevices = (Button) view.findViewById(R.id.button_show_devices);
+        showDevices.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), ListDeviceActivity.class);
+                startActivityForResult(intent, REQUEST_CONNECT_DEVICE);
+            }
+        });
+
+        return view;
     }
 
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_CONNECT_DEVICE:
@@ -112,6 +130,7 @@ public class BluetoothStartFragment extends Fragment {
             case REQUEST_ENABLE_BT:
                 // Setup game and connect to other devices now that bluetooth is enabled
                 if (resultCode == Activity.RESULT_OK) {
+                    Toast.makeText(getActivity(), "Successfully enabled Bluetooth.", Toast.LENGTH_LONG).show();
                     setupGame();
                 } else {
                     // User did not enable Bluetooth or an error occurred
@@ -120,9 +139,40 @@ public class BluetoothStartFragment extends Fragment {
                             Toast.LENGTH_SHORT).show();
                     getActivity().finish();
                 }
+                break;
+            case REQUEST_MAKE_DISCOVERABLE:
+                if (resultCode == Activity.RESULT_OK) {
+                    Toast.makeText(getActivity(), "Successfully turned on discovery.", Toast.LENGTH_LONG).show();
+                }
+                break;
         }
     }
 
+    /**
+     * Make the device discoverable for the specified time.
+     */
+    private void makeDiscoverable(int seconds) {
+        // Enable bluetooth simply by enabling bluetooth discoverability
+        Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, seconds);
+        startActivityForResult(discoverableIntent, REQUEST_MAKE_DISCOVERABLE);
+    }
+
+    private void setupGame() {
+        // TODO: implement
+        connectService = new BluetoothConnectService(new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                return false;
+            }
+        }));
+    }
+
+    /**
+     * After the device has been selected, connect to the device.
+     *
+     * @param data the response
+     */
     private void connectDevice(Intent data) {
         // Get the address of the device
         String addr = data.getExtras().getString(ListDeviceActivity.DEVICE_ADDRESS);
@@ -132,11 +182,5 @@ public class BluetoothStartFragment extends Fragment {
 
         // Connect to device
         connectService.connect(device);
-    }
-
-    // TODO: check if we need a menu for the start fragment, or if we'll just need one for the actual game activity
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.start, menu);
     }
 }
