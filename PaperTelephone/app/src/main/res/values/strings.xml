@@ -8,4 +8,5 @@
     <string name="scanning">Scanning for Bluetooth devices…</string>
     <string name="select_device">Select Device</string>
     <string name="none_found">No Devices Found</string>
+    <string name="not_discoverable">Not discoverable.</string>
 </resources>

@@ -6,17 +6,17 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -39,13 +39,17 @@ public class BluetoothManagerFragment extends Fragment {
     private static final int REQUEST_MAKE_DISCOVERABLE = 3;
 
     // Names of connected devices
-    private List<String> connectedDeviceNames = new ArrayList<String>();
+    private List<String> connectedDeviceNames = new ArrayList<>();
 
     // Local Bluetooth adapter
     private BluetoothAdapter bluetoothAdapter = null;
 
     // Bluetooth Connection Service to handle connections to other devices
     private BluetoothConnectService connectService = null;
+
+    // Views
+    private Button makeDiscoverableButton;
+    private TextView mTimeDiscoverable;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -115,6 +119,17 @@ public class BluetoothManagerFragment extends Fragment {
             }
         });
 
+        makeDiscoverableButton = (Button) view.findViewById(R.id.button_make_discoverable);
+        makeDiscoverableButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                requestDiscoverable(300);
+            }
+        });
+
+        mTimeDiscoverable = (TextView) view.findViewById(R.id.title_discoverable_time);
+        mTimeDiscoverable.setText(getResources().getString(R.string.not_discoverable));
+
         return view;
     }
 
@@ -141,8 +156,23 @@ public class BluetoothManagerFragment extends Fragment {
                 }
                 break;
             case REQUEST_MAKE_DISCOVERABLE:
-                if (resultCode == Activity.RESULT_OK) {
+                if (resultCode == Activity.RESULT_CANCELED) {
+                    Toast.makeText(getActivity(), "Did not turn on discovery.", Toast.LENGTH_LONG).show();
+                } else {
                     Toast.makeText(getActivity(), "Successfully turned on discovery.", Toast.LENGTH_LONG).show();
+                    makeDiscoverableButton.setEnabled(false);
+                    new CountDownTimer(0, resultCode * 1000) {
+
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+                            mTimeDiscoverable.setText(String.format("Discoverable for %d seconds", (millisUntilFinished / 1000)));
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            mTimeDiscoverable.setText(getResources().getString(R.string.not_discoverable));
+                        }
+                    }.start();
                 }
                 break;
         }
@@ -151,7 +181,7 @@ public class BluetoothManagerFragment extends Fragment {
     /**
      * Make the device discoverable for the specified time.
      */
-    private void makeDiscoverable(int seconds) {
+    private void requestDiscoverable(int seconds) {
         // Enable bluetooth simply by enabling bluetooth discoverability
         Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
         discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, seconds);
