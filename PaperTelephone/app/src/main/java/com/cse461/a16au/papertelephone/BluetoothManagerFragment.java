@@ -161,7 +161,8 @@ public class BluetoothManagerFragment extends Fragment {
                 } else {
                     Toast.makeText(getActivity(), "Successfully turned on discovery.", Toast.LENGTH_LONG).show();
                     makeDiscoverableButton.setEnabled(false);
-                    new CountDownTimer(0, resultCode * 1000) {
+                    // Handy dandy countdown timer to show on the screen
+                    new CountDownTimer(resultCode * 1000, 1000) {
 
                         @Override
                         public void onTick(long millisUntilFinished) {
@@ -171,6 +172,7 @@ public class BluetoothManagerFragment extends Fragment {
                         @Override
                         public void onFinish() {
                             mTimeDiscoverable.setText(getResources().getString(R.string.not_discoverable));
+                            makeDiscoverableButton.setEnabled(true);
                         }
                     }.start();
                 }
