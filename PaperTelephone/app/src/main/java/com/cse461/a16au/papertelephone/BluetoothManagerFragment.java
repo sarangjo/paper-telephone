@@ -49,7 +49,7 @@ public class BluetoothManagerFragment extends Fragment {
 
     // Views
     private Button makeDiscoverableButton;
-    private TextView mTimeDiscoverable;
+    private TextView timeDiscoverableButton;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -98,7 +98,7 @@ public class BluetoothManagerFragment extends Fragment {
         // be called when the ACTION_REQUEST_ENABLE activity has returned
         // TODO: connect to other devices here
         if (connectService != null) {
-            if (connectService.getState() == BluetoothConnectService.STOPPED) {
+            if (connectService.getState() == BluetoothConnectService.STATE_STOPPED) {
                 // Start our BluetoothConnectionService
                 connectService.start();
             }
@@ -127,8 +127,8 @@ public class BluetoothManagerFragment extends Fragment {
             }
         });
 
-        mTimeDiscoverable = (TextView) view.findViewById(R.id.title_discoverable_time);
-        mTimeDiscoverable.setText(getResources().getString(R.string.not_discoverable));
+        timeDiscoverableButton = (TextView) view.findViewById(R.id.title_discoverable_time);
+        timeDiscoverableButton.setText(getResources().getString(R.string.not_discoverable));
 
         return view;
     }
@@ -166,12 +166,12 @@ public class BluetoothManagerFragment extends Fragment {
 
                         @Override
                         public void onTick(long millisUntilFinished) {
-                            mTimeDiscoverable.setText(String.format("Discoverable for %d seconds", (millisUntilFinished / 1000)));
+                            timeDiscoverableButton.setText(String.format("Discoverable for %d seconds", (millisUntilFinished / 1000)));
                         }
 
                         @Override
                         public void onFinish() {
-                            mTimeDiscoverable.setText(getResources().getString(R.string.not_discoverable));
+                            timeDiscoverableButton.setText(getResources().getString(R.string.not_discoverable));
                             makeDiscoverableButton.setEnabled(true);
                         }
                     }.start();
@@ -192,12 +192,7 @@ public class BluetoothManagerFragment extends Fragment {
 
     private void setupGame() {
         // TODO: implement
-        connectService = new BluetoothConnectService(new Handler(new Handler.Callback() {
-            @Override
-            public boolean handleMessage(Message msg) {
-                return false;
-            }
-        }));
+        connectService = new BluetoothConnectService(mHandler, getActivity());
     }
 
     /**
@@ -215,4 +210,24 @@ public class BluetoothManagerFragment extends Fragment {
         // Connect to device
         connectService.connect(device);
     }
+
+    private final Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case Constants.MESSAGE_DEVICE_NAME:
+                    String deviceName = msg.getData().getString(Constants.DEVICE_NAME);
+                    connectedDeviceNames.add(deviceName);
+                    Toast.makeText(getActivity(), "Connected to " + deviceName, Toast.LENGTH_LONG).show();
+                    break;
+                case Constants.MESSAGE_WRITE:
+                    // TODO: do something with what we write out?
+                    break;
+                case Constants.MESSAGE_READ:
+                    // TODO: do something with what we read?
+                    break;
+            }
+        }
+    };
+
 }
