@@ -5,6 +5,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <Button
+        android:id="@+id/button_start_drawing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/draw" />
+
     <TextView
         android:id="@+id/title_discoverable_time"
         android:layout_width="wrap_content"
@@ -28,9 +34,19 @@
         android:layout_height="wrap_content"
         android:text="Ping" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Connected Devices:" />
+
     <ListView
         android:id="@+id/list_connected_devices"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <ImageView
+        android:id="@+id/image_received_image"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
 </LinearLayout>

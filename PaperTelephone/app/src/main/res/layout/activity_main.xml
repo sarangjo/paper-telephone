@@ -16,12 +16,6 @@
         android:layout_height="wrap_content"
         android:text="Hello World!" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/draw"
-        android:onClick="startDrawing"/>
-
     <fragment
         android:name="com.cse461.a16au.papertelephone.BluetoothManagerFragment"
         android:layout_width="match_parent"

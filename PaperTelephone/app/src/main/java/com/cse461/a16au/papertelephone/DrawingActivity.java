@@ -1,6 +1,8 @@
 package com.cse461.a16au.papertelephone;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -9,10 +11,16 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
+
+import java.io.ByteArrayOutputStream;
 
 public class DrawingActivity extends AppCompatActivity {
 
+    public static final String RESULT_GET_DRAWING = "result_get_drawing";
+    public static final String EXTRA_IMAGE_DATA = "extra_image_data";
     private Paint mPaint;
 
     @Override
@@ -25,8 +33,29 @@ public class DrawingActivity extends AppCompatActivity {
 
         // PaintingView for current drawing turn
         final View v = new PaintingView(this);
-        v.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 600));
+        v.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
         ll.addView(v);
+
+        Button sendDrawingButton = (Button) findViewById(R.id.button_send_drawing);
+        sendDrawingButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Build intent with the drawing data
+                Bitmap cache = v.getDrawingCache();
+                Bitmap b = cache.copy(cache.getConfig(), true);
+
+                Intent result = new Intent(RESULT_GET_DRAWING);
+
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                b.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                byte[] byteArray = stream.toByteArray();
+
+                result.putExtra(EXTRA_IMAGE_DATA, byteArray);
+
+                setResult(Activity.RESULT_OK, result);
+                finish();
+            }
+        });
 
         mPaint = new Paint();
         mPaint.setAntiAlias(true);

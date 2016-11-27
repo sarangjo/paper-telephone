@@ -17,13 +17,5 @@ public class MainActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        // TODO: Maybe implement onActivityResult()? I'm not entirely sure
-        // https://developer.android.com/guide/topics/connectivity/bluetooth.html#EnablingDiscoverability
-    }
-
-    public void startDrawing(View view) {
-        Intent intent = new Intent(this, DrawingActivity.class);
-        startActivity(intent);
     }
 }

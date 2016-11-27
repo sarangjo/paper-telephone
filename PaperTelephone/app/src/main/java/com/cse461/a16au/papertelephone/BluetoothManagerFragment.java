@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -20,11 +22,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -41,6 +46,11 @@ public class BluetoothManagerFragment extends Fragment {
     private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     private static final int REQUEST_MAKE_DISCOVERABLE = 3;
+    private static final int REQUEST_GET_DRAWING = 4;
+
+    private static final byte[] HEADER_IMAGE = "IMAGE".getBytes();
+
+    private ByteBuffer img;
 
     // Names of connected devices
 //    private List<String> connectedDeviceNames = new ArrayList<>();
@@ -55,6 +65,7 @@ public class BluetoothManagerFragment extends Fragment {
     // Views
     private Button makeDiscoverableButton;
     private TextView timeDiscoverableButton;
+    private ImageView receivedImageView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -150,6 +161,19 @@ public class BluetoothManagerFragment extends Fragment {
         ListView connectedListView = (ListView) view.findViewById(R.id.list_connected_devices);
         connectedListView.setAdapter(connectedDevicesAdapter);
 
+        // Going to drawing
+        Button startDrawing = (Button) view.findViewById(R.id.button_start_drawing);
+        startDrawing.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), DrawingActivity.class);
+                startActivityForResult(intent, REQUEST_GET_DRAWING);
+            }
+        });
+
+        // Holding on to image view
+        receivedImageView = (ImageView) view.findViewById(R.id.image_received_image);
+
         return view;
     }
 
@@ -197,7 +221,25 @@ public class BluetoothManagerFragment extends Fragment {
                     }.start();
                 }
                 break;
+            case REQUEST_GET_DRAWING:
+                sendDrawing(data);
+                break;
         }
+    }
+
+    private void sendDrawing(Intent data) {
+        // First send header to indicaate we're sending an image
+        byte[] header = HEADER_IMAGE;
+
+        // Get byte array from intent
+        byte[] img = data.getByteArrayExtra(DrawingActivity.EXTRA_IMAGE_DATA);
+        ByteBuffer buf = ByteBuffer.allocate(header.length + img.length + 4);
+
+        buf.put(header);
+        buf.putInt(img.length);
+        buf.put(img);
+        // Write it through the service
+        connectService.write(buf.array());
     }
 
     /**
@@ -254,6 +296,8 @@ public class BluetoothManagerFragment extends Fragment {
         connectService.connect(device);
     }
 
+    private int imageSize;
+
     private final Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -265,12 +309,46 @@ public class BluetoothManagerFragment extends Fragment {
                     break;
                 case Constants.MESSAGE_WRITE:
                     // TODO: do something with what we write out?
-                    Toast.makeText(getActivity(), "Sent ping", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Sent data", Toast.LENGTH_LONG).show();
                     break;
-                case Constants.MESSAGE_READ
-                        :
+                case Constants.MESSAGE_READ:
                     // TODO: do something with what we read?
-                    Toast.makeText(getActivity(), "Received ping", Toast.LENGTH_LONG).show();
+                    ByteBuffer input = ByteBuffer.wrap(Arrays.copyOfRange((byte[]) msg.obj, 0, msg.arg1));
+
+                    if (isReceivingImage) {
+                        // Process this packet into the byte buffer field
+
+                        img.put(input.array());
+                        imageSize -= msg.arg1;
+
+                        if(imageSize == 0) {
+                            processImage();
+                        }
+
+                    } else {
+                        byte[] header = new byte[HEADER_IMAGE.length];
+                        input.get(header, 0, 5);
+
+                        if (msg.arg1 > 5 && Arrays.equals(header, HEADER_IMAGE)) {
+                            isReceivingImage = true;
+
+                            imageSize = input.getInt(5);
+                            img = ByteBuffer.allocate(imageSize);
+
+                            byte[] imagePacket = new byte[msg.arg1 - 9];
+                            input.get(imagePacket, 9, msg.arg1);
+
+                            // Pipe into our global byte buffer
+                            img.put(imagePacket);
+
+                            imageSize -= msg.arg1 - 9;
+
+                            Toast.makeText(getActivity(), "Image incoming...", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getActivity(), "Received ping", Toast.LENGTH_LONG).show();
+                        }
+                    }
+
                     break;
                 case Constants.MESSAGE_TOAST:
                     Toast.makeText(getActivity(), "Toast: " + msg.getData().getString(Constants.TOAST), Toast.LENGTH_LONG).show();
@@ -278,5 +356,15 @@ public class BluetoothManagerFragment extends Fragment {
             }
         }
     };
+
+    private boolean isReceivingImage = false;
+
+    private void processImage() {
+        byte[] data = img.array();
+        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0,
+                data.length);
+        receivedImageView.setImageBitmap(bitmap);
+        isReceivingImage = false;
+    }
 
 }
