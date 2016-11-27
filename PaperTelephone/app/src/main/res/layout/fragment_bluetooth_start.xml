@@ -6,14 +6,9 @@
     android:orientation="vertical">
 
     <TextView
+        android:id="@+id/title_discoverable_time"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="This is the Bluetooth Start Fragment." />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/title_discoverable_time"/>
+        android:layout_height="wrap_content" />
 
     <Button
         android:id="@+id/button_show_devices"
@@ -26,5 +21,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Make Discoverable" />
+
+    <Button
+        android:id="@+id/button_ping"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ping" />
+
+    <ListView
+        android:id="@+id/list_connected_devices"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

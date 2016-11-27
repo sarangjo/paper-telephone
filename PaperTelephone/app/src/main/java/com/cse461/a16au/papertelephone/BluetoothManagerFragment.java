@@ -15,7 +15,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,7 +32,6 @@ import java.util.List;
  */
 
 public class BluetoothManagerFragment extends Fragment {
-
     private static final String TAG = "BluetoothStartFragment";
 
     // Intent request codes
@@ -39,7 +40,8 @@ public class BluetoothManagerFragment extends Fragment {
     private static final int REQUEST_MAKE_DISCOVERABLE = 3;
 
     // Names of connected devices
-    private List<String> connectedDeviceNames = new ArrayList<>();
+//    private List<String> connectedDeviceNames = new ArrayList<>();
+    private ArrayAdapter<String> connectedDevicesAdapter;
 
     // Local Bluetooth adapter
     private BluetoothAdapter bluetoothAdapter = null;
@@ -61,9 +63,8 @@ public class BluetoothManagerFragment extends Fragment {
         // Display error message in the case that the device does not support bluetooth
         if (bluetoothAdapter == null) {
             FragmentActivity activity = (FragmentActivity) getActivity();
-            Toast.makeText(activity, "Bluetooth is not available." +
-                    "Our game needs bluetooth to work... Sorry", Toast.LENGTH_LONG).show();
-            activity.finish();
+            Toast.makeText(activity, "Bluetooth is not available. Our game needs bluetooth to work... Sorry", Toast.LENGTH_LONG).show();
+            // activity.finish();
         }
     }
 
@@ -130,6 +131,22 @@ public class BluetoothManagerFragment extends Fragment {
         timeDiscoverableButton = (TextView) view.findViewById(R.id.title_discoverable_time);
         timeDiscoverableButton.setText(getResources().getString(R.string.not_discoverable));
 
+        Button sendPing = (Button) view.findViewById(R.id.button_ping);
+        sendPing.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                connectService.write("Hello world!".getBytes());
+            }
+        });
+
+        // Connected devices list
+        connectedDevicesAdapter =
+                new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1);
+
+        // Two ListViews for paired and new devices
+        ListView connectedListView = (ListView) view.findViewById(R.id.list_connected_devices);
+        connectedListView.setAdapter(connectedDevicesAdapter);
+
         return view;
     }
 
@@ -192,7 +209,7 @@ public class BluetoothManagerFragment extends Fragment {
 
     private void setupGame() {
         // TODO: implement
-        connectService = new BluetoothConnectService(mHandler, getActivity());
+        connectService = new BluetoothConnectService(mHandler);
     }
 
     /**
@@ -215,16 +232,21 @@ public class BluetoothManagerFragment extends Fragment {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-                case Constants.MESSAGE_DEVICE_NAME:
+                case Constants.MESSAGE_CONNECTED:
                     String deviceName = msg.getData().getString(Constants.DEVICE_NAME);
-                    connectedDeviceNames.add(deviceName);
+                    connectedDevicesAdapter.add(deviceName);
                     Toast.makeText(getActivity(), "Connected to " + deviceName, Toast.LENGTH_LONG).show();
                     break;
                 case Constants.MESSAGE_WRITE:
                     // TODO: do something with what we write out?
+                    Toast.makeText(getActivity(), "Sent ping", Toast.LENGTH_LONG).show();
                     break;
                 case Constants.MESSAGE_READ:
                     // TODO: do something with what we read?
+                    Toast.makeText(getActivity(), "Received ping", Toast.LENGTH_LONG).show();
+                    break;
+                case Constants.MESSAGE_TOAST:
+                    Toast.makeText(getActivity(), "Toast: " + msg.getData().getString(Constants.TOAST), Toast.LENGTH_LONG).show();
                     break;
             }
         }

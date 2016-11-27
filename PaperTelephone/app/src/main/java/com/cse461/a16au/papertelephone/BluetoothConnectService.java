@@ -4,12 +4,10 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,7 +27,6 @@ public class BluetoothConnectService {
     private final BluetoothAdapter mAdapter;
     private final Handler mHandler;
     private int mState;
-    private final Context mContext;
 
     // Threads
     private ConnectThread mConnectThread;
@@ -42,10 +39,9 @@ public class BluetoothConnectService {
     public static final int STATE_CONNECTING = 2;
     public static final int STATE_CONNECTED = 3;
 
-    public BluetoothConnectService(Handler handler, Context context) {
+    public BluetoothConnectService(Handler handler) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mHandler = handler;
-        mContext = context;
     }
 
     // SERVER FUNCTIONS: start() and stop()
@@ -76,7 +72,7 @@ public class BluetoothConnectService {
      * Stops all threads.
      */
     public void stop() {
-        Toast.makeText(mContext, "Stopping all threads", Toast.LENGTH_LONG).show();
+        Log.d(TAG, "Stopping all threads");
         if (mConnectThread != null) {
             mConnectThread.cancel();
             mConnectThread = null;
@@ -128,7 +124,7 @@ public class BluetoothConnectService {
      * Connection to a specific remote device failed.
      */
     private void connectFailed() {
-        Toast.makeText(mContext, "Unable to connect to device", Toast.LENGTH_LONG).show();
+        Log.e(TAG, "Unable to connect to device");
 
         this.start();
     }
@@ -136,7 +132,7 @@ public class BluetoothConnectService {
     // UNIVERSAL FUNCTIONS: connected(), connectionLost(), write()
 
     private synchronized void connected(BluetoothSocket socket, BluetoothDevice remoteDevice) {
-        Toast.makeText(mContext, "Connected!", Toast.LENGTH_LONG).show();
+        Log.d(TAG, "Connected!");
 
         // Cancel any existing threads
         if (mConnectThread != null) {
@@ -147,6 +143,7 @@ public class BluetoothConnectService {
             mConnectedThread.cancel();
             mConnectedThread = null;
         }
+        // TODO: we should allow AcceptThreads
         if (mAcceptThread != null) {
             mAcceptThread.cancel();
             mAcceptThread = null;
@@ -157,7 +154,7 @@ public class BluetoothConnectService {
         mConnectedThread.start();
 
         // Send the name back to UI
-        Message msg = mHandler.obtainMessage(Constants.MESSAGE_DEVICE_NAME);
+        Message msg = mHandler.obtainMessage(Constants.MESSAGE_CONNECTED);
         Bundle bundle = new Bundle();
         bundle.putString(Constants.DEVICE_NAME, remoteDevice.getName());
         msg.setData(bundle);
@@ -166,8 +163,18 @@ public class BluetoothConnectService {
         setState(STATE_CONNECTED);
     }
 
+    /**
+     * When a connection is lost.
+     */
     private void connectionLost() {
-        Toast.makeText(mContext, "Connection was lost", Toast.LENGTH_LONG).show();
+        Log.d(TAG, "Connection was lost");
+
+        // Send toast back to UI
+        Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
+        Bundle bundle = new Bundle();
+        bundle.putString(Constants.TOAST, "Connection was lost.");
+        msg.setData(bundle);
+        mHandler.sendMessage(msg);
 
         this.start();
     }
