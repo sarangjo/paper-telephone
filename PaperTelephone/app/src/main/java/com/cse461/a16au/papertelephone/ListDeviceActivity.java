@@ -184,6 +184,4 @@ public class ListDeviceActivity extends AppCompatActivity {
             }
         }
     };
-
-
 }
