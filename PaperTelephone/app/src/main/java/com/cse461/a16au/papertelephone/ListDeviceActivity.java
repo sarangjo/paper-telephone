@@ -128,6 +128,10 @@ public class ListDeviceActivity extends AppCompatActivity {
             mBluetoothAdapter.cancelDiscovery();
         }
 
+        int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
 
         // Request discover from BluetoothAdapter
         mBluetoothAdapter.startDiscovery();

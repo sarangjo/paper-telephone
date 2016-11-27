@@ -4,7 +4,10 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -201,6 +204,29 @@ public class BluetoothManagerFragment extends Fragment {
      * Make the device discoverable for the specified time.
      */
     private void requestDiscoverable(int seconds) {
+        IntentFilter discoverabilityChanged = new IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
+        getActivity().registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+
+                if (BluetoothAdapter.ACTION_SCAN_MODE_CHANGED.equals(action)) {
+                    int scanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, -1);
+                    switch (scanMode) {
+                        case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE:
+                            Toast.makeText(getActivity(), "SCAN MODE CHANGED TO DISCOVERABLE", Toast.LENGTH_LONG).show();
+                            break;
+                        case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
+                            Toast.makeText(getActivity(), "SCAN MODE CHANGED TO CONNECTABLE ONLY", Toast.LENGTH_LONG).show();
+                            break;
+                        case BluetoothAdapter.SCAN_MODE_NONE:
+                            Toast.makeText(getActivity(), "SCAN MODE CHANGED TO NONE", Toast.LENGTH_LONG).show();
+                            break;
+                    }
+                }
+            }
+        }, discoverabilityChanged);
+
         // Enable bluetooth simply by enabling bluetooth discoverability
         Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
         discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, seconds);
@@ -241,7 +267,8 @@ public class BluetoothManagerFragment extends Fragment {
                     // TODO: do something with what we write out?
                     Toast.makeText(getActivity(), "Sent ping", Toast.LENGTH_LONG).show();
                     break;
-                case Constants.MESSAGE_READ:
+                case Constants.MESSAGE_READ
+                        :
                     // TODO: do something with what we read?
                     Toast.makeText(getActivity(), "Received ping", Toast.LENGTH_LONG).show();
                     break;

@@ -132,7 +132,7 @@ public class BluetoothConnectService {
     // UNIVERSAL FUNCTIONS: connected(), connectionLost(), write()
 
     private synchronized void connected(BluetoothSocket socket, BluetoothDevice remoteDevice) {
-        Log.d(TAG, "Connected!");
+        Log.d(TAG, "Connected to: " + remoteDevice.getName() + " at " + remoteDevice.getAddress());
 
         // Cancel any existing threads
         if (mConnectThread != null) {
@@ -144,10 +144,12 @@ public class BluetoothConnectService {
             mConnectedThread = null;
         }
         // TODO: we should allow AcceptThreads
-        if (mAcceptThread != null) {
-            mAcceptThread.cancel();
-            mAcceptThread = null;
-        }
+//        if (mAcceptThread != null) {
+//            mAcceptThread.cancel();
+//            mAcceptThread = null;
+//        }
+
+        setState(STATE_CONNECTED);
 
         // Start the new ConnectedThread
         mConnectedThread = new ConnectedThread(socket);
@@ -160,7 +162,7 @@ public class BluetoothConnectService {
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
-        setState(STATE_CONNECTED);
+
     }
 
     /**
@@ -212,7 +214,7 @@ public class BluetoothConnectService {
         }
 
         public void run() {
-            Log.d(TAG, "Begin listening...");
+            Log.d(TAG, "[ACCEPT THREAD] Begin listening...");
             BluetoothSocket socket = null;
 
             while (mState != STATE_CONNECTED) {
@@ -244,7 +246,7 @@ public class BluetoothConnectService {
                     }
                 }
             }
-            Log.d(TAG, "Done listening.");
+            Log.d(TAG, "[ACCEPT THREAD] Done listening.");
         }
 
         void cancel() {
@@ -278,7 +280,7 @@ public class BluetoothConnectService {
         }
 
         public void run() {
-            Log.d(TAG, "Attempting to connect...");
+            Log.d(TAG, "[CONNECT THREAD] Attempting to connect...");
             setName("ConnectThread");
 
             mAdapter.cancelDiscovery();
@@ -300,6 +302,7 @@ public class BluetoothConnectService {
                 mConnectThread = null;
             }
 
+            Log.d(TAG, "[CONNECT THREAD] Finished connect operation");
             // Connected!
             connected(mmSocket, mmDevice);
         }
@@ -340,7 +343,7 @@ public class BluetoothConnectService {
         }
 
         public void run() {
-            Log.d(TAG, "Start reading and writing");
+            Log.d(TAG, "[CONNECTED THREAD] Start reading and writing");
 
             byte[] buffer = new byte[1024];
             int bytes;
@@ -348,6 +351,7 @@ public class BluetoothConnectService {
             while (mState == STATE_CONNECTED) {
                 try {
                     bytes = mmInStream.read(buffer);
+                    Log.d(TAG, "[CONNECTED THREAD] Received " + bytes + " bytes");
                     mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, -1, buffer)
                             .sendToTarget();
                 } catch (IOException e) {
@@ -357,6 +361,7 @@ public class BluetoothConnectService {
                     break;
                 }
             }
+            Log.d(TAG, "[CONNECTED THREAD] Done listening");
         }
 
         public void write(byte[] buffer) {
