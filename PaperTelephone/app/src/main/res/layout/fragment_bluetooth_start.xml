@@ -28,16 +28,10 @@
         android:layout_height="wrap_content"
         android:text="Make Discoverable" />
 
-    <Button
-        android:id="@+id/button_ping"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Ping" />
-
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Connected Devices:" />
+        android:text="Connected Devices: (tap to ping)" />
 
     <ListView
         android:id="@+id/list_connected_devices"

@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -28,9 +29,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by jsunde on 11/18/2016.
@@ -141,16 +139,6 @@ public class BluetoothManagerFragment extends Fragment {
         timeDiscoverableButton = (TextView) view.findViewById(R.id.title_discoverable_time);
         timeDiscoverableButton.setText(getResources().getString(R.string.not_discoverable));
 
-        Button sendPing = (Button) view.findViewById(R.id.button_ping);
-        sendPing.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!connectedDevicesAdapter.isEmpty()) {
-                    connectService.write("Hello world!".getBytes(), connectedDevicesAdapter.getItem(0));
-                }
-            }
-        });
-
         // Connected devices list
         connectedDevicesAdapter =
                 new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1);
@@ -158,6 +146,14 @@ public class BluetoothManagerFragment extends Fragment {
         // Two ListViews for paired and new devices
         ListView connectedListView = (ListView) view.findViewById(R.id.list_connected_devices);
         connectedListView.setAdapter(connectedDevicesAdapter);
+        connectedListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (!connectedDevicesAdapter.isEmpty()) {
+                    connectService.write(Constants.PING, connectedDevicesAdapter.getItem(position));
+                }
+            }
+        });
 
         // Going to drawing
         Button startDrawing = (Button) view.findViewById(R.id.button_start_drawing);
@@ -310,18 +306,24 @@ public class BluetoothManagerFragment extends Fragment {
                     connectedDevicesAdapter.add(deviceAddress);
                     Toast.makeText(getActivity(), "Connected to " + deviceName, Toast.LENGTH_LONG).show();
                     break;
+                case Constants.MESSAGE_DISCONNECTED:
+                    deviceName = msg.getData().getString(Constants.DEVICE_NAME);
+                    deviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
+                    connectedDevicesAdapter.remove(deviceAddress);
+                    Toast.makeText(getActivity(), "Disconnected from " + deviceName, Toast.LENGTH_LONG).show();
+                    break;
                 case Constants.MESSAGE_WRITE:
                     // TODO: do something with what we write out?
-                    Toast.makeText(getActivity(), "Sent data", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Sent data", Toast.LENGTH_SHORT).show();
                     break;
                 case Constants.MESSAGE_READ:
                     switch (msg.arg2) {
-                        case Constants.MESSAGE_RECV_IMAGE:
-                            Toast.makeText(getActivity(), "Image incoming...", Toast.LENGTH_LONG).show();
+                        case Constants.READ_IMAGE:
+                            Toast.makeText(getActivity(), "Image incoming...", Toast.LENGTH_SHORT).show();
                             processImage((byte[]) msg.obj);
                             break;
-                        case Constants.MESSAGE_RECV_TEXT:
-                            Toast.makeText(getActivity(), "Received ping", Toast.LENGTH_LONG).show();
+                        case Constants.READ_TEXT:
+                            Toast.makeText(getActivity(), "Received ping", Toast.LENGTH_SHORT).show();
                             break;
                     }
 

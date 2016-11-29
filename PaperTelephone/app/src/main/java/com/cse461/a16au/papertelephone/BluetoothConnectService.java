@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,7 +36,7 @@ public class BluetoothConnectService {
     // Threads
     private BluetoothThread mAcceptThread;
     private Map<String, BluetoothThread> mConnectThreads;
-    private Map<String, BluetoothThread> mConnectedThreads;
+    private final Map<String, BluetoothThread> mConnectedThreads;
 
     // States
     public static final int STATE_STOPPED = 0;
@@ -176,14 +175,14 @@ public class BluetoothConnectService {
     /**
      * When a connection is lost.
      */
-    private void connectionLost() {
-        // TODO provide more info on whose connection was lost
+    private void connectionLost(BluetoothDevice device) {
         Log.d(TAG, "Connection was lost");
 
         // Send toast back to UI
-        Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
+        Message msg = mHandler.obtainMessage(Constants.MESSAGE_DISCONNECTED);
         Bundle bundle = new Bundle();
-        bundle.putString(Constants.TOAST, "Connection was lost.");
+        bundle.putString(Constants.DEVICE_ADDRESS, device.getAddress());
+        bundle.putString(Constants.DEVICE_NAME, device.getName());
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
@@ -197,15 +196,15 @@ public class BluetoothConnectService {
      * @return
      */
     public boolean write(byte[] out, String address) {
-        ConnectedThread r;
-        synchronized (mConnectedThreads) {
+        ConnectedThread thread;
+
 //            if (mState != STATE_CONNECTED) return;
-            r = (ConnectedThread) mConnectedThreads.get(address);
-        }
-        if (r == null) {
+        thread = (ConnectedThread) mConnectedThreads.get(address);
+
+        if (thread == null) {
             return false;
         }
-        return r.write(out);
+        return thread.write(out);
     }
 
     // THREAD IMPLEMENTATIONS
@@ -378,7 +377,7 @@ public class BluetoothConnectService {
                     handleRead(buffer, bytes);
                 } catch (IOException e) {
                     Log.e(TAG, "Connection disconnected", e);
-                    connectionLost();
+                    connectionLost(mmDevice);
 
                     break;
                 }
@@ -418,20 +417,20 @@ public class BluetoothConnectService {
                             imageSize -= bytes;
                         } catch (IOException e) {
                             Log.e(TAG, "Connection disconnected", e);
-                            connectionLost();
+                            connectionLost(mmDevice);
 
                             break;
                         }
                     }
 
-                    mHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.MESSAGE_RECV_IMAGE, img.array())
+                    mHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, img.array())
                             .sendToTarget();
 
                     return;
                 }
             }
             // TODO: minor, maybe consider truncating, not a big deal
-            mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.MESSAGE_RECV_TEXT, buffer)
+            mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_TEXT, buffer)
                     .sendToTarget();
         }
 
