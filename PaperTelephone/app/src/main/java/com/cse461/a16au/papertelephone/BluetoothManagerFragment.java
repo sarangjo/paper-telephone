@@ -414,9 +414,10 @@ public class BluetoothManagerFragment extends Fragment {
                                 byte[] pairedDeviceAddress = new byte[17];
                                 buf.get(pairedDeviceAddress);
 
-
+                                // If removing from the set returns false that means we are the
+                                // newly paired device so we need to choose our successor
                                 if(!unplacedDevices.remove(new String(pairedDeviceAddress))) {
-
+                                    chooseSuccessor();
                                 }
                             }
                             break;
