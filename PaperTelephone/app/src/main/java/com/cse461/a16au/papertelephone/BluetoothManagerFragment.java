@@ -29,6 +29,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Created by jsunde on 11/18/2016.
@@ -47,6 +51,8 @@ public class BluetoothManagerFragment extends Fragment {
     private static final int REQUEST_GET_DRAWING = 4;
     private static final int NEXTDEVICE = 0; // TODO: needs to be set to indicate the next device after "START" logic
     private static int startDevice = -1;
+    private static Set<String> unplacedDevices = new HashSet<>();
+    private static int lastPair = 0;
 
     // Names of connected devices
     private ArrayAdapter<String> connectedDevicesAdapter;
@@ -268,8 +274,45 @@ public class BluetoothManagerFragment extends Fragment {
             }
 
 
+            if(startDevice == -1 || bluetoothAdapter.getAddress().compareTo(connectedDevicesAdapter.getItem(startDevice)) < 0) {
+                for(int i = 0; i < connectedDevicesAdapter.getCount(); i++) {
+                    unplacedDevices.add(connectedDevicesAdapter.getItem(i));
+                }
+
+                chooseSuccessor();
+            }
         }
     }
+
+    /**
+     * Chooses which device we will be sending to and informs all other devices
+     */
+    private void chooseSuccessor() {
+        int connectedDevices = connectedDevicesAdapter.getCount();
+
+        Iterator<String> iter = unplacedDevices.iterator();
+        String nextDevice;
+        if(iter.hasNext()) {
+            nextDevice = iter.next();
+
+            // Remove device from set of unplaced devices
+            iter.remove();
+        } else {
+            nextDevice = connectedDevicesAdapter.getItem(startDevice);
+        }
+
+
+        ByteBuffer msg = ByteBuffer.allocate(26);
+        msg.put(Constants.HEADER_START);
+        msg.putInt(lastPair + 1);
+        msg.put(nextDevice.getBytes());
+
+        for(int i = 0; i < connectedDevices; i++) {
+            String currDevice = connectedDevicesAdapter.getItem(i);
+            connectService.write(msg.array(), currDevice);
+        }
+    }
+
 
     /**
      * Make the device discoverable for the specified time.
@@ -355,7 +398,27 @@ public class BluetoothManagerFragment extends Fragment {
                             Toast.makeText(getActivity(), "Received ping", Toast.LENGTH_SHORT).show();
                             break;
                         case Constants.MESSAGE_RECV_START:
-                            startDevice = connectedDevicesAdapter.getPosition(msg.getData().getString(Constants.DEVICE_ADDRESS));
+                            if(msg.arg1 == 5) {
+                                String startDeviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
+                                startDevice = connectedDevicesAdapter.getPosition(startDeviceAddress);
+                                for(int i = 0; i < connectedDevicesAdapter.getCount(); i++) {
+                                    String currDevice = connectedDevicesAdapter.getItem(i);
+                                    if(!currDevice.equals(startDeviceAddress)) {
+                                        unplacedDevices.add(currDevice);
+                                    }
+                                }
+                            } else {
+                                ByteBuffer buf = ByteBuffer.wrap(Arrays.copyOfRange((byte[]) msg.obj, 0, 26));
+                                buf.get(new byte[5], 0, 5); // Throw away header
+                                lastPair = buf.getInt();
+                                byte[] pairedDeviceAddress = new byte[17];
+                                buf.get(pairedDeviceAddress);
+
+
+                                if(!unplacedDevices.remove(new String(pairedDeviceAddress))) {
+
+                                }
+                            }
                             break;
                     }
 

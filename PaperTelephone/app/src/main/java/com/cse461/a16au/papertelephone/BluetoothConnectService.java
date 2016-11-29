@@ -389,6 +389,8 @@ public class BluetoothConnectService {
             // ByteBuffer to wrap our input buffer
             ByteBuffer input = ByteBuffer.wrap(Arrays.copyOfRange(buffer, 0, bytes));
 
+            Message msg;
+
             // Extracts header, if any
             if (bytes > 5) {
                 byte[] header = new byte[Constants.HEADER_IMAGE.length];
@@ -423,17 +425,24 @@ public class BluetoothConnectService {
                         }
                     }
 
-                    mHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, img.array())
-                            .sendToTarget();
-
-                    return;
+                    msg = mHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, img.array());
                 } else if (Arrays.equals(header, Constants.HEADER_START)) {
-                    mHandler.obtainMessage(Constants.MESSAGE_READ, 5, Constants.MESSAGE_RECV_START).sendToTarget();
+                    msg = mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.MESSAGE_RECV_START, buffer);
+                } else {
+                    // TODO: minor, maybe consider truncating, not a big deal
+                    msg = mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_TEXT, buffer);
                 }
+            } else {
+                // TODO: minor, maybe consider truncating, not a big deal
+                msg = mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_TEXT, buffer);
             }
-            // TODO: minor, maybe consider truncating, not a big deal
-            mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_TEXT, buffer)
-                    .sendToTarget();
+
+
+            Bundle bundle = new Bundle();
+            bundle.putString(Constants.DEVICE_ADDRESS, mmDevice.getAddress());
+            bundle.putString(Constants.DEVICE_NAME, mmDevice.getName());
+            msg.setData(bundle);
+            mHandler.sendMessage(msg);
         }
 
         public boolean write(byte[] buffer) {
