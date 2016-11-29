@@ -12,6 +12,8 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * This class does the work of setting up
@@ -352,8 +354,8 @@ public class BluetoothConnectService {
                 try {
                     bytes = mmInStream.read(buffer);
                     Log.d(TAG, "[CONNECTED THREAD] Received " + bytes + " bytes");
-                    mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, -1, buffer)
-                            .sendToTarget();
+
+                    handleRead(buffer, bytes);
                 } catch (IOException e) {
                     Log.e(TAG, "Connection disconnected", e);
                     connectionLost();
@@ -362,6 +364,58 @@ public class BluetoothConnectService {
                 }
             }
             Log.d(TAG, "[CONNECTED THREAD] Done listening");
+        }
+
+        private void handleRead(byte[] buffer, int bytes) {
+            // ByteBuffer to wrap our input buffer
+            ByteBuffer input = ByteBuffer.wrap(Arrays.copyOfRange(buffer, 0, bytes));
+
+            // Extracts header, if any
+            if (bytes > 5) {
+                byte[] header = new byte[Constants.HEADER_IMAGE.length];
+                input.get(header, 0, 5);
+
+                if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
+                    // Hold onto the full image size for later
+                    int totalImageSize = input.getInt();
+                    int imageSize = totalImageSize;
+
+                    // Set up the overall buffer
+                    ByteBuffer img = ByteBuffer.allocate(imageSize);
+
+                    // Get the actual image data
+                    byte[] imagePacket = new byte[bytes - 9];
+                    input.get(imagePacket);
+                    img.put(imagePacket);
+                    imageSize -= imagePacket.length;
+
+                    while (imageSize > 0) {
+                        try {
+                            bytes = mmInStream.read(buffer);
+                            Log.d(TAG, "[CONNECTED THREAD] Received image packet of " + bytes + " bytes");
+
+                            img.put(Arrays.copyOfRange(buffer, 0, bytes));
+                            imageSize -= bytes;
+                        } catch (IOException e) {
+                            Log.e(TAG, "Connection disconnected", e);
+                            connectionLost();
+
+                            break;
+                        }
+                    }
+
+//                byte[] header = Arrays.copyOfRange(buffer, 0, Constants.HEADER_SIZE);
+//                Log.d(TAG, "[CONNECTED THREAD] Header: " + Arrays.toString(header));
+
+                    mHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.MESSAGE_RECV_IMAGE, img.array())
+                            .sendToTarget();
+
+                    return;
+                }
+            }
+            // TODO: minor, maybe consider truncating, not a big deal
+            mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.MESSAGE_RECV_TEXT, buffer)
+                    .sendToTarget();
         }
 
         public void write(byte[] buffer) {

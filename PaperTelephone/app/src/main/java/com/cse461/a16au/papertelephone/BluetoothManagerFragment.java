@@ -48,10 +48,6 @@ public class BluetoothManagerFragment extends Fragment {
     private static final int REQUEST_MAKE_DISCOVERABLE = 3;
     private static final int REQUEST_GET_DRAWING = 4;
 
-    private static final byte[] HEADER_IMAGE = "IMAGE".getBytes();
-
-    private ByteBuffer img;
-
     // Names of connected devices
 //    private List<String> connectedDeviceNames = new ArrayList<>();
     private ArrayAdapter<String> connectedDevicesAdapter;
@@ -229,7 +225,7 @@ public class BluetoothManagerFragment extends Fragment {
 
     private void sendDrawing(Intent data) {
         // First send header to indicaate we're sending an image
-        byte[] header = HEADER_IMAGE;
+        byte[] header = Constants.HEADER_IMAGE;
 
         // Get byte array from intent
         byte[] img = data.getByteArrayExtra(DrawingActivity.EXTRA_IMAGE_DATA);
@@ -312,41 +308,14 @@ public class BluetoothManagerFragment extends Fragment {
                     Toast.makeText(getActivity(), "Sent data", Toast.LENGTH_LONG).show();
                     break;
                 case Constants.MESSAGE_READ:
-                    // TODO: do something with what we read?
-                    ByteBuffer input = ByteBuffer.wrap(Arrays.copyOfRange((byte[]) msg.obj, 0, msg.arg1));
-
-                    if (isReceivingImage) {
-                        // Process this packet into the byte buffer field
-
-                        img.put(input.array());
-                        imageSize -= msg.arg1;
-
-                        if(imageSize == 0) {
-                            processImage();
-                        }
-
-                    } else {
-                        byte[] header = new byte[HEADER_IMAGE.length];
-                        input.get(header, 0, 5);
-
-                        if (msg.arg1 > 5 && Arrays.equals(header, HEADER_IMAGE)) {
-                            isReceivingImage = true;
-
-                            imageSize = input.getInt(5);
-                            img = ByteBuffer.allocate(imageSize);
-
-                            byte[] imagePacket = new byte[msg.arg1 - 9];
-                            input.get(imagePacket, 9, msg.arg1);
-
-                            // Pipe into our global byte buffer
-                            img.put(imagePacket);
-
-                            imageSize -= msg.arg1 - 9;
-
+                    switch (msg.arg2) {
+                        case Constants.MESSAGE_RECV_IMAGE:
                             Toast.makeText(getActivity(), "Image incoming...", Toast.LENGTH_LONG).show();
-                        } else {
+                            processImage((byte[]) msg.obj);
+                            break;
+                        case Constants.MESSAGE_RECV_TEXT:
                             Toast.makeText(getActivity(), "Received ping", Toast.LENGTH_LONG).show();
-                        }
+                            break;
                     }
 
                     break;
@@ -357,14 +326,9 @@ public class BluetoothManagerFragment extends Fragment {
         }
     };
 
-    private boolean isReceivingImage = false;
-
-    private void processImage() {
-        byte[] data = img.array();
+    private void processImage(byte[] data) {
         Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0,
                 data.length);
         receivedImageView.setImageBitmap(bitmap);
-        isReceivingImage = false;
     }
-
 }

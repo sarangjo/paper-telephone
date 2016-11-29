@@ -14,4 +14,8 @@ public class Constants {
     public static final int MESSAGE_WRITE = 2;
     public static final int MESSAGE_TOAST = 3;
     public static final String TOAST = "toast";
+
+    public static final byte[] HEADER_IMAGE = "IMAGE".getBytes();
+    public static final int MESSAGE_RECV_IMAGE = 0;
+    public static final int MESSAGE_RECV_TEXT = 1;
 }
