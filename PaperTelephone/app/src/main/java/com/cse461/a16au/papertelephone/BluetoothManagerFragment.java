@@ -145,7 +145,9 @@ public class BluetoothManagerFragment extends Fragment {
         sendPing.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                connectService.write("Hello world!".getBytes());
+                if (!connectedDevicesAdapter.isEmpty()) {
+                    connectService.write("Hello world!".getBytes(), connectedDevicesAdapter.getItem(0));
+                }
             }
         });
 
@@ -224,18 +226,24 @@ public class BluetoothManagerFragment extends Fragment {
     }
 
     private void sendDrawing(Intent data) {
-        // First send header to indicaate we're sending an image
+        // First send header to indicate we're sending an image
         byte[] header = Constants.HEADER_IMAGE;
 
-        // Get byte array from intent
-        byte[] img = data.getByteArrayExtra(DrawingActivity.EXTRA_IMAGE_DATA);
-        ByteBuffer buf = ByteBuffer.allocate(header.length + img.length + 4);
+        if (data != null) {
+            // Get byte array from intent
+            byte[] img = data.getByteArrayExtra(DrawingActivity.EXTRA_IMAGE_DATA);
+            if (img != null) {
+                ByteBuffer buf = ByteBuffer.allocate(header.length + img.length + 4);
 
-        buf.put(header);
-        buf.putInt(img.length);
-        buf.put(img);
-        // Write it through the service
-        connectService.write(buf.array());
+                buf.put(header);
+                buf.putInt(img.length);
+                buf.put(img);
+                // Write it through the service
+                connectService.write(buf.array(), connectedDevicesAdapter.getItem(0));
+                return;
+            }
+        }
+        Toast.makeText(getActivity(), "Please submit a drawing.", Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -292,15 +300,14 @@ public class BluetoothManagerFragment extends Fragment {
         connectService.connect(device);
     }
 
-    private int imageSize;
-
     private final Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case Constants.MESSAGE_CONNECTED:
                     String deviceName = msg.getData().getString(Constants.DEVICE_NAME);
-                    connectedDevicesAdapter.add(deviceName);
+                    String deviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
+                    connectedDevicesAdapter.add(deviceAddress);
                     Toast.makeText(getActivity(), "Connected to " + deviceName, Toast.LENGTH_LONG).show();
                     break;
                 case Constants.MESSAGE_WRITE:
