@@ -38,7 +38,6 @@ import java.util.Set;
  * Created by jsunde on 11/18/2016.
  * Use this file for reference in writing the bluetooth related logic
  * https://github.com/googlesamples/android-BluetoothChat/blob/master/Application/src/main/java/com/example/android/bluetoothchat/BluetoothChatFragment.java
- * TODO: Add discoverability logic maybe?
  */
 
 public class BluetoothManagerFragment extends Fragment {
@@ -49,7 +48,7 @@ public class BluetoothManagerFragment extends Fragment {
     private static final int REQUEST_ENABLE_BT = 2;
     private static final int REQUEST_MAKE_DISCOVERABLE = 3;
     private static final int REQUEST_GET_DRAWING = 4;
-    private static final int NEXTDEVICE = 0; // TODO: needs to be set to indicate the next device after "START" logic
+    private static int nextDevice = 0;
     private static int startDevice = -1;
     private static Set<String> unplacedDevices = new HashSet<>();
     private static int lastPair = 0;
@@ -242,7 +241,7 @@ public class BluetoothManagerFragment extends Fragment {
                 buf.putInt(img.length);
                 buf.put(img);
                 // Write it through the service
-                connectService.write(buf.array(), connectedDevicesAdapter.getItem(NEXTDEVICE));
+                connectService.write(buf.array(), connectedDevicesAdapter.getItem(nextDevice));
                 return;
             }
         }
@@ -291,21 +290,23 @@ public class BluetoothManagerFragment extends Fragment {
         int connectedDevices = connectedDevicesAdapter.getCount();
 
         Iterator<String> iter = unplacedDevices.iterator();
-        String nextDevice;
+        String nextDeviceAddress;
         if(iter.hasNext()) {
-            nextDevice = iter.next();
+            nextDeviceAddress = iter.next();
 
             // Remove device from set of unplaced devices
             iter.remove();
         } else {
-            nextDevice = connectedDevicesAdapter.getItem(startDevice);
+            nextDeviceAddress = connectedDevicesAdapter.getItem(startDevice);
         }
-
 
         ByteBuffer msg = ByteBuffer.allocate(26);
         msg.put(Constants.HEADER_START);
         msg.putInt(lastPair + 1);
-        msg.put(nextDevice.getBytes());
+        msg.put(nextDeviceAddress.getBytes());
+
+        // Set nextDevice field to store which device we will send prompts and drawings to
+        nextDevice = connectedDevicesAdapter.getPosition(nextDeviceAddress);
 
         for(int i = 0; i < connectedDevices; i++) {
             String currDevice = connectedDevicesAdapter.getItem(i);
