@@ -17,7 +17,9 @@ public class Constants {
     public static final String DEVICE_NAME = "device_name";
     public static final String DEVICE_ADDRESS = "device_address";
 
+    public static final byte[] HEADER_START = "START".getBytes();
     public static final byte[] HEADER_IMAGE = "IMAGE".getBytes();
     public static final int MESSAGE_RECV_IMAGE = 0;
     public static final int MESSAGE_RECV_TEXT = 1;
+    public static final int MESSAGE_RECV_START = 2;
 }

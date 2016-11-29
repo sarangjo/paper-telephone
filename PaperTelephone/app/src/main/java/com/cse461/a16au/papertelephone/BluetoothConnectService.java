@@ -428,6 +428,8 @@ public class BluetoothConnectService {
                             .sendToTarget();
 
                     return;
+                } else if (Arrays.equals(header, Constants.HEADER_START)) {
+                    mHandler.obtainMessage(Constants.MESSAGE_READ, 5, Constants.MESSAGE_RECV_START).sendToTarget();
                 }
             }
             // TODO: minor, maybe consider truncating, not a big deal

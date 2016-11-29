@@ -47,9 +47,10 @@ public class BluetoothManagerFragment extends Fragment {
     private static final int REQUEST_ENABLE_BT = 2;
     private static final int REQUEST_MAKE_DISCOVERABLE = 3;
     private static final int REQUEST_GET_DRAWING = 4;
+    private static final int NEXTDEVICE = 0; // TODO: needs to be set to indicate the next device after "START" logic
+    private static int startDevice = -1;
 
     // Names of connected devices
-//    private List<String> connectedDeviceNames = new ArrayList<>();
     private ArrayAdapter<String> connectedDevicesAdapter;
 
     // Local Bluetooth adapter
@@ -239,11 +240,39 @@ public class BluetoothManagerFragment extends Fragment {
                 buf.putInt(img.length);
                 buf.put(img);
                 // Write it through the service
-                connectService.write(buf.array(), connectedDevicesAdapter.getItem(0));
+                connectService.write(buf.array(), connectedDevicesAdapter.getItem(NEXTDEVICE));
                 return;
             }
         }
         Toast.makeText(getActivity(), "Please submit a drawing.", Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * Establishes an ordering for the connected devices when the user hits the start button
+     *
+     */
+    private void start() {
+        int connectedDevices = connectedDevicesAdapter.getCount();
+        if(connectedDevices < 2) {
+            Toast.makeText(getActivity(), "You don't have enough players, the game requires" +
+               "at least 3 players", Toast.LENGTH_LONG).show();
+        } else {
+            byte[] startMsg = Constants.HEADER_START;
+
+            for(int i = 0; i < connectedDevices; i++) {
+               String currDevice = connectedDevicesAdapter.getItem(i);
+               connectService.write(startMsg, currDevice);
+            }
+
+            // Sleep for a short time in case another device pressed start at the same time
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+
+        }
     }
 
     /**
@@ -323,6 +352,9 @@ public class BluetoothManagerFragment extends Fragment {
                         case Constants.MESSAGE_RECV_TEXT:
                             Toast.makeText(getActivity(), "Received ping", Toast.LENGTH_LONG).show();
                             break;
+                        case Constants.MESSAGE_RECV_START:
+                            startDevice = connectedDevicesAdapter.getPosition(msg.getData().getString(Constants.DEVICE_ADDRESS));
+                            break;
                     }
 
                     break;
@@ -333,6 +365,11 @@ public class BluetoothManagerFragment extends Fragment {
         }
     };
 
+    /**
+     * Process an array of bytes into a bitmap and display it in the view
+     *
+     * @param data array of bytes containing image information
+     */
     private void processImage(byte[] data) {
         Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0,
                 data.length);
