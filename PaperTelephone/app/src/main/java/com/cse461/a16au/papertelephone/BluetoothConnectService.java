@@ -47,6 +47,7 @@ public class BluetoothConnectService {
 
     private BluetoothConnectService() {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
+
         mConnectThreads = new ConcurrentHashMap<>();
         mConnectedThreads = new ConcurrentHashMap<>();
     }
