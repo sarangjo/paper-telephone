@@ -5,18 +5,16 @@
     android:layout_height="match_parent"
     android:weightSum="1">
 
-    <LinearLayout
-        android:id="@+id/game_drawing"
-        android:layout_width="match_parent"
-        android:layout_height="146dp"
-        android:orientation="vertical" />
-
-    <TextView
-        android:text="TextView"
+    <fragment
+        android:name="com.cse461.a16au.papertelephone.DrawingFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/game_prompt"
-        android:layout_weight="0.09"
-        tools:text="Draw a fuckin elephant" />
+        android:id="@+id/drawing_fragment" />
+
+    <fragment
+        android:name="com.cse461.a16au.papertelephone.PromptFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/prompt_fragment" />
 
 </LinearLayout>

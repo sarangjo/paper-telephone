@@ -5,7 +5,7 @@
     android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/main_layout"
+        android:id="@+id/game_drawing"
         android:layout_width="match_parent"
         android:layout_height="150dp"
         android:orientation="vertical" />

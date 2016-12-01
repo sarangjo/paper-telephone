@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
@@ -27,7 +26,7 @@ public class DrawingActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // TODO
-        setContentView(R.layout.activity_drawing_simple);
+        setContentView(R.layout.fragment_drawing);
 
         LinearLayout ll = (LinearLayout) findViewById(R.id.main_layout);
 
