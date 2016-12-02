@@ -21,11 +21,6 @@ import org.w3c.dom.Text;
 
 /**
  * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link DiscoverableFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link DiscoverableFragment#newInstance} factory method to
- * create an instance of this fragment.
  */
 public class DiscoverableFragment extends Fragment {
     private static final int REQUEST_MAKE_DISCOVERABLE = 1;

@@ -70,7 +70,6 @@ public class BluetoothManagerFragment extends Fragment {
 
         // In the case that Bluetooth was disabled to start, onResume() will
         // be called when the ACTION_REQUEST_ENABLE activity has returned
-        // TODO: connect to other devices here
         if (connectService != null) {
             if (connectService.getState() == BluetoothConnectService.STATE_STOPPED) {
                 // Start our BluetoothConnectionService

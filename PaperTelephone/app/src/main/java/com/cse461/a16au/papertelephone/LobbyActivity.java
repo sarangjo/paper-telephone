@@ -2,6 +2,7 @@ package com.cse461.a16au.papertelephone;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -10,6 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -31,12 +33,12 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     /**
      * Access to the Bluetooth adapter
      */
-    private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothAdapter mBluetoothAdapter = null;
 
     /**
      * Our bluetooth service
      */
-    private BluetoothConnectService mConnectService;
+    private BluetoothConnectService mConnectService = null;
 
     // TODO: static?
     private static int nextDevice = 0;
@@ -56,7 +58,31 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         mConnectService = BluetoothConnectService.getInstance();
         mConnectService.registerHandler(mHandler);
 
+        Button devicesButton = (Button) findViewById(R.id.button_show_devices);
+        if (devicesButton != null) {
+            devicesButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivityForResult(new Intent(LobbyActivity.this, ListDeviceActivity.class), Constants.REQUEST_CONNECT_DEVICE);
+                }
+            });
+        }
+
         setupConnectedDevicesList();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // In the case that Bluetooth was disabled to start, onResume() will
+        // be called when the ACTION_REQUEST_ENABLE activity has returned
+        if (mConnectService != null) {
+            if (mConnectService.getState() == BluetoothConnectService.STATE_STOPPED) {
+                // Start our BluetoothConnectionService
+                mConnectService.start();
+            }
+        }
     }
 
     @Override
@@ -69,9 +95,21 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 //        }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case Constants.REQUEST_CONNECT_DEVICE:
+                if (resultCode == RESULT_OK) {
+                    connectDevice(data.getStringExtra(Constants.DEVICE_ADDRESS));
+                }
+                break;
+        }
+    }
+
     /**
      * Set up paired, unpaired, and connected devices.
      */
+
     private void setupConnectedDevicesList() {
         // Connected devices
         connectedDevicesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
