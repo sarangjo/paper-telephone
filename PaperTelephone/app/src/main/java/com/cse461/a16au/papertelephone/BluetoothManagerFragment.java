@@ -47,7 +47,6 @@ public class BluetoothManagerFragment extends Fragment {
     // Views
     private Button makeDiscoverableButton;
     private TextView timeDiscoverableButton;
-    private ImageView receivedImageView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -105,9 +104,6 @@ public class BluetoothManagerFragment extends Fragment {
             }
         });
 
-        // Holding on to image view
-        receivedImageView = (ImageView) view.findViewById(R.id.image_received_image);
-
         return view;
     }
 
@@ -141,14 +137,5 @@ public class BluetoothManagerFragment extends Fragment {
         Toast.makeText(getActivity(), "Please submit a drawing.", Toast.LENGTH_SHORT).show();
     }
 
-    /**
-     * Process an array of bytes into a bitmap and display it in the view
-     *
-     * @param data array of bytes containing image information
-     */
-    private void processImage(byte[] data) {
-        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0,
-                data.length);
-        receivedImageView.setImageBitmap(bitmap);
-    }
+
 }

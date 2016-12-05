@@ -30,7 +30,8 @@ public class BluetoothConnectService {
     private static final String TAG = "BluetoothConnectService";
 
     private final BluetoothAdapter mAdapter;
-    private Handler mHandler;
+    private Handler mMainHandler;
+    private Handler mGameHandler;
     private int mState;
 
     // Threads
@@ -41,8 +42,6 @@ public class BluetoothConnectService {
     // States
     public static final int STATE_STOPPED = 0;
     public static final int STATE_STARTED = 1;
-//    public static final int STATE_CONNECTING = 2;
-//    public static final int STATE_CONNECTED = 3;
 
     private static BluetoothConnectService ourInstance = new BluetoothConnectService();
 
@@ -56,8 +55,9 @@ public class BluetoothConnectService {
         return ourInstance;
     }
 
-    public void registerHandler(Handler handler) {
-        mHandler = handler;
+    public void registerHandlers(Handler mainHandler, Handler gameHandler) {
+        mMainHandler = mainHandler;
+        mGameHandler = gameHandler;
     }
 
     // SERVER FUNCTIONS: start() and stop()
@@ -173,12 +173,12 @@ public class BluetoothConnectService {
         connectedThread.start();
 
         // Send the name back to UI
-        Message msg = mHandler.obtainMessage(Constants.MESSAGE_CONNECTED);
+        Message msg = mMainHandler.obtainMessage(Constants.MESSAGE_CONNECTED);
         Bundle bundle = new Bundle();
         bundle.putString(Constants.DEVICE_NAME, remoteDevice.getName());
         bundle.putString(Constants.DEVICE_ADDRESS, remoteDevice.getAddress());
         msg.setData(bundle);
-        mHandler.sendMessage(msg);
+        mMainHandler.sendMessage(msg);
     }
 
     /**
@@ -188,12 +188,12 @@ public class BluetoothConnectService {
         Log.d(TAG, "Connection was lost");
 
         // Send toast back to UI
-        Message msg = mHandler.obtainMessage(Constants.MESSAGE_DISCONNECTED);
+        Message msg = mMainHandler.obtainMessage(Constants.MESSAGE_DISCONNECTED);
         Bundle bundle = new Bundle();
         bundle.putString(Constants.DEVICE_ADDRESS, device.getAddress());
         bundle.putString(Constants.DEVICE_NAME, device.getName());
         msg.setData(bundle);
-        mHandler.sendMessage(msg);
+        mMainHandler.sendMessage(msg);
 
         this.start();
     }
@@ -402,6 +402,8 @@ public class BluetoothConnectService {
 
             Message msg;
 
+            Handler currHandler = mGameHandler;
+
             // Extracts header, if any
             if (bytes > 5) {
                 byte[] header = new byte[Constants.HEADER_IMAGE.length];
@@ -436,16 +438,17 @@ public class BluetoothConnectService {
                         }
                     }
 
-                    msg = mHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, img.array());
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, img.array());
                 } else if (Arrays.equals(header, Constants.HEADER_START)) {
-                    msg = mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, buffer);
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, buffer);
+                    currHandler = mMainHandler;
                 } else {
                     // TODO: minor, maybe consider truncating, not a big deal
-                    msg = mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_TEXT, buffer);
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_TEXT, buffer);
                 }
             } else {
                 // TODO: minor, maybe consider truncating, not a big deal
-                msg = mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_TEXT, buffer);
+                msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_TEXT, buffer);
             }
 
 
@@ -453,14 +456,14 @@ public class BluetoothConnectService {
             bundle.putString(Constants.DEVICE_ADDRESS, mmDevice.getAddress());
             bundle.putString(Constants.DEVICE_NAME, mmDevice.getName());
             msg.setData(bundle);
-            mHandler.sendMessage(msg);
+            currHandler.sendMessage(msg);
         }
 
         public boolean write(byte[] buffer) {
             try {
                 mmOutStream.write(buffer);
 
-                mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer)
+                mMainHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer)
                         .sendToTarget();
                 return true;
             } catch (IOException e) {

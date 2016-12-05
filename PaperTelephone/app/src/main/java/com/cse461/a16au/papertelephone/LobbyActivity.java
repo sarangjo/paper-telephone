@@ -3,6 +3,8 @@ package com.cse461.a16au.papertelephone;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -12,6 +14,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -45,6 +48,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     private static int startDevice = -1;
     private static Set<String> unplacedDevices = new HashSet<>();
     private static int lastPair = 0;
+    private ImageView receivedImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +60,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         // Setting up singletons
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mConnectService = BluetoothConnectService.getInstance();
-        mConnectService.registerHandler(mHandler);
+        mConnectService.registerHandlers(mHandler, mGameHandler);
 
         Button devicesButton = (Button) findViewById(R.id.button_show_devices);
         if (devicesButton != null) {
@@ -157,36 +161,29 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     Toast.makeText(LobbyActivity.this, "Sent data", Toast.LENGTH_SHORT).show();
                     break;
                 case Constants.MESSAGE_READ:
-                    switch (msg.arg2) {
-                        case Constants.READ_TEXT:
-                            Toast.makeText(LobbyActivity.this, "Received ping", Toast.LENGTH_SHORT).show();
-                            break;
-                        case Constants.READ_START:
-                            if (msg.arg1 == 5) {
-                                String startDeviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
-                                startDevice = connectedDevicesAdapter.getPosition(startDeviceAddress);
-                                for (int i = 0; i < connectedDevicesAdapter.getCount(); i++) {
-                                    String currDevice = connectedDevicesAdapter.getItem(i);
-                                    if (!currDevice.equals(startDeviceAddress)) {
-                                        unplacedDevices.add(currDevice);
-                                    }
-                                }
-                            } else {
-                                ByteBuffer buf = ByteBuffer.wrap(Arrays.copyOfRange((byte[]) msg.obj, 0, 26));
-                                buf.get(new byte[5], 0, 5); // Throw away header
-                                lastPair = buf.getInt();
-                                byte[] pairedDeviceAddress = new byte[17];
-                                buf.get(pairedDeviceAddress);
-
-                                // If removing from the set returns false that means we are the
-                                // newly paired device so we need to choose our successor
-                                if (!unplacedDevices.remove(new String(pairedDeviceAddress))) {
-                                    chooseSuccessor();
-                                }
+                    // Received START message
+                    if (msg.arg1 == 5) {
+                        String startDeviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
+                        startDevice = connectedDevicesAdapter.getPosition(startDeviceAddress);
+                        for (int i = 0; i < connectedDevicesAdapter.getCount(); i++) {
+                            String currDevice = connectedDevicesAdapter.getItem(i);
+                            if (!currDevice.equals(startDeviceAddress)) {
+                                unplacedDevices.add(currDevice);
                             }
-                            break;
-                    }
+                        }
+                    } else {
+                        ByteBuffer buf = ByteBuffer.wrap(Arrays.copyOfRange((byte[]) msg.obj, 0, 26));
+                        buf.get(new byte[5], 0, 5); // Throw away header
+                        lastPair = buf.getInt();
+                        byte[] pairedDeviceAddress = new byte[17];
+                        buf.get(pairedDeviceAddress);
 
+                        // If removing from the set returns false that means we are the
+                        // newly paired device so we need to choose our successor
+                        if (!unplacedDevices.remove(new String(pairedDeviceAddress))) {
+                            chooseSuccessor();
+                        }
+                    }
                     break;
                 case Constants.MESSAGE_TOAST:
                     Toast.makeText(LobbyActivity.this, "Toast: " + msg.getData().getString(Constants.TOAST), Toast.LENGTH_LONG).show();
@@ -194,6 +191,32 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             }
         }
     };
+
+    private final Handler mGameHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.arg2){
+                case Constants.READ_TEXT:
+                    Toast.makeText(LobbyActivity.this,"Received ping",Toast.LENGTH_SHORT).show();
+                    break;
+                case Constants.READ_IMAGE:
+                    Toast.makeText(LobbyActivity.this, "Image incoming...", Toast.LENGTH_SHORT).show();
+                    processImage((byte[]) msg.obj);
+                    break;
+            }
+        }
+    };
+
+    /**
+     * Process an array of bytes into a bitmap and display it in the view
+     *
+     * @param data array of bytes containing image information
+     */
+    private void processImage(byte[] data) {
+        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0,
+                data.length);
+        receivedImageView.setImageBitmap(bitmap);
+    }
 
     /**
      * Establishes an ordering for the connected devices when the user hits the start button
