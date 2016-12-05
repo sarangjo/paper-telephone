@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * This class does the work of setting up
+ * This singleton class does the work of setting up
  * bluetooth connections between phones after
  * initializing and making sure that phones
  * have bluetooth available and that it is turned on
@@ -30,12 +30,12 @@ public class BluetoothConnectService {
     private static final String TAG = "BluetoothConnectService";
 
     private final BluetoothAdapter mAdapter;
-    private final Handler mHandler;
+    private Handler mHandler;
     private int mState;
 
     // Threads
     private BluetoothThread mAcceptThread;
-    private Map<String, BluetoothThread> mConnectThreads;
+    private final Map<String, BluetoothThread> mConnectThreads;
     private final Map<String, BluetoothThread> mConnectedThreads;
 
     // States
@@ -44,11 +44,20 @@ public class BluetoothConnectService {
 //    public static final int STATE_CONNECTING = 2;
 //    public static final int STATE_CONNECTED = 3;
 
-    public BluetoothConnectService(Handler handler) {
+    private static BluetoothConnectService ourInstance = new BluetoothConnectService();
+
+    private BluetoothConnectService() {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
-        mHandler = handler;
         mConnectThreads = new ConcurrentHashMap<>();
         mConnectedThreads = new ConcurrentHashMap<>();
+    }
+
+    public static BluetoothConnectService getInstance() {
+        return ourInstance;
+    }
+
+    public void registerHandler(Handler handler) {
+        mHandler = handler;
     }
 
     // SERVER FUNCTIONS: start() and stop()
@@ -313,7 +322,7 @@ public class BluetoothConnectService {
                 } catch (IOException e2) {
                     Log.e(TAG, "Unable to close socket during connection failure", e2);
                 }
-                Log.e(TAG, "Unable to connect to device");
+                Log.e(TAG, "Unable to connect to device", e);
                 return;
             }
 
@@ -343,6 +352,7 @@ public class BluetoothConnectService {
      */
     private class ConnectedThread extends BluetoothThread {
         private final BluetoothDevice mmDevice;
+        private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
 
@@ -351,6 +361,7 @@ public class BluetoothConnectService {
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
             mmDevice = device;
+            mmSocket = socket;
 
             try {
                 tmpIn = socket.getInputStream();
@@ -427,7 +438,7 @@ public class BluetoothConnectService {
 
                     msg = mHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, img.array());
                 } else if (Arrays.equals(header, Constants.HEADER_START)) {
-                    msg = mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.MESSAGE_RECV_START, buffer);
+                    msg = mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, buffer);
                 } else {
                     // TODO: minor, maybe consider truncating, not a big deal
                     msg = mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_TEXT, buffer);
@@ -460,6 +471,14 @@ public class BluetoothConnectService {
 
         void cancel() {
             // TODO: implement
+            try {
+                mmInStream.close();
+                mmOutStream.close();
+                mmSocket.close();
+            } catch (IOException e) {
+                Log.e(TAG, "Unable to cancel connected thread", e);
+            }
+
         }
 
         private void log(String str) {
