@@ -134,7 +134,7 @@ public class BluetoothManagerFragment extends Fragment {
                 buf.putInt(img.length);
                 buf.put(img);
                 // Write it through the service
-                connectService.write(buf.array(), ""/*connectedDevicesAdapter.getItem(nextDevice)*/);
+                connectService.write(buf.array(), ""/*TODO: replace with connectedDevices.get(nextDevice)*/);
                 return;
             }
         }
