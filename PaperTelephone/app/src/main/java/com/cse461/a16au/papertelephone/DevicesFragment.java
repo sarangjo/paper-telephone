@@ -161,10 +161,7 @@ public class DevicesFragment extends Fragment {
             mBluetoothAdapter.cancelDiscovery();
         }
 
-        int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
-        ActivityCompat.requestPermissions(getActivity(),
-                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+        ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
 
         mScanProgress.setIndeterminate(true);
         mScanProgress.setVisibility(View.VISIBLE);
@@ -187,8 +184,7 @@ public class DevicesFragment extends Fragment {
             // TODO Gross, get the MAC address it from the device not from the string
             String info = ((TextView) v).getText().toString();
 
-            // TODO: callback
-            mDeviceChosenListener.deviceChosen(info.substring(info.length() - 17));
+            mDeviceChosenListener.deviceChosen(info.substring(info.length() - Constants.ADDRESS_LENGTH));
         }
     };
 
@@ -208,10 +204,6 @@ public class DevicesFragment extends Fragment {
                     mNewDevicesAdapter.add(device.getName() + "\n" + device.getAddress());
                 }
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-//                if (mNewDevicesAdapter.getCount() == 0) {
-//                    String noDevices = getResources().getText(R.string.none_found).toString();
-//                    mNewDevicesAdapter.add(noDevices);
-//                }
                 mScanProgress.setVisibility(View.GONE);
             }
         }
