@@ -2,32 +2,55 @@ package com.cse461.a16au.papertelephone;
 
 /**
  * Created by siddt on 11/29/2016.
+ * TODO: documentation
  */
-import android.content.Context;
+
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.support.v4.app.FragmentActivity;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.view.MotionEvent;
-import android.view.View;
-import android.widget.LinearLayout;
-
-
-import java.lang.Override;
-
+import android.os.Handler;
+import android.os.Message;
+import android.support.v4.app.FragmentActivity;
+import android.widget.ImageView;
+import android.widget.Toast;
 
 public class GameActivity extends FragmentActivity {
-    private Paint mPaint;
+    private BluetoothConnectService mConnectService;
+    private ImageView mReceivedImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+        mConnectService = BluetoothConnectService.getInstance();
+        mConnectService.registerMainHandler(mGameHandler);
 
+        mReceivedImageView = (ImageView) findViewById(R.id.image_received_image);
     }
 
+    private final Handler mGameHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case Constants.MESSAGE_READ:
+                    switch (msg.arg2) {
+                        case Constants.READ_UNKNOWN:
+                            Toast.makeText(GameActivity.this, "Received unknown format", Toast.LENGTH_SHORT).show();
+                            break;
+                        case Constants.READ_IMAGE:
+                            Toast.makeText(GameActivity.this, "Image incoming...", Toast.LENGTH_SHORT).show();
+                            processImage((byte[]) msg.obj);
+                            break;
+                    }
+                    break;
+            }
+        }
+    };
 
+    private void processImage(byte[] data) {
+        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0,
+                data.length);
+        mReceivedImageView.setImageBitmap(bitmap);
+    }
 }

@@ -30,6 +30,7 @@ public class BluetoothConnectService {
     private static final String TAG = "BluetoothConnectService";
 
     private final BluetoothAdapter mAdapter;
+
     private Handler mMainHandler;
     private Handler mGameHandler;
     private int mState;
@@ -56,9 +57,12 @@ public class BluetoothConnectService {
         return ourInstance;
     }
 
-    public void registerHandlers(Handler mainHandler, Handler gameHandler) {
-        mMainHandler = mainHandler;
-        mGameHandler = gameHandler;
+    public void registerGameHandler(Handler handler) {
+        mGameHandler = handler;
+    }
+
+    public void registerMainHandler(Handler handler) {
+        mMainHandler = handler;
     }
 
     // SERVER FUNCTIONS: start() and stop()
@@ -200,10 +204,9 @@ public class BluetoothConnectService {
     }
 
     /**
-     * Write to ConnectedThread in an unsynchronized manner
+     * Write to ConnectedThread synchronously.
      *
-     * @param out
-     * @return
+     * @return success
      */
     public boolean write(byte[] out, String address) {
         ConnectedThread thread;
@@ -211,10 +214,7 @@ public class BluetoothConnectService {
 //            if (mState != STATE_CONNECTED) return;
         thread = (ConnectedThread) mConnectedThreads.get(address);
 
-        if (thread == null) {
-            return false;
-        }
-        return thread.write(out);
+        return thread != null && thread.write(out);
     }
 
     // THREAD IMPLEMENTATIONS
@@ -406,9 +406,9 @@ public class BluetoothConnectService {
             Handler currHandler = mGameHandler;
 
             // Extracts header, if any
-            if (bytes > 5) {
-                byte[] header = new byte[Constants.HEADER_IMAGE.length];
-                input.get(header, 0, 5);
+            if (bytes > Constants.HEADER_LENGTH) {
+                byte[] header = new byte[Constants.HEADER_LENGTH];
+                input.get(header);
 
                 if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
                     // Hold onto the full image size for later
@@ -443,13 +443,14 @@ public class BluetoothConnectService {
                 } else if (Arrays.equals(header, Constants.HEADER_START)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, buffer);
                     currHandler = mMainHandler;
+                } else if (Arrays.equals(header, Constants.HEADER_PING)) {
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, buffer);
                 } else {
-                    // TODO: minor, maybe consider truncating, not a big deal
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_TEXT, buffer);
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, buffer);
                 }
             } else {
                 // TODO: minor, maybe consider truncating, not a big deal
-                msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_TEXT, buffer);
+                msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, buffer);
             }
 
 

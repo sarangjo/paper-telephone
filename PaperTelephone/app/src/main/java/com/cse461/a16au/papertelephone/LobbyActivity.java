@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -30,7 +31,9 @@ import java.util.Set;
 public class LobbyActivity extends AppCompatActivity implements DevicesFragment.DeviceChosenListener {
     private static final String TAG = "LobbyActivity";
 
-    // Names of connected devices
+    /**
+     * Names of connected devices
+     */
     private ArrayAdapter<String> connectedDevicesAdapter;
 
     /**
@@ -60,7 +63,11 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         // Setting up singletons
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mConnectService = BluetoothConnectService.getInstance();
+<<<<<<< HEAD
         mConnectService.registerHandlers(mHandler, mGameHandler);
+=======
+        mConnectService.registerMainHandler(mMainHandler);
+>>>>>>> Pre-start game logic
 
         Button devicesButton = (Button) findViewById(R.id.button_show_devices);
         if (devicesButton != null) {
@@ -113,7 +120,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     /**
      * Set up paired, unpaired, and connected devices.
      */
-
     private void setupConnectedDevicesList() {
         // Connected devices
         connectedDevicesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
@@ -123,7 +129,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (!connectedDevicesAdapter.isEmpty()) {
-                    mConnectService.write(Constants.PING, connectedDevicesAdapter.getItem(position));
+                    mConnectService.write(Constants.HEADER_PING, connectedDevicesAdapter.getItem(position));
                 }
             }
         });
@@ -140,15 +146,20 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         mConnectService.connect(device);
     }
 
-    private final Handler mHandler = new Handler() {
+    private final Handler mMainHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case Constants.MESSAGE_CONNECTED:
                     String deviceName = msg.getData().getString(Constants.DEVICE_NAME);
                     String deviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
+
+                    // TODO: send a message describing which devices we are already connected to
+                    sendConnectedDevices(deviceAddress);
+
                     connectedDevicesAdapter.add(deviceAddress);
                     Toast.makeText(LobbyActivity.this, "Connected to " + deviceName, Toast.LENGTH_LONG).show();
+
                     break;
                 case Constants.MESSAGE_DISCONNECTED:
                     deviceName = msg.getData().getString(Constants.DEVICE_NAME);
@@ -161,6 +172,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     Toast.makeText(LobbyActivity.this, "Sent data", Toast.LENGTH_SHORT).show();
                     break;
                 case Constants.MESSAGE_READ:
+<<<<<<< HEAD
                     // Received START message
                     if (msg.arg1 == 5) {
                         String startDeviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
@@ -183,10 +195,43 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                         if (!unplacedDevices.remove(new String(pairedDeviceAddress))) {
                             chooseSuccessor();
                         }
+=======
+                    switch (msg.arg2) {
+                        case Constants.READ_UNKNOWN:
+                            Toast.makeText(LobbyActivity.this, "Received unknown format", Toast.LENGTH_SHORT).show();
+                            break;
+                        case Constants.READ_PING:
+                            Toast.makeText(LobbyActivity.this, "Received ping", Toast.LENGTH_SHORT).show();
+                            break;
+                        case Constants.READ_START:
+                            if (msg.arg1 == 5) {
+                                String startDeviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
+                                startDevice = connectedDevicesAdapter.getPosition(startDeviceAddress);
+                                for (int i = 0; i < connectedDevicesAdapter.getCount(); i++) {
+                                    String currDevice = connectedDevicesAdapter.getItem(i);
+                                    if (!currDevice.equals(startDeviceAddress)) {
+                                        unplacedDevices.add(currDevice);
+                                    }
+                                }
+                            } else {
+                                ByteBuffer buf = ByteBuffer.wrap(Arrays.copyOfRange((byte[]) msg.obj, 0, 26));
+                                buf.get(new byte[5], 0, 5); // Throw away header
+                                lastPair = buf.getInt();
+                                byte[] pairedDeviceAddress = new byte[17];
+                                buf.get(pairedDeviceAddress);
+
+                                // If removing from the set returns false that means we are the
+                                // newly paired device so we need to choose our successor
+                                if (!unplacedDevices.remove(new String(pairedDeviceAddress))) {
+                                    chooseSuccessor();
+                                }
+                            }
+                            break;
+                        case Constants.READ_DEVICES:
+                            // TODO: establish connections with devices that are already in the game
+                            break;
+>>>>>>> Pre-start game logic
                     }
-                    break;
-                case Constants.MESSAGE_TOAST:
-                    Toast.makeText(LobbyActivity.this, "Toast: " + msg.getData().getString(Constants.TOAST), Toast.LENGTH_LONG).show();
                     break;
             }
         }
@@ -219,6 +264,22 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     }
 
     /**
+     * After establishing a connection with another device, send the already-connected devices with it.
+     *
+     * @param deviceAddress
+     */
+    private void sendConnectedDevices(String deviceAddress) {
+        ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + 4 + Constants.ADDRESS_LENGTH * connectedDevicesAdapter.getCount());
+        buf.put(Constants.HEADER_DEVICES);
+        buf.putInt(connectedDevicesAdapter.getCount());
+        for (int i = 0; i < connectedDevicesAdapter.getCount(); i++) {
+            buf.put(connectedDevicesAdapter.getItem(i).getBytes());
+        }
+
+        mConnectService.write(buf.array(), deviceAddress);
+    }
+
+    /**
      * Establishes an ordering for the connected devices when the user hits the start button
      */
     private void start() {
@@ -238,7 +299,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             try {
                 Thread.sleep(250);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG, "Failed to sleep", e);
             }
 
 
