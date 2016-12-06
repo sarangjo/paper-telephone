@@ -45,6 +45,7 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
         mConnectService.registerGameHandler(mGameHandler);
 
         mReceivedImageView = (ImageView) findViewById(R.id.image_received_image);
+        mTimerTextView = (TextView) findViewById(R.id.timer);
     }
 
     private final Handler mGameHandler = new Handler() {
