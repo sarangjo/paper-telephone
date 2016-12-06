@@ -100,7 +100,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 Log.e(TAG, "Failed to sleep", e);
             }
 
-
             if (startDevice == -1 || mBluetoothAdapter.getAddress().compareTo(connectedDevices.get(startDevice)) < 0) {
                 for (String address : connectedDevices) {
                     unplacedDevices.add(address);
@@ -245,8 +244,13 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                             String pairedDeviceAddress = new String(pairedDeviceAddressArr);
                             unplacedDevices.remove(pairedDeviceAddress);
 
+                            boolean isUs = true;
+                            for(String address: connectedDevices) {
+                                isUs = isUs && !pairedDeviceAddress.equals(address);
+                            }
+
                             if (    // If we are the start device and we are the newly paired device, start game
-                                    (startDevice == -1 && pairedDeviceAddress.equals(mBluetoothAdapter.getAddress()))
+                                    (startDevice == -1 && isUs)
                                     // If the loop has been completed and all devices have a successor, start game
                                     || pairedDeviceAddress.equals(connectedDevices.get(startDevice))) {
                                 Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
@@ -256,7 +260,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
                             // If removing from the set returns false that means we are the
                             // newly paired device so we need to choose our successor
-                            if (pairedDeviceAddress.equals(mBluetoothAdapter.getAddress())) {
+                            if (isUs) {
                                 chooseSuccessor();
                             }
                             break;
