@@ -127,14 +127,18 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
         mReceivedImageView.setImageBitmap(bitmap);
     }
 
+    private void processText(byte[] data) {
+        System.out.println("fuck this method");
+    }
+
     @Override
     public void sendDrawing(byte[] image) {
         // First send header to indicate we're sending an image
         byte[] header = Constants.HEADER_IMAGE;
 
         if (image != null) {
+            updateMode();
             ByteBuffer buf = ByteBuffer.allocate(header.length + image.length + 4);
-
             buf.put(header);
             buf.putInt(image.length);
             buf.put(image);
@@ -151,9 +155,9 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
         byte[] header = Constants.HEADER_PROMPT;
 
         if(prompt != null) {
-            ByteBuffer buf = ByteBuffer.allocate(header.length + prompt.length + 4);
+            updateMode();
+            ByteBuffer buf = ByteBuffer.allocate(header.length + prompt.length);
             buf.put(header);
-            buf.putInt(prompt.length);
             buf.put(prompt);
             mConnectService.write(buf.array(), "");
             return;
@@ -162,4 +166,6 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
         Toast.makeText(this, "Please submit a prompt.", Toast.LENGTH_SHORT).show();
 
     }
+
+
 }
