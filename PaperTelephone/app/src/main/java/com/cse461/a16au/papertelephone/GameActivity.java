@@ -10,7 +10,9 @@ import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
@@ -29,6 +31,7 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
     private ImageView mReceivedImageView;
     private boolean isDrawMode;
     private Fragment mFragment;
+    private TextView mTimerTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +72,18 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
 
 
     public void updateMode(){
+        new CountDownTimer(30000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                mTimerTextView.setText(String.format("%2ds", millisUntilFinished / 1000));
+            }
+
+            public void onFinish() {
+                // TODO: Send prompt or drawing if it has not been sent yet
+                mTimerTextView.setText("00s");
+                mTimerTextView.setTextColor(Color.RED);
+            }
+        }.start();
 
         FragmentTransaction ft = getFragmentManager().beginTransaction();
 
