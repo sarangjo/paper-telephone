@@ -83,11 +83,18 @@ public class DiscoverableFragment extends Fragment {
     }
 
     @Override
-    public void onStart() {
+     public void onStart() {
         super.onStart();
 
         IntentFilter discoverabilityChanged = new IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
         getActivity().registerReceiver(mReceiver, discoverabilityChanged);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        getActivity().unregisterReceiver(mReceiver);
     }
 
     private void requestDiscoverable(int seconds) {

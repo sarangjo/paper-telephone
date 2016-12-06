@@ -98,7 +98,7 @@ public class BluetoothConnectService {
         if (mAcceptThread != null) {
             mAcceptThread.cancel();
             mAcceptThread = null;
-        }   
+        }
 
         setState(STATE_STOPPED);
     }
