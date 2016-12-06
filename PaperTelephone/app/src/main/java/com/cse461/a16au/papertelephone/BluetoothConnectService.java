@@ -405,55 +405,52 @@ public class BluetoothConnectService {
 
             Handler currHandler = mGameHandler;
 
-            // Extracts header, if any
-            if (bytes > Constants.HEADER_LENGTH) {
-                byte[] header = new byte[Constants.HEADER_LENGTH];
-                input.get(header);
+            // Extracts header
+            byte[] header = new byte[Constants.HEADER_LENGTH];
+            input.get(header);
 
-                if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
-                    // Hold onto the full image size for later
-                    int totalImageSize = input.getInt();
-                    int imageSize = totalImageSize;
+            if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
+                // Hold onto the full image size for later
+                int totalImageSize = input.getInt();
+                int imageSize = totalImageSize;
 
-                    // Set up the overall buffer
-                    ByteBuffer img = ByteBuffer.allocate(imageSize);
+                // Set up the overall buffer
+                ByteBuffer img = ByteBuffer.allocate(imageSize);
 
-                    // Get the actual image data
-                    byte[] imagePacket = new byte[bytes - 9];
-                    input.get(imagePacket);
-                    img.put(imagePacket);
-                    imageSize -= imagePacket.length;
+                // Get the actual image data
+                byte[] imagePacket = new byte[bytes - 9];
+                input.get(imagePacket);
+                img.put(imagePacket);
+                imageSize -= imagePacket.length;
 
-                    while (imageSize > 0) {
-                        try {
-                            bytes = mmInStream.read(buffer);
-                            log("Received image packet of " + bytes + " bytes");
+                while (imageSize > 0) {
+                    try {
+                        bytes = mmInStream.read(buffer);
+                        log("Received image packet of " + bytes + " bytes");
 
-                            img.put(Arrays.copyOfRange(buffer, 0, bytes));
-                            imageSize -= bytes;
-                        } catch (IOException e) {
-                            Log.e(TAG, "Connection disconnected", e);
-                            connectionLost(mmDevice);
+                        img.put(Arrays.copyOfRange(buffer, 0, bytes));
+                        imageSize -= bytes;
+                    } catch (IOException e) {
+                        Log.e(TAG, "Connection disconnected", e);
+                        connectionLost(mmDevice);
 
-                            break;
-                        }
+                        break;
                     }
-
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, img.array());
-                } else if (Arrays.equals(header, Constants.HEADER_START)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, buffer);
-                    currHandler = mMainHandler;
-                } else if (Arrays.equals(header, Constants.HEADER_PING)) {
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, buffer);
-                } else {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, buffer);
                 }
+
+                msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, img.array());
+            } else if (Arrays.equals(header, Constants.HEADER_START)) {
+                msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, buffer);
+                currHandler = mMainHandler;
+            } else if (Arrays.equals(header, Constants.HEADER_PING)) {
+                msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, buffer);
+                currHandler = mMainHandler;
+            } else if(Arrays.equals(header, Constants.HEADER_PROMPT)) {
+                msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PROMPT, buffer);
             } else {
-                // TODO: minor, maybe consider truncating, not a big deal
-                msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, buffer);
+                msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, buffer);
             }
-
-
+            
             Bundle bundle = new Bundle();
             bundle.putString(Constants.DEVICE_ADDRESS, mmDevice.getAddress());
             bundle.putString(Constants.DEVICE_NAME, mmDevice.getName());

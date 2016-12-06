@@ -24,7 +24,7 @@ public class GameActivity extends FragmentActivity {
         setContentView(R.layout.activity_game);
 
         mConnectService = BluetoothConnectService.getInstance();
-        mConnectService.registerMainHandler(mGameHandler);
+        mConnectService.registerGameHandler(mGameHandler);
 
         mReceivedImageView = (ImageView) findViewById(R.id.image_received_image);
     }
@@ -48,6 +48,11 @@ public class GameActivity extends FragmentActivity {
         }
     };
 
+    /**
+     * Process an array of bytes into a bitmap and display it in the view
+     *
+     * @param data array of bytes containing image information
+     */
     private void processImage(byte[] data) {
         Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0,
                 data.length);

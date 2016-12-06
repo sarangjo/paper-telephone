@@ -32,10 +32,13 @@ public class Constants {
     public static final int READ_START = 0;
     public static final byte[] HEADER_IMAGE = getHeader("IMAGE");
     public static final int READ_IMAGE = 1;
+    public static final byte[] HEADER_PROMPT = getHeader("PROMPT");
+    public static final int READ_PROMPT = 2;
     public static final byte[] HEADER_PING = getHeader("PING");
-    public static final int READ_PING = 2;
+    public static final int READ_PING = 3;
     public static final byte[] HEADER_DEVICES = getHeader("DEVICES");
-    public static final int READ_DEVICES = 3;
+    public static final int READ_DEVICES = 4;
+
 
 
     public static final int ADDRESS_LENGTH = 17;
