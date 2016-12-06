@@ -18,6 +18,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Iterator;
 
 import static com.cse461.a16au.papertelephone.GameData.connectedDevices;
@@ -238,12 +239,24 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                             buf.get(new byte[Constants.HEADER_LENGTH]);
 
                             lastPair = buf.getInt();
-                            byte[] pairedDeviceAddress = new byte[17];
-                            buf.get(pairedDeviceAddress);
+                            byte[] pairedDeviceAddressArr = new byte[17];
+                            buf.get(pairedDeviceAddressArr);
+
+                            String pairedDeviceAddress = new String(pairedDeviceAddressArr);
+                            unplacedDevices.remove(pairedDeviceAddress);
+
+                            if (    // If we are the start device and we are the newly paired device, start game
+                                    (startDevice == -1 && pairedDeviceAddress.equals(mBluetoothAdapter.getAddress()))
+                                    // If the loop has been completed and all devices have a successor, start game
+                                    || pairedDeviceAddress.equals(connectedDevices.get(startDevice))) {
+                                Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
+                                startActivity(intent);
+                                return;
+                            }
 
                             // If removing from the set returns false that means we are the
                             // newly paired device so we need to choose our successor
-                            if (!unplacedDevices.remove(new String(pairedDeviceAddress))) {
+                            if (pairedDeviceAddress.equals(mBluetoothAdapter.getAddress())) {
                                 chooseSuccessor();
                             }
                             break;
@@ -324,9 +337,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         for (String address : connectedDevices) {
             mConnectService.write(msg.array(), address);
         }
-
-        Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
-        startActivity(intent);
     }
 
     @Override
