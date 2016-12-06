@@ -25,8 +25,6 @@ import java.util.Set;
 
 /**
  * TODO: class comment
- * Use the {@link DevicesFragment#newInstance} factory method to
- * create an instance of this fragment.
  */
 public class DevicesFragment extends Fragment {
     private static final String TAG = "DevicesFragment";
@@ -47,16 +45,6 @@ public class DevicesFragment extends Fragment {
 
     public DevicesFragment() {
         // Required empty constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment.
-     *
-     * @return A new instance of fragment DevicesFragment.
-     */
-    public static DevicesFragment newInstance() {
-        return new DevicesFragment();
     }
 
     @Override
@@ -91,7 +79,9 @@ public class DevicesFragment extends Fragment {
         }
 
         // Expandable list view
-        ((ExpandableListView) view.findViewById(R.id.list_potential_devices)).setAdapter(mDevicesAdapter);
+        ExpandableListView list = (ExpandableListView) view.findViewById(R.id.list_potential_devices);
+        list.setAdapter(mDevicesAdapter);
+        list.setOnChildClickListener(mDeviceClickListener);
 
         Button scanButton = (Button) view.findViewById(R.id.button_scan_devices);
         scanButton.setOnClickListener(new View.OnClickListener() {
@@ -157,22 +147,6 @@ public class DevicesFragment extends Fragment {
     }
 
     /**
-     * The on-click listener for all devices in the ListViews
-     */
-    private AdapterView.OnItemClickListener mDeviceClickListener
-            = new AdapterView.OnItemClickListener() {
-        public void onItemClick(AdapterView<?> av, View v, int arg2, long arg3) {
-            // Cancel discovery because it's costly and we're about to connect
-            mBluetoothAdapter.cancelDiscovery();
-
-            // TODO Gross, get the MAC address it from the device not from the string
-            String info = ((TextView) v).getText().toString();
-
-            mDeviceChosenListener.deviceChosen(info.substring(info.length() - Constants.ADDRESS_LENGTH));
-        }
-    };
-
-    /**
      * The BroadcastReceiver that listens for discovered devices and changes the title when
      * discovery is finished
      */
@@ -190,6 +164,21 @@ public class DevicesFragment extends Fragment {
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 mScanProgress.setVisibility(View.GONE);
             }
+        }
+    };
+
+    private ExpandableListView.OnChildClickListener mDeviceClickListener = new ExpandableListView.OnChildClickListener() {
+        @Override
+        public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+            // Cancel discovery because it's costly and we're about to connect
+            mBluetoothAdapter.cancelDiscovery();
+
+            // TODO Gross, get the MAC address from the BluetoothDevice object, not from the string
+            String info = ((TextView) v).getText().toString();
+
+            mDeviceChosenListener.deviceChosen(info.substring(info.length() - Constants.ADDRESS_LENGTH));
+
+            return true;
         }
     };
 

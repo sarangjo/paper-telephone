@@ -83,7 +83,7 @@ public class DevicesListAdapter extends BaseExpandableListAdapter {
 
     @Override
     public boolean isChildSelectable(int groupPosition, int childPosition) {
-        return false;
+        return true;
     }
 
     public void addPairedDevice(String s) {
