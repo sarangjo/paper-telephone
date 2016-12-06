@@ -403,13 +403,14 @@ public class BluetoothConnectService {
 
             Message msg;
 
-            Handler currHandler = mGameHandler;
+            Handler currHandler = mMainHandler;
 
             // Extracts header, if any
             if (bytes > Constants.HEADER_LENGTH) {
                 byte[] header = new byte[Constants.HEADER_LENGTH];
                 input.get(header);
 
+                // Game handler
                 if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
                     // Hold onto the full image size for later
                     int totalImageSize = input.getInt();
@@ -440,25 +441,30 @@ public class BluetoothConnectService {
                     }
 
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, img.array());
-                } else if (Arrays.equals(header, Constants.HEADER_START)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, buffer);
-                    currHandler = mMainHandler;
+                    currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_PING)) {
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, buffer);
+                    currHandler = mGameHandler;
+                }
+                // Main handler
+                else if (Arrays.equals(header, Constants.HEADER_START)) {
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, buffer);
+                } else if (Arrays.equals(header, Constants.HEADER_DEVICES)) {
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DEVICES, buffer);
                 } else {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, buffer);
                 }
             } else {
-                // TODO: minor, maybe consider truncating, not a big deal
-                msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, buffer);
+                msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, buffer);
             }
 
-
-            Bundle bundle = new Bundle();
-            bundle.putString(Constants.DEVICE_ADDRESS, mmDevice.getAddress());
-            bundle.putString(Constants.DEVICE_NAME, mmDevice.getName());
-            msg.setData(bundle);
-            currHandler.sendMessage(msg);
+            if (currHandler != null) {
+                Bundle bundle = new Bundle();
+                bundle.putString(Constants.DEVICE_ADDRESS, mmDevice.getAddress());
+                bundle.putString(Constants.DEVICE_NAME, mmDevice.getName());
+                msg.setData(bundle);
+                currHandler.sendMessage(msg);
+            }
         }
 
         public boolean write(byte[] buffer) {
