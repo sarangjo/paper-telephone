@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.SyncStateContract;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -316,7 +317,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             nextDeviceAddress = connectedDevices.get(startDevice);
         }
 
-        ByteBuffer msg = ByteBuffer.allocate(26);
+        ByteBuffer msg = ByteBuffer.allocate(Constants.HEADER_LENGTH + 4 + Constants.ADDRESS_LENGTH);
         msg.put(Constants.HEADER_PAIR);
         msg.putInt(lastPair + 1);
         msg.put(nextDeviceAddress.getBytes());
