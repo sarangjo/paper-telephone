@@ -4,15 +4,18 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/timer" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="What do you think this drawing is?"/>
+        android:text="What do you think this drawing is?"
+        android:id="@+id/prompt"/>
 
     <ImageView
-        android:id="@+id/image_received_image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:contentDescription="Received image" />

@@ -16,7 +16,10 @@ import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.nio.ByteBuffer;
@@ -32,6 +35,7 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
         super.onCreate(savedInstanceState);
         isDrawMode = true;
         setContentView(R.layout.activity_game);
+
 
         updateMode();
         mConnectService = BluetoothConnectService.getInstance();
@@ -73,7 +77,24 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
         }
 
         if (isDrawMode) {
-            mFragment = new PromptFragment();
+            if(mFragment == null) {
+                mFragment = new PromptFragment();
+                TextView prompt = (TextView)findViewById(R.id.prompt);
+                prompt.setText("Enter something for someone to draw");
+                setContentView(prompt);
+
+                EditText editBox = (EditText)findViewById(R.id.userGuess);
+                editBox.setText("Enter prompt here");
+                setContentView(editBox);
+
+
+                Button button = (Button)findViewById(R.id.button_send_drawing);
+                button.setText("Send prompt");
+                setContentView(button);
+
+            } else {
+                mFragment = new PromptFragment();
+            }
         } else {
             mFragment = new DrawingFragment();
         }

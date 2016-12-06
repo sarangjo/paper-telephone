@@ -80,11 +80,6 @@ public class DrawingFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        getView().setVisibility(View.GONE);
-    }
 
 
     @Override

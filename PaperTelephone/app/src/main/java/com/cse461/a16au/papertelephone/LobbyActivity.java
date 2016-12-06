@@ -75,12 +75,48 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         startGameButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (connectedDevices.size() > 0) {
-                    Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
-                    startActivity(intent);
-                }
+                start();
             }
         });
+    }
+
+    /**
+     * Establishes an ordering for the connected devices when the user hits the start button
+     */
+    private void start() {
+        if (connectedDevices.size() >= 2) {
+            byte[] startMsg = Constants.HEADER_START;
+
+            for (String currDevice : connectedDevices) {
+                mConnectService.write(startMsg, currDevice);
+            }
+
+            // Sleep for a short time in case another device pressed start at the same time
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+                Log.e(TAG, "Failed to sleep", e);
+            }
+
+
+            if (startDevice == -1 || mBluetoothAdapter.getAddress().compareTo(connectedDevices.get(startDevice)) < 0) {
+                for (String address : connectedDevices) {
+                    unplacedDevices.add(address);
+                }
+
+                chooseSuccessor();
+            }
+
+            Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
+            startActivity(intent);
+
+        } else if (connectedDevices.size() == 0) {
+            Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
+            startActivity(intent);
+        } else {
+            Toast.makeText(this, "You don't have enough players, the game requires " +
+                    "at least 3 players", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -263,38 +299,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         }
 
         mConnectService.write(buf.array(), deviceAddress);
-    }
-
-    /**
-     * Establishes an ordering for the connected devices when the user hits the start button
-     */
-    private void start() {
-        if (connectedDevices.size() < 2) {
-            Toast.makeText(this, "You don't have enough players, the game requires" +
-                    "at least 3 players", Toast.LENGTH_LONG).show();
-        } else {
-            byte[] startMsg = Constants.HEADER_START;
-
-            for (String currDevice : connectedDevices) {
-                mConnectService.write(startMsg, currDevice);
-            }
-
-            // Sleep for a short time in case another device pressed start at the same time
-            try {
-                Thread.sleep(250);
-            } catch (InterruptedException e) {
-                Log.e(TAG, "Failed to sleep", e);
-            }
-
-
-            if (startDevice == -1 || mBluetoothAdapter.getAddress().compareTo(connectedDevices.get(startDevice)) < 0) {
-                for (String address : connectedDevices) {
-                    unplacedDevices.add(address);
-                }
-
-                chooseSuccessor();
-            }
-        }
     }
 
     /**

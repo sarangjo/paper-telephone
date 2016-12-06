@@ -32,11 +32,6 @@ public class PromptFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        getView().setVisibility(View.GONE);
-    }
 
     interface PromptSendListener {
         void sendPrompt(byte[] prompt);
