@@ -42,6 +42,12 @@ public class GameActivity extends FragmentActivity {
                             Toast.makeText(GameActivity.this, "Image incoming...", Toast.LENGTH_SHORT).show();
                             processImage((byte[]) msg.obj);
                             break;
+                        case Constants.READ_PING:
+                            Toast.makeText(GameActivity.this,"Received ping",Toast.LENGTH_SHORT).show();
+                            break;
+                        case Constants.READ_PROMPT:
+                            // TODO: Add display prompt logic here
+                            break;
                     }
                     break;
             }

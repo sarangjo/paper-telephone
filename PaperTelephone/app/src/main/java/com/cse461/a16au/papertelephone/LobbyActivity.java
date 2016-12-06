@@ -190,9 +190,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                                 }
                             }
                             break;
-                        case Constants.READ_PING:
-                            Toast.makeText(LobbyActivity.this,"Received ping",Toast.LENGTH_SHORT).show();
-                            break;
                         case Constants.READ_DEVICES:
                             // TODO: establish connections with devices that are already in the game
                             break;
