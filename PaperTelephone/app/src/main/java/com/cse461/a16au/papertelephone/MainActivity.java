@@ -21,7 +21,7 @@ public class MainActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        buttonStartGame = (Button) findViewById(R.id.button_start_game);
+        buttonStartGame = (Button) findViewById(R.id.button_open_lobby);
         buttonStartGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

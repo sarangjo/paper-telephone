@@ -14,6 +14,12 @@
     tools:context="com.cse461.a16au.papertelephone.LobbyActivity"
     tools:showIn="@layout/activity_lobby">
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_start_game"
+        android:text="START GAME!!!!"/>
+
     <fragment
         android:id="@+id/fragment_discoverable"
         android:name="com.cse461.a16au.papertelephone.DiscoverableFragment"

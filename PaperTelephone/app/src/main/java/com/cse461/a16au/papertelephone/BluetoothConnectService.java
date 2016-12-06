@@ -401,8 +401,8 @@ public class BluetoothConnectService {
             // ByteBuffer to wrap our input buffer
             ByteBuffer input = ByteBuffer.wrap(Arrays.copyOfRange(buffer, 0, bytes));
 
+            // Message to be passed to the appropriate handler
             Message msg;
-
             Handler currHandler = mMainHandler;
 
             // Extracts header, if any
@@ -442,18 +442,17 @@ public class BluetoothConnectService {
 
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, img.array());
                     currHandler = mGameHandler;
-                } else if (Arrays.equals(header, Constants.HEADER_PING)) {
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, buffer);
-                    currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_PROMPT)) {
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PROMPT, buffer);
                     currHandler = mGameHandler;
                 }
-                //  Main Handler
+                // Main Handler
                 else if (Arrays.equals(header, Constants.HEADER_START)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, buffer);
                 } else if (Arrays.equals(header, Constants.HEADER_DEVICES)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DEVICES, buffer);
+                } else if (Arrays.equals(header, Constants.HEADER_PING)) {
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, buffer);
                 } else {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, buffer);
                 }

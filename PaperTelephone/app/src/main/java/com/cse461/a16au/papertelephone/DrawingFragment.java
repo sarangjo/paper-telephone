@@ -47,16 +47,16 @@ public class DrawingFragment extends Fragment {
         LinearLayout ll = (LinearLayout) view.findViewById(R.id.game_drawing);
 
         // PaintingView for current drawing turn
-        final View v = new DrawingFragment.PaintingView(getActivity());
-        v.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-        ll.addView(v);
+        final View paintingView = new DrawingFragment.PaintingView(getActivity());
+        paintingView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+        ll.addView(paintingView);
 
         Button sendDrawingButton = (Button) view.findViewById(R.id.button_send_drawing);
         sendDrawingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Build intent with the drawing data
-                Bitmap cache = v.getDrawingCache();
+                Bitmap cache = paintingView.getDrawingCache();
                 Bitmap b = cache.copy(cache.getConfig(), true);
 
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();

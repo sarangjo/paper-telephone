@@ -5,17 +5,23 @@
     android:orientation="vertical"
     tools:context="com.cse461.a16au.papertelephone.DevicesFragment">
 
-    <Button
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Scan"
-        android:id="@+id/button_scan_devices"/>
+        android:orientation="horizontal">
 
-    <ProgressBar
-        android:visibility="gone"
-        android:id="@+id/scanning_progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        <Button
+            android:id="@+id/button_scan_devices"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Scan" />
+
+        <ProgressBar
+            android:id="@+id/scanning_progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/title_paired_devices"
