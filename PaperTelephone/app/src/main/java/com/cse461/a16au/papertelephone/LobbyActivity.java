@@ -252,7 +252,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                             if (    // If we are the start device and we are the newly paired device, start game
                                     (startDevice == -1 && isUs)
                                     // If the loop has been completed and all devices have a successor, start game
-                                    || pairedDeviceAddress.equals(connectedDevices.get(startDevice))) {
+                                    || (startDevice != -1 && pairedDeviceAddress.equals(connectedDevices.get(startDevice)))) {
                                 Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
                                 startActivity(intent);
                                 return;
