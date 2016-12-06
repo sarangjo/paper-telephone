@@ -78,22 +78,15 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
 
         if (isDrawMode) {
             if(mFragment == null) {
+                Bundle args = new Bundle();
+                args.putBoolean("start", true);
                 mFragment = new PromptFragment();
-                TextView prompt = (TextView)findViewById(R.id.prompt);
-                prompt.setText("Enter something for someone to draw");
-                setContentView(prompt);
-
-                EditText editBox = (EditText)findViewById(R.id.userGuess);
-                editBox.setText("Enter prompt here");
-                setContentView(editBox);
-
-
-                Button button = (Button)findViewById(R.id.button_send_drawing);
-                button.setText("Send prompt");
-                setContentView(button);
-
+                mFragment.setArguments(args);
             } else {
+                Bundle args = new Bundle();
+                args.putBoolean("start", false);
                 mFragment = new PromptFragment();
+                mFragment.setArguments(args);
             }
         } else {
             mFragment = new DrawingFragment();
