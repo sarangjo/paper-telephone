@@ -107,10 +107,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
                 chooseSuccessor();
             }
-
-            Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
-            startActivity(intent);
-
         } else if (connectedDevices.size() == 0) {
             Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
             startActivity(intent);
@@ -328,6 +324,9 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         for (String address : connectedDevices) {
             mConnectService.write(msg.array(), address);
         }
+
+        Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
+        startActivity(intent);
     }
 
     @Override
