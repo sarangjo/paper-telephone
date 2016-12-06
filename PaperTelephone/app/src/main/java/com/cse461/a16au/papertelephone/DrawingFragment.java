@@ -22,9 +22,10 @@ import java.io.ByteArrayOutputStream;
  * TODO documentation
  */
 
-public class DrawingFragment extends Fragment {
+public class DrawingFragment extends Fragment implements GameElement {
     private Paint mPaint;
     private DrawingSendListener mListener;
+    private PaintingView paintingView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -55,16 +56,7 @@ public class DrawingFragment extends Fragment {
         sendDrawingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Build intent with the drawing data
-                Bitmap cache = paintingView.getDrawingCache();
-                Bitmap b = cache.copy(cache.getConfig(), true);
-
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                b.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                byte[] array = stream.toByteArray();
-
-                mListener.sendDrawing(array);
-                getView().setVisibility(View.GONE);
+                endTurn();
             }
         });
         return view;
@@ -78,6 +70,19 @@ public class DrawingFragment extends Fragment {
         } else {
             throw new RuntimeException("Must implement DrawingSendListener");
         }
+    }
+
+    @Override
+    public void endTurn() {
+        // Build intent with the drawing data
+        Bitmap cache = paintingView.getDrawingCache();
+        Bitmap b = cache.copy(cache.getConfig(), true);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        b.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        byte[] array = stream.toByteArray();
+
+        mListener.sendDrawing(array);
     }
 
 

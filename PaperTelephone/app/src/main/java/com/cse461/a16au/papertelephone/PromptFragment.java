@@ -15,7 +15,7 @@ import android.widget.TextView;
  * Created by sgorti3 on 11/30/2016.
  * TODO: implement and document
  */
-public class PromptFragment extends Fragment {
+public class PromptFragment extends Fragment implements GameElement {
     private PromptSendListener mListener;
 
 
@@ -39,7 +39,7 @@ public class PromptFragment extends Fragment {
             Button button = (Button) v.findViewById(R.id.button_send_drawing);
             button.setText("Send prompt");
         }
-        
+
 
         return v;
     }
@@ -52,6 +52,11 @@ public class PromptFragment extends Fragment {
         } else {
             throw new RuntimeException("Must implement DrawingSendListener");
         }
+    }
+
+    @Override
+    public void endTurn() {
+
     }
 
 
