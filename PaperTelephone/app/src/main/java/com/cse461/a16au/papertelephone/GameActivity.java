@@ -5,6 +5,8 @@ package com.cse461.a16au.papertelephone;
  * TODO: documentation
  */
 
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,6 +14,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -20,12 +24,16 @@ import java.nio.ByteBuffer;
 public class GameActivity extends FragmentActivity implements DrawingFragment.DrawingSendListener, PromptFragment.PromptSendListener {
     private BluetoothConnectService mConnectService;
     private ImageView mReceivedImageView;
+    private boolean isDrawMode;
+    private Fragment mFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        isDrawMode = true;
         setContentView(R.layout.activity_game);
 
+        updateMode();
         mConnectService = BluetoothConnectService.getInstance();
         mConnectService.registerGameHandler(mGameHandler);
 
@@ -54,6 +62,29 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
 
         }
     };
+
+
+    public void updateMode(){
+
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+
+        if(mFragment != null) {
+            ft.remove(mFragment);
+        }
+
+        if (isDrawMode) {
+            mFragment = new PromptFragment();
+        } else {
+            mFragment = new DrawingFragment();
+        }
+
+        ft.add(R.id.game_fragment_container, mFragment);
+        isDrawMode = !isDrawMode;
+
+        ft.commit();
+    }
+
+
 
     /**
      * Process an array of bytes into a bitmap and display it in the view

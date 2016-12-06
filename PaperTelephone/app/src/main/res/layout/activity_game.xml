@@ -3,19 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:weightSum="1">
+    android:weightSum="1"
+    android:id="@+id/game_fragment_container">
 
-    <fragment
-        android:name="com.cse461.a16au.papertelephone.DrawingFragment"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/drawing_fragment" />
-
-    <fragment
-        android:name="com.cse461.a16au.papertelephone.PromptFragment"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/prompt_fragment" />
 
 
 
