@@ -5,6 +5,7 @@ package com.cse461.a16au.papertelephone;
  * TODO: documentation
  */
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -14,7 +15,9 @@ import android.support.v4.app.FragmentActivity;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-public class GameActivity extends FragmentActivity {
+import java.nio.ByteBuffer;
+
+public class GameActivity extends FragmentActivity implements DrawingFragment.DrawingSendListener {
     private BluetoothConnectService mConnectService;
     private ImageView mReceivedImageView;
 
@@ -35,22 +38,20 @@ public class GameActivity extends FragmentActivity {
             switch (msg.what) {
                 case Constants.MESSAGE_READ:
                     switch (msg.arg2) {
-                        case Constants.READ_UNKNOWN:
-                            Toast.makeText(GameActivity.this, "Received unknown format", Toast.LENGTH_SHORT).show();
-                            break;
                         case Constants.READ_IMAGE:
                             Toast.makeText(GameActivity.this, "Image incoming...", Toast.LENGTH_SHORT).show();
                             processImage((byte[]) msg.obj);
                             break;
                         case Constants.READ_PING:
-                            Toast.makeText(GameActivity.this,"Received ping",Toast.LENGTH_SHORT).show();
+                            Toast.makeText(GameActivity.this, "Received ping", Toast.LENGTH_SHORT).show();
                             break;
                         case Constants.READ_PROMPT:
-                            // TODO: Add display prompt logic here
+                            Toast.makeText(GameActivity.this, "Text incoming...", Toast.LENGTH_SHORT).show();
                             break;
                     }
                     break;
             }
+
         }
     };
 
@@ -63,5 +64,24 @@ public class GameActivity extends FragmentActivity {
         Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0,
                 data.length);
         mReceivedImageView.setImageBitmap(bitmap);
+    }
+
+    @Override
+    public void sendDrawing(byte[] image) {
+        // First send header to indicate we're sending an image
+        byte[] header = Constants.HEADER_IMAGE;
+
+        if (image != null) {
+            ByteBuffer buf = ByteBuffer.allocate(header.length + image.length + 4);
+
+            buf.put(header);
+            buf.putInt(image.length);
+            buf.put(image);
+            // Write it through the service
+            mConnectService.write(buf.array(), ""/*TODO: replace with connectedDevices.get(nextDevice)*/);
+            return;
+        }
+
+        Toast.makeText(this, "Please submit a drawing.", Toast.LENGTH_SHORT).show();
     }
 }

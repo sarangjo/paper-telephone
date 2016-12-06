@@ -12,7 +12,6 @@ public class Constants {
 
     public static final int REQUEST_CONNECT_DEVICE = 1;
     public static final int REQUEST_ENABLE_BT = 2;
-    public static final int REQUEST_GET_DRAWING = 3;
 
     // Message sent from Service to Handlers
     public static final int MESSAGE_CONNECTED = 0;
@@ -39,12 +38,7 @@ public class Constants {
     public static final byte[] HEADER_DEVICES = getHeader("DEVICES");
     public static final int READ_DEVICES = 4;
 
-
-
     public static final int ADDRESS_LENGTH = 17;
-
-    public static final String RESULT_GET_DRAWING = "result_get_drawing";
-    public static final String EXTRA_IMAGE_DATA = "extra_image_data";
 
     private static byte[] getHeader(String s) {
         return Arrays.copyOf(s.getBytes(), HEADER_LENGTH);

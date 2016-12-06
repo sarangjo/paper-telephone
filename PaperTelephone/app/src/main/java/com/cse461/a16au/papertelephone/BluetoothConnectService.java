@@ -405,9 +405,8 @@ public class BluetoothConnectService {
 
             Handler currHandler = mMainHandler;
 
-
-            if (bytes > Constants.HEADER_LENGTH) {
-                // Extracts header
+            // Extracts header, if any
+            if (bytes >= Constants.HEADER_LENGTH) {
                 byte[] header = new byte[Constants.HEADER_LENGTH];
                 input.get(header);
 

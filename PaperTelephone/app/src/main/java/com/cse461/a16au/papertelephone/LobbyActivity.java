@@ -61,15 +61,16 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         mConnectService = BluetoothConnectService.getInstance();
         mConnectService.registerMainHandler(mMainHandler);
 
-        Button devicesButton = (Button) findViewById(R.id.button_show_devices);
-        if (devicesButton != null) {
-            devicesButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    startActivityForResult(new Intent(LobbyActivity.this, ListDeviceActivity.class), Constants.REQUEST_CONNECT_DEVICE);
-                }
-            });
-        }
+        // Now that device search is integrated in a fragment, we don't need this
+//        Button devicesButton = (Button) findViewById(R.id.button_show_devices);
+//        if (devicesButton != null) {
+//            devicesButton.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    startActivityForResult(new Intent(LobbyActivity.this, ListDeviceActivity.class), Constants.REQUEST_CONNECT_DEVICE);
+//                }
+//            });
+//        }
 
         setupConnectedDevicesList();
     }
@@ -164,7 +165,13 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     Toast.makeText(LobbyActivity.this, "Sent data", Toast.LENGTH_SHORT).show();
                     break;
                 case Constants.MESSAGE_READ:
-                    switch(msg.arg2) {
+                    switch (msg.arg2) {
+                        case Constants.READ_UNKNOWN:
+                            Toast.makeText(LobbyActivity.this, "Received unknown format", Toast.LENGTH_SHORT).show();
+                            break;
+                        case Constants.READ_PING:
+                            Toast.makeText(LobbyActivity.this, "Received ping", Toast.LENGTH_SHORT).show();
+                            break;
                         case Constants.READ_START:
                             // Received START message
                             if (msg.arg1 == 5) {

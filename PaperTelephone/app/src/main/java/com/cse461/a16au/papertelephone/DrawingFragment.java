@@ -12,21 +12,33 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
+
+import java.io.ByteArrayOutputStream;
 
 /**
  * Created by siddt on 11/29/2016.
+ * TODO documentation
  */
 
 public class DrawingFragment extends Fragment {
     private Paint mPaint;
-
+    private DrawingSendListener mListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-    }
 
+        mPaint = new Paint();
+        mPaint.setAntiAlias(true);
+        mPaint.setDither(true);
+        mPaint.setColor(0xFFFF0000);
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeJoin(Paint.Join.ROUND);
+        mPaint.setStrokeCap(Paint.Cap.ROUND);
+        mPaint.setStrokeWidth(12);
+    }
 
     @Nullable
     @Override
@@ -39,7 +51,39 @@ public class DrawingFragment extends Fragment {
         v.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
         ll.addView(v);
 
+        Button sendDrawingButton = (Button) view.findViewById(R.id.button_send_drawing);
+        sendDrawingButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Build intent with the drawing data
+                Bitmap cache = v.getDrawingCache();
+                Bitmap b = cache.copy(cache.getConfig(), true);
+
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                b.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                byte[] array = stream.toByteArray();
+
+                mListener.sendDrawing(array);
+            }
+        });
+
         return view;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof DrawingSendListener) {
+            mListener = (DrawingSendListener) context;
+        } else {
+            throw new RuntimeException("Must implement DrawingSendListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 
     public class PaintingView extends View {
@@ -120,5 +164,9 @@ public class DrawingFragment extends Fragment {
             }
             return true;
         }
+    }
+
+    interface DrawingSendListener {
+        void sendDrawing(byte[] image);
     }
 }
