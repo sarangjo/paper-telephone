@@ -98,7 +98,7 @@ public class BluetoothConnectService {
         if (mAcceptThread != null) {
             mAcceptThread.cancel();
             mAcceptThread = null;
-        }
+        }   
 
         setState(STATE_STOPPED);
     }
@@ -133,44 +133,16 @@ public class BluetoothConnectService {
     public void connect(BluetoothDevice device) {
         Log.d(TAG, "Connecting to: " + device);
 
-//        if (mState == STATE_CONNECTING) {
-//            if (mConnectThread != null) {
-//                mConnectThread.cancel();
-//                mConnectThread = null;
-//            }
-//        }
-//        if (mConnectedThread != null) {
-//            mConnectedThread.cancel();
-//            mConnectedThread = null;
-//        }
-
         // Start outgoing thread
         BluetoothThread connectThread = new ConnectThread(device);
         mConnectThreads.put(device.getAddress(), connectThread);
         connectThread.start();
-
-//        setState(STATE_CONNECTING);
     }
 
     // UNIVERSAL FUNCTIONS: connected(), connectionLost(), write()
 
     private synchronized void connected(BluetoothSocket socket, BluetoothDevice remoteDevice) {
         Log.d(TAG, "Connected to: " + remoteDevice.getName() + " at " + remoteDevice.getAddress());
-
-//        if (mConnectThread != null) {
-//            mConnectThread.cancel();
-//            mConnectThread = null;
-//        }
-//        if (mConnectedThread != null) {
-//            mConnectedThread.cancel();
-//            mConnectedThread = null;
-//        }
-//        if (mAcceptThread != null) {
-//            mAcceptThread.cancel();
-//            mAcceptThread = null;
-//        }
-
-//        setState(STATE_CONNECTED);
 
         // Start the new ConnectedThread
         BluetoothThread connectedThread = new ConnectedThread(socket, remoteDevice);
@@ -199,8 +171,6 @@ public class BluetoothConnectService {
         bundle.putString(Constants.DEVICE_NAME, device.getName());
         msg.setData(bundle);
         mMainHandler.sendMessage(msg);
-
-        this.start();
     }
 
     /**
