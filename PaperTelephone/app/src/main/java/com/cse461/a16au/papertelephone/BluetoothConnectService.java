@@ -449,6 +449,8 @@ public class BluetoothConnectService {
                 // Main Handler
                 else if (Arrays.equals(header, Constants.HEADER_START)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, buffer);
+                } else if (Arrays.equals(header, Constants.HEADER_PAIR)) {
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PAIR, buffer);
                 } else if (Arrays.equals(header, Constants.HEADER_DEVICES)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DEVICES, buffer);
                 } else if (Arrays.equals(header, Constants.HEADER_PING)) {

@@ -17,10 +17,13 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
+
+import static com.cse461.a16au.papertelephone.GameData.connectedDevices;
+import static com.cse461.a16au.papertelephone.GameData.lastPair;
+import static com.cse461.a16au.papertelephone.GameData.nextDevice;
+import static com.cse461.a16au.papertelephone.GameData.startDevice;
+import static com.cse461.a16au.papertelephone.GameData.unplacedDevices;
 
 /**
  * TODO: class documentation
@@ -29,7 +32,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     private static final String TAG = "LobbyActivity";
 
     /**
-     * Names of connected devices
+     * Adapter for connected devices view
      */
     private ArrayAdapter<String> mConnectedDevicesAdapter;
 
@@ -42,12 +45,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
      * Our bluetooth service
      */
     private BluetoothConnectService mConnectService = null;
-
-    // TODO: static?
-    private static int nextDevice = 0;
-    private static int startDevice = -1;
-    private static Set<String> unplacedDevices = new HashSet<>();
-    private static int lastPair = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +75,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         startGameButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mConnectedDevicesAdapter.getCount() > 0) {
+                if (connectedDevices.size() > 0) {
                     Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
                     startActivity(intent);
                 }
@@ -126,14 +123,14 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
      */
     private void setupConnectedDevicesList() {
         // Connected devices
-        mConnectedDevicesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
+        mConnectedDevicesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, connectedDevices);
         ListView connectedListView = (ListView) findViewById(R.id.connected_devices);
         connectedListView.setAdapter(mConnectedDevicesAdapter);
         connectedListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (!mConnectedDevicesAdapter.isEmpty()) {
-                    mConnectService.write(Constants.HEADER_PING, mConnectedDevicesAdapter.getItem(position));
+                if (!connectedDevices.isEmpty()) {
+                    mConnectService.write(Constants.HEADER_PING, connectedDevices.get(position));
                 }
             }
         });
@@ -161,14 +158,18 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     // TODO: send a message describing which devices we are already connected to
                     sendConnectedDevices(deviceAddress);
 
-                    mConnectedDevicesAdapter.add(deviceAddress);
+                    connectedDevices.add(deviceAddress);
+                    mConnectedDevicesAdapter.notifyDataSetChanged();
+
                     Toast.makeText(LobbyActivity.this, "Connected to " + deviceName, Toast.LENGTH_LONG).show();
 
                     break;
                 case Constants.MESSAGE_DISCONNECTED:
                     deviceName = msg.getData().getString(Constants.DEVICE_NAME);
                     deviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
-                    mConnectedDevicesAdapter.remove(deviceAddress);
+                    connectedDevices.remove(deviceAddress);
+                    mConnectedDevicesAdapter.notifyDataSetChanged();
+
                     Toast.makeText(LobbyActivity.this, "Disconnected from " + deviceName, Toast.LENGTH_LONG).show();
                     break;
                 case Constants.MESSAGE_WRITE:
@@ -176,6 +177,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     Toast.makeText(LobbyActivity.this, "Sent data", Toast.LENGTH_SHORT).show();
                     break;
                 case Constants.MESSAGE_READ:
+                    ByteBuffer buf;
                     switch (msg.arg2) {
                         case Constants.READ_UNKNOWN:
                             Toast.makeText(LobbyActivity.this, "Received unknown format", Toast.LENGTH_SHORT).show();
@@ -185,31 +187,47 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                             break;
                         case Constants.READ_START:
                             // Received START message
-                            if (msg.arg1 == 5) {
-                                String startDeviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
-                                startDevice = mConnectedDevicesAdapter.getPosition(startDeviceAddress);
-                                for (int i = 0; i < mConnectedDevicesAdapter.getCount(); i++) {
-                                    String currDevice = mConnectedDevicesAdapter.getItem(i);
-                                    if (!currDevice.equals(startDeviceAddress)) {
-                                        unplacedDevices.add(currDevice);
-                                    }
+                            String startDeviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
+                            startDevice = connectedDevices.indexOf(startDeviceAddress);
+                            for (int i = 0; i < connectedDevices.size(); i++) {
+                                String currDevice = connectedDevices.get(i);
+                                if (!currDevice.equals(startDeviceAddress)) {
+                                    unplacedDevices.add(currDevice);
                                 }
-                            } else {
-                                ByteBuffer buf = ByteBuffer.wrap(Arrays.copyOfRange((byte[]) msg.obj, 0, 26));
-                                buf.get(new byte[5], 0, 5); // Throw away header
-                                lastPair = buf.getInt();
-                                byte[] pairedDeviceAddress = new byte[17];
-                                buf.get(pairedDeviceAddress);
+                            }
+                            break;
+                        case Constants.READ_PAIR:
+                            // Format of pair tuple: header, pair #, pair address
+                            // msg.arg1 = Constants.HEADER_LENGTH + 4 + Constants.ADDRESS_LENGTH);
+                            buf = ByteBuffer.wrap((byte[]) msg.obj, 0, msg.arg1);
 
-                                // If removing from the set returns false that means we are the
-                                // newly paired device so we need to choose our successor
-                                if (!unplacedDevices.remove(new String(pairedDeviceAddress))) {
-                                    chooseSuccessor();
-                                }
+                            // Throw away header
+                            buf.get(new byte[Constants.HEADER_LENGTH]);
+
+                            lastPair = buf.getInt();
+                            byte[] pairedDeviceAddress = new byte[17];
+                            buf.get(pairedDeviceAddress);
+
+                            // If removing from the set returns false that means we are the
+                            // newly paired device so we need to choose our successor
+                            if (!unplacedDevices.remove(new String(pairedDeviceAddress))) {
+                                chooseSuccessor();
                             }
                             break;
                         case Constants.READ_DEVICES:
                             // TODO: establish connections with devices that are already in the game
+                            buf = ByteBuffer.wrap((byte[]) msg.obj, 0, msg.arg1);
+                            buf.get(new byte[Constants.HEADER_LENGTH]);
+
+                            int numDevices = buf.getInt();
+                            String[] addresses = new String[numDevices];
+                            for (int i = 0; i < numDevices; i++) {
+                                byte[] address = new byte[Constants.ADDRESS_LENGTH];
+                                buf.get(address);
+                                addresses[i] = new String(address);
+                            }
+
+                            joinGame(addresses);
                             break;
                     }
                     break;
@@ -218,16 +236,30 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     };
 
     /**
+     * Establishes connections with all given addresses.
+     */
+    private void joinGame(String[] addresses) {
+        for (String addr : addresses) {
+            if (GameData.connectedDevices.indexOf(addr) >= 0) {
+                // this has already been connected to!
+                Log.d(TAG, "Already connected to " + addr);
+            } else {
+                connectDevice(addr);
+            }
+        }
+    }
+
+    /**
      * After establishing a connection with another device, send the already-connected devices with it.
      *
      * @param deviceAddress
      */
     private void sendConnectedDevices(String deviceAddress) {
-        ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + 4 + Constants.ADDRESS_LENGTH * mConnectedDevicesAdapter.getCount());
+        ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + 4 + Constants.ADDRESS_LENGTH * connectedDevices.size());
         buf.put(Constants.HEADER_DEVICES);
-        buf.putInt(mConnectedDevicesAdapter.getCount());
-        for (int i = 0; i < mConnectedDevicesAdapter.getCount(); i++) {
-            buf.put(mConnectedDevicesAdapter.getItem(i).getBytes());
+        buf.putInt(connectedDevices.size());
+        for (String address : connectedDevices) {
+            buf.put(address.getBytes());
         }
 
         mConnectService.write(buf.array(), deviceAddress);
@@ -237,15 +269,13 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
      * Establishes an ordering for the connected devices when the user hits the start button
      */
     private void start() {
-        int connectedDevices = mConnectedDevicesAdapter.getCount();
-        if (connectedDevices < 2) {
+        if (connectedDevices.size() < 2) {
             Toast.makeText(this, "You don't have enough players, the game requires" +
                     "at least 3 players", Toast.LENGTH_LONG).show();
         } else {
             byte[] startMsg = Constants.HEADER_START;
 
-            for (int i = 0; i < connectedDevices; i++) {
-                String currDevice = mConnectedDevicesAdapter.getItem(i);
+            for (String currDevice : connectedDevices) {
                 mConnectService.write(startMsg, currDevice);
             }
 
@@ -257,9 +287,9 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             }
 
 
-            if (startDevice == -1 || mBluetoothAdapter.getAddress().compareTo(mConnectedDevicesAdapter.getItem(startDevice)) < 0) {
-                for (int i = 0; i < mConnectedDevicesAdapter.getCount(); i++) {
-                    unplacedDevices.add(mConnectedDevicesAdapter.getItem(i));
+            if (startDevice == -1 || mBluetoothAdapter.getAddress().compareTo(connectedDevices.get(startDevice)) < 0) {
+                for (String address : connectedDevices) {
+                    unplacedDevices.add(address);
                 }
 
                 chooseSuccessor();
@@ -271,8 +301,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
      * Chooses which device we will be sending to and informs all other devices
      */
     private void chooseSuccessor() {
-        int connectedDevices = mConnectedDevicesAdapter.getCount();
-
         Iterator<String> iter = unplacedDevices.iterator();
         String nextDeviceAddress;
         if (iter.hasNext()) {
@@ -281,20 +309,19 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             // Remove device from set of unplaced devices
             iter.remove();
         } else {
-            nextDeviceAddress = mConnectedDevicesAdapter.getItem(startDevice);
+            nextDeviceAddress = connectedDevices.get(startDevice);
         }
 
         ByteBuffer msg = ByteBuffer.allocate(26);
-        msg.put(Constants.HEADER_START);
+        msg.put(Constants.HEADER_PAIR);
         msg.putInt(lastPair + 1);
         msg.put(nextDeviceAddress.getBytes());
 
         // Set nextDevice field to store which device we will send prompts and drawings to
-        nextDevice = mConnectedDevicesAdapter.getPosition(nextDeviceAddress);
+        nextDevice = connectedDevices.indexOf(nextDeviceAddress);
 
-        for (int i = 0; i < connectedDevices; i++) {
-            String currDevice = mConnectedDevicesAdapter.getItem(i);
-            mConnectService.write(msg.array(), currDevice);
+        for (String address : connectedDevices) {
+            mConnectService.write(msg.array(), address);
         }
     }
 

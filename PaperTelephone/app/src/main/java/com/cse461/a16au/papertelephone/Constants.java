@@ -37,6 +37,8 @@ public class Constants {
     public static final int READ_PING = 3;
     public static final byte[] HEADER_DEVICES = getHeader("DEVICES");
     public static final int READ_DEVICES = 4;
+    public static final byte[] HEADER_PAIR = getHeader("PAIR");
+    public static final int READ_PAIR = 5;
 
     public static final int ADDRESS_LENGTH = 17;
 
