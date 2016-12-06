@@ -26,17 +26,21 @@ import android.widget.Toast;
 
 import java.nio.ByteBuffer;
 
+import static com.cse461.a16au.papertelephone.GameData.turnTimer;
+
 public class GameActivity extends FragmentActivity implements DrawingFragment.DrawingSendListener, PromptFragment.PromptSendListener {
     private BluetoothConnectService mConnectService;
     private ImageView mReceivedImageView;
     private boolean isDrawMode;
     private Fragment mFragment;
     private TextView mTimerTextView;
+    private boolean isDone;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         isDrawMode = true;
+        isDone = false;
         setContentView(R.layout.activity_game);
 
 
@@ -73,14 +77,22 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
 
 
     public void updateMode(){
-        new CountDownTimer(30000, 1000) {
+        if(turnTimer != null) {
+            turnTimer.cancel();
+        }
+
+        turnTimer = new CountDownTimer(30000, 1000) {
 
             public void onTick(long millisUntilFinished) {
                 mTimerTextView.setText(String.format("%2ds", millisUntilFinished / 1000));
             }
 
             public void onFinish() {
-                // TODO: Send prompt or drawing if it has not been sent yet
+                // End the turn, sending the drawing or prompt if it hasn't already been sent
+                if(!isDone) {
+                    mFragment.endTurn();
+                    isDone = true;
+                }
                 mTimerTextView.setText("00s");
                 mTimerTextView.setTextColor(Color.RED);
             }
@@ -127,8 +139,14 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
         mReceivedImageView.setImageBitmap(bitmap);
     }
 
+    private void endTurn() {
+        isDone = true;
+        turnTimer.cancel();
+    }
+
     @Override
     public void sendDrawing(byte[] image) {
+        endTurn();
         // First send header to indicate we're sending an image
         byte[] header = Constants.HEADER_IMAGE;
 
@@ -148,6 +166,7 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
 
     @Override
     public void sendPrompt(byte[] prompt) {
+        endTurn();
         byte[] header = Constants.HEADER_PROMPT;
 
         if(prompt != null) {
