@@ -21,7 +21,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"
+            android:label="Paper Telephone">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -30,7 +31,7 @@
         </activity>
         <activity
             android:name=".LobbyActivity"
-            android:label="@string/title_activity_lobby"
+            android:label="Pre-Game Lobby"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".GameActivity"

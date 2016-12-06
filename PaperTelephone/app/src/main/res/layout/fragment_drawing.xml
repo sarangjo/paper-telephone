@@ -4,16 +4,24 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Draw a freaking elephant in the area below!"/>
+
     <LinearLayout
         android:id="@+id/game_drawing"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:orientation="vertical" />
+        android:layout_height="200dp"
+        android:orientation="vertical" >
+    </LinearLayout>
+
+
 
     <Button
         android:id="@+id/button_send_drawing"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="SEND DA DRAWING BRO"/>
+        android:text="Send Drawing!"/>
 
 </LinearLayout>

@@ -17,7 +17,7 @@ import android.widget.Toast;
 
 import java.nio.ByteBuffer;
 
-public class GameActivity extends FragmentActivity implements DrawingFragment.DrawingSendListener {
+public class GameActivity extends FragmentActivity implements DrawingFragment.DrawingSendListener, PromptFragment.PromptSendListener {
     private BluetoothConnectService mConnectService;
     private ImageView mReceivedImageView;
 
@@ -83,5 +83,22 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
         }
 
         Toast.makeText(this, "Please submit a drawing.", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void sendPrompt(byte[] prompt) {
+        byte[] header = Constants.HEADER_PROMPT;
+
+        if(prompt != null) {
+            ByteBuffer buf = ByteBuffer.allocate(header.length + prompt.length + 4);
+            buf.put(header);
+            buf.putInt(prompt.length);
+            buf.put(prompt);
+            mConnectService.write(buf.array(), "");
+            return;
+        }
+
+        Toast.makeText(this, "Please submit a prompt.", Toast.LENGTH_SHORT).show();
+
     }
 }
