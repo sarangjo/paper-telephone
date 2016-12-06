@@ -405,13 +405,13 @@ public class BluetoothConnectService {
 
             Handler currHandler = mMainHandler;
 
-            // Extracts header
-            byte[] header = new byte[Constants.HEADER_LENGTH];
-            input.get(header);
 
-
-            // Game handler
             if (bytes > Constants.HEADER_LENGTH) {
+                // Extracts header
+                byte[] header = new byte[Constants.HEADER_LENGTH];
+                input.get(header);
+
+                // Game handler
                 if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
                     // Hold onto the full image size for later
                     int totalImageSize = input.getInt();
