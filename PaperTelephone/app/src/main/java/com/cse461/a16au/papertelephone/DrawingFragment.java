@@ -64,9 +64,9 @@ public class DrawingFragment extends Fragment {
                 byte[] array = stream.toByteArray();
 
                 mListener.sendDrawing(array);
+                getView().setVisibility(View.GONE);
             }
         });
-
         return view;
     }
 
@@ -79,6 +79,8 @@ public class DrawingFragment extends Fragment {
             throw new RuntimeException("Must implement DrawingSendListener");
         }
     }
+
+
 
     @Override
     public void onDetach() {
