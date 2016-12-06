@@ -32,7 +32,7 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
     private BluetoothConnectService mConnectService;
     private ImageView mReceivedImageView;
     private boolean isDrawMode;
-    private Fragment mFragment;
+    private GameFragment mFragment;
     private TextView mTimerTextView;
     private boolean isDone;
 
@@ -42,7 +42,6 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
         isDrawMode = true;
         isDone = false;
         setContentView(R.layout.activity_game);
-
 
         updateMode();
         mConnectService = BluetoothConnectService.getInstance();

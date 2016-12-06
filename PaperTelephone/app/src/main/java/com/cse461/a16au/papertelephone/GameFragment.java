@@ -1,5 +1,7 @@
 package com.cse461.a16au.papertelephone;
 
+import android.app.Fragment;
+
 /**
  * Created by sgorti3 on 12/6/2016.
  *
@@ -9,6 +11,6 @@ package com.cse461.a16au.papertelephone;
  *
  */
 
-public interface GameElement {
-    void endTurn();
+public abstract class GameFragment extends Fragment {
+    public abstract void endTurn();
 }

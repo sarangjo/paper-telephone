@@ -15,7 +15,7 @@ import android.widget.TextView;
  * Created by sgorti3 on 11/30/2016.
  * TODO: implement and document
  */
-public class PromptFragment extends Fragment implements GameElement {
+public class PromptFragment extends GameFragment {
     private PromptSendListener mListener;
 
 

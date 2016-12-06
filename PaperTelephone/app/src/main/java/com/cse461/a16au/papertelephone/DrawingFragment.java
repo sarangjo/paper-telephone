@@ -22,7 +22,7 @@ import java.io.ByteArrayOutputStream;
  * TODO documentation
  */
 
-public class DrawingFragment extends Fragment implements GameElement {
+public class DrawingFragment extends GameFragment {
     private Paint mPaint;
     private DrawingSendListener mListener;
     private PaintingView paintingView;
@@ -48,7 +48,7 @@ public class DrawingFragment extends Fragment implements GameElement {
         LinearLayout ll = (LinearLayout) view.findViewById(R.id.game_drawing);
 
         // PaintingView for current drawing turn
-        final View paintingView = new DrawingFragment.PaintingView(getActivity());
+        paintingView = new DrawingFragment.PaintingView(getActivity());
         paintingView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
         ll.addView(paintingView);
 
