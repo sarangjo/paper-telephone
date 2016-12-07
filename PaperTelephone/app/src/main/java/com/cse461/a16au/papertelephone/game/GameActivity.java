@@ -1,13 +1,11 @@
-package com.cse461.a16au.papertelephone;
+package com.cse461.a16au.papertelephone.game;
 
 /**
  * Created by siddt on 11/29/2016.
  * TODO: documentation
  */
 
-import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -16,17 +14,15 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.util.Log;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.nio.ByteBuffer;
+import com.cse461.a16au.papertelephone.BluetoothConnectService;
+import com.cse461.a16au.papertelephone.Constants;
+import com.cse461.a16au.papertelephone.R;
 
-import static com.cse461.a16au.papertelephone.GameData.turnTimer;
+import java.nio.ByteBuffer;
 
 public class GameActivity extends FragmentActivity implements DrawingFragment.DrawingSendListener, PromptFragment.PromptSendListener {
     private BluetoothConnectService mConnectService;
@@ -76,11 +72,11 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
 
 
     public void updateMode(){
-        if(turnTimer != null) {
-            turnTimer.cancel();
+        if(GameData.turnTimer != null) {
+            GameData.turnTimer.cancel();
         }
 
-        turnTimer = new CountDownTimer(30000, 1000) {
+        GameData.turnTimer = new CountDownTimer(30000, 1000) {
 
             public void onTick(long millisUntilFinished) {
                 mTimerTextView.setText(String.format("%2ds", millisUntilFinished / 1000));
@@ -140,7 +136,7 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
     
     private void endTurn() {
         isDone = true;
-        turnTimer.cancel();
+        GameData.turnTimer.cancel();
     }
 
     private void processText(byte[] data) {

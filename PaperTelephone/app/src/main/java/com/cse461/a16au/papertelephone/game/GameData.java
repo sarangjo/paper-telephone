@@ -1,4 +1,4 @@
-package com.cse461.a16au.papertelephone;
+package com.cse461.a16au.papertelephone.game;
 
 import android.os.CountDownTimer;
 

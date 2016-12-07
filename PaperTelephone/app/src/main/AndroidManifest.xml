@@ -11,10 +11,6 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -30,11 +26,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".LobbyActivity"
+            android:name=".lobby.LobbyActivity"
             android:label="Pre-Game Lobby"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".GameActivity"
+            android:name=".game.GameActivity"
             android:label="@string/title_activity_game"
             android:theme="@style/AppTheme.NoActionBar" />
     </application>

@@ -1,4 +1,4 @@
-package com.cse461.a16au.papertelephone;
+package com.cse461.a16au.papertelephone.lobby;
 
 import android.app.Activity;
 import android.view.LayoutInflater;
@@ -14,7 +14,7 @@ import java.util.List;
  * TODO: class documentation
  */
 
-public class DevicesListAdapter extends BaseExpandableListAdapter {
+class DevicesListAdapter extends BaseExpandableListAdapter {
     private List<String> pairedDevices;
     private List<String> newDevices;
     private LayoutInflater inflater;

@@ -41,6 +41,7 @@ public class Constants {
     public static final int READ_PAIR = 5;
 
     public static final int ADDRESS_LENGTH = 17;
+    public static final int DISCOVERABLE_TIME = 300;
 
     private static byte[] getHeader(String s) {
         return Arrays.copyOf(s.getBytes(), HEADER_LENGTH);

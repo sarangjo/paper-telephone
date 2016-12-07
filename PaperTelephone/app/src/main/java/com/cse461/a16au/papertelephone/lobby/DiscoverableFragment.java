@@ -1,4 +1,4 @@
-package com.cse461.a16au.papertelephone;
+package com.cse461.a16au.papertelephone.lobby;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v4.app.Fragment;
@@ -16,7 +15,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
+import com.cse461.a16au.papertelephone.Constants;
+import com.cse461.a16au.papertelephone.R;
 
 
 /**
@@ -68,7 +68,7 @@ public class DiscoverableFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        requestDiscoverable(300);
+        requestDiscoverable(Constants.DISCOVERABLE_TIME);
     }
 
     @Override

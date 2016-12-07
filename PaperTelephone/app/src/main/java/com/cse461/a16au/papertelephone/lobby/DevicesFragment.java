@@ -1,4 +1,4 @@
-package com.cse461.a16au.papertelephone;
+package com.cse461.a16au.papertelephone.lobby;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
@@ -14,14 +14,15 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import java.util.Set;
+import com.cse461.a16au.papertelephone.Constants;
+import com.cse461.a16au.papertelephone.R;
 
+import java.util.Set;
 
 /**
  * TODO: class comment
@@ -41,7 +42,7 @@ public class DevicesFragment extends Fragment {
 
     private BluetoothAdapter mBluetoothAdapter;
 
-    private DeviceChosenListener mDeviceChosenListener;
+    private ConnectDeviceListener mConnectDeviceListener;
 
     public DevicesFragment() {
         // Required empty constructor
@@ -111,8 +112,8 @@ public class DevicesFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof DeviceChosenListener) {
-            mDeviceChosenListener = (DeviceChosenListener) context;
+        if (context instanceof ConnectDeviceListener) {
+            mConnectDeviceListener = (ConnectDeviceListener) context;
         } else {
             throw new UnsupportedOperationException("Must be DeviceChosenListener");
         }
@@ -121,7 +122,7 @@ public class DevicesFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        mDeviceChosenListener = null;
+        mConnectDeviceListener = null;
     }
 
     /**
@@ -176,13 +177,13 @@ public class DevicesFragment extends Fragment {
             // TODO Gross, get the MAC address from the BluetoothDevice object, not from the string
             String info = ((TextView) v).getText().toString();
 
-            mDeviceChosenListener.deviceChosen(info.substring(info.length() - Constants.ADDRESS_LENGTH));
+            mConnectDeviceListener.connectDevice(info.substring(info.length() - Constants.ADDRESS_LENGTH));
 
             return true;
         }
     };
 
-    public interface DeviceChosenListener {
-        void deviceChosen(String address);
+    public interface ConnectDeviceListener {
+        void connectDevice(String address);
     }
 }

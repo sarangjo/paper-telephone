@@ -130,8 +130,15 @@ public class BluetoothConnectService {
     /**
      * Connects to the given BluetoothDevice.
      */
-    public void connect(BluetoothDevice device) {
+    public void connect(String address) {
+        BluetoothDevice device = mAdapter.getRemoteDevice(address);
+
         Log.d(TAG, "Connecting to: " + device);
+
+        // If we're already discovering, stop it
+        if (mAdapter.isDiscovering()) {
+            mAdapter.cancelDiscovery();
+        }
 
         // Start outgoing thread
         BluetoothThread connectThread = new ConnectThread(device);
@@ -445,9 +452,13 @@ public class BluetoothConnectService {
             try {
                 mmOutStream.write(buffer);
 
-                mMainHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer)
-                        .sendToTarget();
-                return true;
+                // Send the name back to UI
+                Message msg = mMainHandler.obtainMessage(Constants.MESSAGE_WRITE);
+                Bundle bundle = new Bundle();
+                bundle.putString(Constants.DEVICE_NAME, mmDevice.getName());
+                bundle.putString(Constants.DEVICE_ADDRESS, mmDevice.getAddress());
+                msg.setData(bundle);
+                return mMainHandler.sendMessage(msg);
             } catch (IOException e) {
                 Log.e(TAG, "Exception during write", e);
             }
