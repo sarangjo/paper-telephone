@@ -402,7 +402,7 @@ public class BluetoothConnectService {
                     ByteBuffer img = ByteBuffer.allocate(imageSize);
 
                     // Get the actual image data
-                    byte[] imagePacket = new byte[bytes - 9];
+                    byte[] imagePacket = new byte[bytes - Constants.HEADER_LENGTH - 4];
                     input.get(imagePacket);
                     img.put(imagePacket);
                     imageSize -= imagePacket.length;
