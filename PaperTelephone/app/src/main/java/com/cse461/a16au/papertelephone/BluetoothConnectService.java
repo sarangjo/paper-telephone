@@ -426,6 +426,9 @@ public class BluetoothConnectService {
                 } else if (Arrays.equals(header, Constants.HEADER_PROMPT)) {
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PROMPT, buffer);
                     currHandler = mGameHandler;
+                } else if (Arrays.equals(header, Constants.HEADER_DONE)) {
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DONE, buffer);
+                    currHandler = mGameHandler;
                 }
                 // Main Handler
                 else if (Arrays.equals(header, Constants.HEADER_START)) {
