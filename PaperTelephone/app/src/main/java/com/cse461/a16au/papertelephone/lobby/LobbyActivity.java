@@ -176,6 +176,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
                 chooseSuccessor();
             }
+        // TODO: REMOVE THIS IN THE FINAL VERSION
         } else if (connectedDevices.size() == 0 && DEBUG) {
             Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
             startActivity(intent);
