@@ -397,12 +397,13 @@ public class BluetoothConnectService {
                     // Hold onto the full image size for later
                     int totalImageSize = input.getInt();
                     int imageSize = totalImageSize;
+                    log("Image Size is " + imageSize);
 
                     // Set up the overall buffer
                     ByteBuffer img = ByteBuffer.allocate(imageSize);
 
                     // Get the actual image data
-                    byte[] imagePacket = new byte[bytes - Constants.HEADER_LENGTH - 4];
+                    byte[] imagePacket = new byte[bytes - 4];
                     input.get(imagePacket);
                     img.put(imagePacket);
                     imageSize -= imagePacket.length;
@@ -412,6 +413,7 @@ public class BluetoothConnectService {
                             bytes = mmInStream.read(data);
                             log("Received image packet of " + bytes + " bytes");
 
+                            log(imageSize + " bytes left to store image");
                             img.put(Arrays.copyOfRange(data, 0, bytes));
                             imageSize -= bytes;
                         } catch (IOException e) {

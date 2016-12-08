@@ -139,23 +139,15 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         mConnectService.write(data, connectedDevices.get(nextDevice));
         Log.d(TAG, "Sent Image/Prompt");
 
-        try {
-            Thread.sleep(250);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         // Write done message to all devices
         byte[] header = Constants.HEADER_DONE;
         ByteBuffer buf = ByteBuffer.allocate(header.length);
         buf.put(header);
 
         for (String device : connectedDevices) {
-            while(true){
-                if(mConnectService.write(buf.array(), device)) {
-                    Log.d(TAG, "Sent Done");
-                    break;
-                }
+            if(!device.equals(connectedDevices.get(nextDevice))) {
+                mConnectService.write(buf.array(), device);
+                Log.d(TAG, "Sent Done");
             }
         }
 
@@ -178,34 +170,26 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
                         case Constants.READ_IMAGE:
                             Toast.makeText(GameActivity.this, "Image received!", Toast.LENGTH_SHORT).show();
                             image = (byte[]) msg.obj;
-                            if (isDone && unfinishedDeviceList.isEmpty()) {
-                                updateMode();
-                            }
                             break;
                         case Constants.READ_PROMPT:
                             Toast.makeText(GameActivity.this, "Prompt received!", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Read Prompt");
                             prompt = new String((byte[]) msg.obj);
-                            if (isDone && unfinishedDeviceList.isEmpty()) {
-                                updateMode();
-                            }
                             break;
-                        case Constants.READ_DONE:
-                            String name = msg.getData().getString(Constants.DEVICE_NAME);
-                            Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
-                            Log.d(TAG, "Read Done");
+                    }
 
-                            // Get address of sender and remove it from our list of devices
-                            // keeping track of which devices haven't finished yet
-                            String address = msg.getData().getString(Constants.DEVICE_ADDRESS);
-                            unfinishedDeviceList.remove(address);
+                    String name = msg.getData().getString(Constants.DEVICE_NAME);
+                    Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
 
-                            // If we are done and all other devices are done we move on to the
-                            // next phase of the game by calling updateMode()
-                            if (isDone && unfinishedDeviceList.isEmpty()) {
-                                updateMode();
-                            }
-                            break;
+                    // Get address of sender and remove it from our list of devices
+                    // keeping track of which devices haven't finished yet
+                    String address = msg.getData().getString(Constants.DEVICE_ADDRESS);
+                    unfinishedDeviceList.remove(address);
+
+                    // If we are done and all other devices are done we move on to the
+                    // next phase of the game by calling updateMode()
+                    if (isDone && unfinishedDeviceList.isEmpty()) {
+                        updateMode();
                     }
                     break;
             }
