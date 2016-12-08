@@ -78,7 +78,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         });
 
         mView = this.findViewById(android.R.id.content);
-        Snackbar.make(mView, "Welcome to SnackBar", Snackbar.LENGTH_LONG).show();
 
         Button startGameButton = (Button) findViewById(R.id.button_start_game);
         startGameButton.setOnClickListener(new View.OnClickListener() {
