@@ -73,7 +73,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         }
 
         // Start the timer at 30 seconds for the next phase of the game
-        GameData.turnTimer = new CountDownTimer(Constants.TURN_MILLIS, 1000) {
+        /*GameData.turnTimer = new CountDownTimer(Constants.TURN_MILLIS, 1000) {
             public void onTick(long millisUntilFinished) {
                 mTimerTextView.setText(String.format("%2ds", millisUntilFinished / 1000));
             }
@@ -87,7 +87,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
                 mTimerTextView.setText("00s");
                 mTimerTextView.setTextColor(Color.RED);
             }
-        }.start();
+        }.start();*/
 
         // Switch out the fragments to update the current mode
         FragmentTransaction ft = getFragmentManager().beginTransaction();
@@ -146,7 +146,9 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         }
 
         isDone = true;
-        GameData.turnTimer.cancel();
+        if (GameData.turnTimer != null) {
+            GameData.turnTimer.cancel();
+        }
 
         if (unfinishedDeviceList.isEmpty()) {
             updateMode();

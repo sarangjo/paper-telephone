@@ -378,9 +378,10 @@ public class BluetoothConnectService {
             log("Done listening");
         }
 
-        private void handleRead(byte[] buffer, int bytes) {
+        private void handleRead(byte[] data, int bytes) {
+            data = Arrays.copyOfRange(data, 0, bytes);
             // ByteBuffer to wrap our input buffer
-            ByteBuffer input = ByteBuffer.wrap(Arrays.copyOfRange(buffer, 0, bytes));
+            ByteBuffer input = ByteBuffer.wrap(data);
 
             // Message to be passed to the appropriate handler
             Message msg;
@@ -408,10 +409,10 @@ public class BluetoothConnectService {
 
                     while (imageSize > 0) {
                         try {
-                            bytes = mmInStream.read(buffer);
+                            bytes = mmInStream.read(data);
                             log("Received image packet of " + bytes + " bytes");
 
-                            img.put(Arrays.copyOfRange(buffer, 0, bytes));
+                            img.put(Arrays.copyOfRange(data, 0, bytes));
                             imageSize -= bytes;
                         } catch (IOException e) {
                             Log.e(TAG, "Connection disconnected", e);
@@ -424,26 +425,28 @@ public class BluetoothConnectService {
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, img.array());
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_PROMPT)) {
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PROMPT, buffer);
+                    data = new byte[bytes - Constants.HEADER_LENGTH];
+                    input.get(data);
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PROMPT, data);
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_DONE)) {
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DONE, buffer);
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DONE, data);
                     currHandler = mGameHandler;
                 }
                 // Main Handler
                 else if (Arrays.equals(header, Constants.HEADER_START)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, buffer);
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, data);
                 } else if (Arrays.equals(header, Constants.HEADER_SUCCESSOR)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_SUCCESSOR, buffer);
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_SUCCESSOR, data);
                 } else if (Arrays.equals(header, Constants.HEADER_DEVICES)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DEVICES, buffer);
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DEVICES, data);
                 } else if (Arrays.equals(header, Constants.HEADER_PING)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, buffer);
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, data);
                 } else {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, buffer);
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, data);
                 }
             } else {
-                msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, buffer);
+                msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, data);
             }
 
             if (currHandler != null) {
