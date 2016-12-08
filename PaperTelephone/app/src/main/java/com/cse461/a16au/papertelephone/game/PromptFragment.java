@@ -12,13 +12,15 @@ import android.widget.TextView;
 
 import com.cse461.a16au.papertelephone.R;
 
+import java.io.ByteArrayOutputStream;
+
 /**
  * Created by sgorti3 on 11/30/2016.
  * TODO: implement and document
  */
 public class PromptFragment extends GameFragment {
     private PromptSendListener mListener;
-
+    private View view;
 
 
 
@@ -27,22 +29,29 @@ public class PromptFragment extends GameFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_prompt, container, false);
+        view = inflater.inflate(R.layout.fragment_prompt, container, false);
         Bundle args = getArguments();
         if(args.getBoolean("start")) {
-            TextView prompt = (TextView) v.findViewById(R.id.prompt);
+            TextView prompt = (TextView) view.findViewById(R.id.prompt);
             prompt.setText("Enter something for someone to draw");
 
-            EditText editBox = (EditText) v.findViewById(R.id.userGuess);
+            EditText editBox = (EditText) view.findViewById(R.id.userGuess);
             editBox.setHint("Enter prompt here");
 
 
-            Button button = (Button) v.findViewById(R.id.button_send_drawing);
+            Button button = (Button) view.findViewById(R.id.button_send_drawing);
             button.setText("Send prompt");
         }
 
+        Button sendPromptButton = (Button) view.findViewById(R.id.button_send_prompt);
+         sendPromptButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                endTurn();
+            }
+        });
 
-        return v;
+        return view;
     }
 
     @Override
@@ -57,7 +66,10 @@ public class PromptFragment extends GameFragment {
 
     @Override
     public void endTurn() {
-
+        String prompt = ((EditText) view.findViewById(R.id.user_prompt)).getText().toString();
+        // Build intent with the drawing data
+        byte[] array = prompt.getBytes();
+        mListener.sendPrompt(array);
     }
 
 

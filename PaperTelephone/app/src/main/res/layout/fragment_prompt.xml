@@ -23,9 +23,9 @@
         android:inputType="textPersonName"
         android:hint="Enter Guess"
         android:ems="10"
-        android:id="@+id/userGuess" />
+        android:id="@+id/user_prompt" />
     <Button
-        android:id="@+id/button_send_drawing"
+        android:id="@+id/button_send_prompt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Send Guess!"/>

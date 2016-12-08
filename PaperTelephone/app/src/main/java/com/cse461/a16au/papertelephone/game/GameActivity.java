@@ -23,22 +23,29 @@ import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.cse461.a16au.papertelephone.game.GameData.connectedDevices;
 
 public class GameActivity extends FragmentActivity implements DrawingFragment.DrawingSendListener, PromptFragment.PromptSendListener {
     private BluetoothConnectService mConnectService;
     private ImageView mReceivedImageView;
-    private boolean isDrawMode;
+    private boolean isPromptMode;
     private GameFragment mFragment;
     private TextView mTimerTextView;
+    private String prompt;
     private boolean isDone;
+    private List<String> deviceList;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        isDrawMode = true;
+        isPromptMode = true;
         isDone = false;
+        deviceList = new ArrayList<>(connectedDevices);
         setContentView(R.layout.activity_game);
-
         updateMode();
         mConnectService = BluetoothConnectService.getInstance();
         mConnectService.registerGameHandler(mGameHandler);
@@ -62,6 +69,18 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
                             break;
                         case Constants.READ_PROMPT:
                             Toast.makeText(GameActivity.this, "Text incoming...", Toast.LENGTH_SHORT).show();
+                            processText((byte[]) msg.obj);
+                            if (isDone && deviceList.isEmpty()) {
+                               updateMode();
+                            }
+                            break;
+                        case Constants.READ_DONE:
+                            // HERE We need to find the address of the sender and remove it from
+                            // device list copy. This is to ensure that we wait for all devices to
+                            // complete before proceeding to the next fragment
+                            if (isDone && deviceList.isEmpty()) {
+                                updateMode();
+                            }
                             break;
                     }
                     break;
@@ -70,7 +89,8 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
         }
     };
 
-
+    // Need a way to pass in image/prompt to the fragments
+    // after the 1st step
     public void updateMode(){
         if(GameData.turnTimer != null) {
             GameData.turnTimer.cancel();
@@ -99,7 +119,7 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
             ft.remove(mFragment);
         }
 
-        if (isDrawMode) {
+        if (isPromptMode) {
             if(mFragment == null) {
                 Bundle args = new Bundle();
                 args.putBoolean("start", true);
@@ -116,9 +136,11 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
         }
 
         ft.add(R.id.game_fragment_container, mFragment);
-        isDrawMode = !isDrawMode;
+        isPromptMode = !isPromptMode;
 
         ft.commit();
+        isDone = false;
+        deviceList = new ArrayList<>(connectedDevices);
     }
 
 
@@ -134,18 +156,31 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
         mReceivedImageView.setImageBitmap(bitmap);
     }
     
-    private void endTurn() {
+    private void gameEndTurn() {
+        // Write done message to all devices
+        byte[] header  = Constants.HEADER_DONE;
+        ByteBuffer buf = ByteBuffer.allocate(header.length);
+        buf.put(header);
+
+        for(String device : connectedDevices) {
+            mConnectService.write(buf.array(), device);
+        }
+
         isDone = true;
+        if (deviceList.isEmpty()) {
+            updateMode();
+        }
         GameData.turnTimer.cancel();
     }
 
     private void processText(byte[] data) {
-        System.out.println("fuck this method");
+        prompt = new String(data);
+
     }
 
     @Override
     public void sendDrawing(byte[] image) {
-        endTurn();
+        gameEndTurn();
         // First send header to indicate we're sending an image
         byte[] header = Constants.HEADER_IMAGE;
 
@@ -165,7 +200,7 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
 
     @Override
     public void sendPrompt(byte[] prompt) {
-        endTurn();
+        gameEndTurn();
         byte[] header = Constants.HEADER_PROMPT;
 
         if(prompt != null) {
