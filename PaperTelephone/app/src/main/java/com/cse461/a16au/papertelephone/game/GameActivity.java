@@ -30,11 +30,11 @@ import static com.cse461.a16au.papertelephone.game.GameData.connectedDevices;
 
 public class GameActivity extends FragmentActivity implements DrawingFragment.DrawingSendListener, PromptFragment.PromptSendListener {
     private BluetoothConnectService mConnectService;
-    private ImageView mReceivedImageView;
     private boolean isPromptMode;
     private GameFragment mFragment;
     private TextView mTimerTextView;
     private String prompt;
+    private byte[] image;
     private boolean isDone;
     private List<String> deviceList;
 
@@ -50,7 +50,6 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
         mConnectService = BluetoothConnectService.getInstance();
         mConnectService.registerGameHandler(mGameHandler);
 
-        mReceivedImageView = (ImageView) findViewById(R.id.image_received_image);
         mTimerTextView = (TextView) findViewById(R.id.timer);
     }
 
@@ -62,7 +61,7 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
                     switch (msg.arg2) {
                         case Constants.READ_IMAGE:
                             Toast.makeText(GameActivity.this, "Image incoming...", Toast.LENGTH_SHORT).show();
-                            processImage((byte[]) msg.obj);
+                            image = (byte[]) msg.obj;
                             break;
                         case Constants.READ_PING:
                             Toast.makeText(GameActivity.this, "Received ping", Toast.LENGTH_SHORT).show();
@@ -75,9 +74,14 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
                             }
                             break;
                         case Constants.READ_DONE:
-                            // HERE We need to find the address of the sender and remove it from
-                            // device list copy. This is to ensure that we wait for all devices to
-                            // complete before proceeding to the next fragment
+                            // Get address of sender and remove it from our list of devices
+                            // keeping track of which devices haven't finished yet
+                            Bundle b = msg.getData();
+                            String address = b.getString(Constants.DEVICE_ADDRESS);
+                            deviceList.remove(address);
+
+                            // If we are done and all other devices are done we move on to the
+                            // next phase of the game by calling updateMode()
                             if (isDone && deviceList.isEmpty()) {
                                 updateMode();
                             }
@@ -88,16 +92,15 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
 
         }
     };
-
-    // Need a way to pass in image/prompt to the fragments
-    // after the 1st step
+    
+    // Moves on to the next phase of the game
     public void updateMode(){
         if(GameData.turnTimer != null) {
             GameData.turnTimer.cancel();
         }
 
+        // Start the timer at 30 seconds for the next phase of the game
         GameData.turnTimer = new CountDownTimer(30000, 1000) {
-
             public void onTick(long millisUntilFinished) {
                 mTimerTextView.setText(String.format("%2ds", millisUntilFinished / 1000));
             }
@@ -119,20 +122,24 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
             ft.remove(mFragment);
         }
 
+        Bundle args = new Bundle();
         if (isPromptMode) {
             if(mFragment == null) {
-                Bundle args = new Bundle();
                 args.putBoolean("start", true);
                 mFragment = new PromptFragment();
                 mFragment.setArguments(args);
             } else {
-                Bundle args = new Bundle();
                 args.putBoolean("start", false);
+                // Add the image as an arg to the PromptFragment
+                args.putByteArray("image", image);
                 mFragment = new PromptFragment();
                 mFragment.setArguments(args);
             }
         } else {
+            // Pass the prompt to the DrawingFragment
+            args.putString("prompt", prompt);
             mFragment = new DrawingFragment();
+            mFragment.setArguments(args);
         }
 
         ft.add(R.id.game_fragment_container, mFragment);
@@ -145,16 +152,6 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
 
 
 
-    /**
-     * Process an array of bytes into a bitmap and display it in the view
-     *
-     * @param data array of bytes containing image information
-     */
-    private void processImage(byte[] data) {
-        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0,
-                data.length);
-        mReceivedImageView.setImageBitmap(bitmap);
-    }
     
     private void gameEndTurn() {
         // Write done message to all devices
@@ -175,7 +172,6 @@ public class GameActivity extends FragmentActivity implements DrawingFragment.Dr
 
     private void processText(byte[] data) {
         prompt = new String(data);
-
     }
 
     @Override

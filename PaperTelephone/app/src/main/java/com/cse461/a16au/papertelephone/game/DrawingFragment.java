@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.cse461.a16au.papertelephone.R;
 
@@ -47,6 +48,11 @@ public class DrawingFragment extends GameFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_drawing, container, false);
         LinearLayout ll = (LinearLayout) view.findViewById(R.id.game_drawing);
+
+        // Retrieve and display prompt
+        Bundle args = getArguments();
+        String prompt = args.getString("prompt");
+        ((TextView) view.findViewById(R.id.prompt_drawing)).setText(prompt);
 
         // PaintingView for current drawing turn
         paintingView = new DrawingFragment.PaintingView(getActivity());
