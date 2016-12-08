@@ -53,7 +53,7 @@ public class PromptFragment extends GameFragment {
                 bitmap = BitmapFactory.decodeByteArray(data, 0,
                         data.length);
             }
-
+            mPromptText = (EditText) view.findViewById(R.id.user_prompt);
             mReceivedImageView.setImageBitmap(bitmap);
         }
 
