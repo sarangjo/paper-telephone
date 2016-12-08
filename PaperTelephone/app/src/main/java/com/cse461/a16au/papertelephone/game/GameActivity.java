@@ -142,7 +142,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         buf.put(header);
 
         for (String device : connectedDevices) {
-            mConnectService.write(buf.array(), device);
+            while(!mConnectService.write(buf.array(), device)){}
         }
 
         isDone = true;

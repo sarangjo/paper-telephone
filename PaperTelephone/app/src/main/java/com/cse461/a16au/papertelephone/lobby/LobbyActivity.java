@@ -148,8 +148,10 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     /**
      * Establishes an ordering for the connected devices when the user hits the start button
      */
+    // TODO: test multiple start logic, Sidd and Jakob seem to have uncovered a bug there
     private void startGame() {
-        if (connectedDevices.size() >= 2) {
+        // TODO: change back to 2
+        if (connectedDevices.size() >= 1) {
             byte[] startMsg = HEADER_START;
 
             for (String currDevice : connectedDevices) {
