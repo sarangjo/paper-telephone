@@ -41,6 +41,7 @@ import static com.cse461.a16au.papertelephone.Constants.READ_PING;
 import static com.cse461.a16au.papertelephone.Constants.READ_START;
 import static com.cse461.a16au.papertelephone.Constants.READ_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_UNKNOWN;
+import static com.cse461.a16au.papertelephone.game.GameData.connectedDeviceNames;
 import static com.cse461.a16au.papertelephone.game.GameData.connectedDevices;
 import static com.cse461.a16au.papertelephone.game.GameData.lastSuccessor;
 import static com.cse461.a16au.papertelephone.game.GameData.nextDevice;
@@ -57,7 +58,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     /**
      * Adapter for connected devices view
      */
-    private ArrayAdapter<String> mConnectedDevicesAdapter;
+    private ArrayAdapter<String> mConnectedDevicesNamesAdapter;
 
     /**
      * Our bluetooth service
@@ -81,9 +82,9 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         mConnectService.registerMainHandler(mMainHandler);
 
         // Views
-        mConnectedDevicesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, connectedDevices);
+        mConnectedDevicesNamesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, connectedDeviceNames);
         ListView connectedListView = (ListView) findViewById(R.id.connected_devices);
-        connectedListView.setAdapter(mConnectedDevicesAdapter);
+        connectedListView.setAdapter(mConnectedDevicesNamesAdapter);
         connectedListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -322,7 +323,8 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     sendConnectedDevices(deviceAddress);
 
                     connectedDevices.add(deviceAddress);
-                    mConnectedDevicesAdapter.notifyDataSetChanged();
+                    connectedDeviceNames.add(deviceName);
+                    mConnectedDevicesNamesAdapter.notifyDataSetChanged();
                     Snackbar.make(mView, "Connected to " + deviceName, Snackbar.LENGTH_LONG).show();
                     break;
                 case MESSAGE_DISCONNECTED:
@@ -330,7 +332,8 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     deviceAddress = msg.getData().getString(DEVICE_ADDRESS);
 
                     connectedDevices.remove(deviceAddress);
-                    mConnectedDevicesAdapter.notifyDataSetChanged();
+                    connectedDeviceNames.remove(deviceName);
+                    mConnectedDevicesNamesAdapter.notifyDataSetChanged();
                     Snackbar.make(mView, "Disconnected from " + deviceName, Snackbar.LENGTH_LONG).show();
                     break;
                 case MESSAGE_WRITE:

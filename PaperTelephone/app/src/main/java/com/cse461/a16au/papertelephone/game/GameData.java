@@ -14,6 +14,7 @@ import java.util.Set;
 public class GameData {
     // SETUP
     public static List<String> connectedDevices = new ArrayList<>();
+    public static List<String> connectedDeviceNames = new ArrayList<>();
     public static int nextDevice = 0;
     public static int startDevice = -1;
     public static int lastSuccessor = 0;
