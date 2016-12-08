@@ -16,7 +16,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.cse461.a16au.papertelephone.BluetoothConnectService;
-import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 import com.cse461.a16au.papertelephone.game.GameActivity;
 import com.cse461.a16au.papertelephone.game.GameData;
@@ -24,10 +23,29 @@ import com.cse461.a16au.papertelephone.game.GameData;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
+import static com.cse461.a16au.papertelephone.Constants.ADDRESS_LENGTH;
+import static com.cse461.a16au.papertelephone.Constants.DEBUG;
+import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
+import static com.cse461.a16au.papertelephone.Constants.DEVICE_NAME;
+import static com.cse461.a16au.papertelephone.Constants.HEADER_DEVICES;
+import static com.cse461.a16au.papertelephone.Constants.HEADER_LENGTH;
+import static com.cse461.a16au.papertelephone.Constants.HEADER_PING;
+import static com.cse461.a16au.papertelephone.Constants.HEADER_START;
+import static com.cse461.a16au.papertelephone.Constants.HEADER_SUCCESSOR;
+import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECTED;
+import static com.cse461.a16au.papertelephone.Constants.MESSAGE_DISCONNECTED;
+import static com.cse461.a16au.papertelephone.Constants.MESSAGE_READ;
+import static com.cse461.a16au.papertelephone.Constants.MESSAGE_WRITE;
+import static com.cse461.a16au.papertelephone.Constants.READ_DEVICES;
+import static com.cse461.a16au.papertelephone.Constants.READ_PING;
+import static com.cse461.a16au.papertelephone.Constants.READ_START;
+import static com.cse461.a16au.papertelephone.Constants.READ_SUCCESSOR;
+import static com.cse461.a16au.papertelephone.Constants.READ_UNKNOWN;
 import static com.cse461.a16au.papertelephone.game.GameData.connectedDevices;
 import static com.cse461.a16au.papertelephone.game.GameData.lastSuccessor;
 import static com.cse461.a16au.papertelephone.game.GameData.nextDevice;
 import static com.cse461.a16au.papertelephone.game.GameData.startDevice;
+import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
 import static com.cse461.a16au.papertelephone.game.GameData.unplacedDevices;
 
 /**
@@ -70,7 +88,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (!connectedDevices.isEmpty()) {
-                    mConnectService.write(Constants.HEADER_PING, connectedDevices.get(position));
+                    mConnectService.write(HEADER_PING, connectedDevices.get(position));
                 }
             }
         });
@@ -116,8 +134,8 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
      * @param deviceAddress
      */
     private void sendConnectedDevices(String deviceAddress) {
-        ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + 4 + Constants.ADDRESS_LENGTH * connectedDevices.size());
-        buf.put(Constants.HEADER_DEVICES);
+        ByteBuffer buf = ByteBuffer.allocate(HEADER_LENGTH + 4 + ADDRESS_LENGTH * connectedDevices.size());
+        buf.put(HEADER_DEVICES);
         buf.putInt(connectedDevices.size());
         for (String address : connectedDevices) {
             buf.put(address.getBytes());
@@ -131,7 +149,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
      */
     private void startGame() {
         if (connectedDevices.size() >= 2) {
-            byte[] startMsg = Constants.HEADER_START;
+            byte[] startMsg = HEADER_START;
 
             for (String currDevice : connectedDevices) {
                 mConnectService.write(startMsg, currDevice);
@@ -145,6 +163,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             }
 
             // TODO: reset all other GameData?
+            turnsLeft = connectedDevices.size();
 
             // TODO: Does this hacky way work?
             String localAddress = android.provider.Settings.Secure.getString(getContentResolver(), "bluetooth_address");
@@ -157,7 +176,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
                 chooseSuccessor();
             }
-        } else if (connectedDevices.size() == 0) {
+        } else if (connectedDevices.size() == 0 && DEBUG) {
             Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
             startActivity(intent);
         } else {
@@ -181,8 +200,8 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             nextDeviceAddress = connectedDevices.get(startDevice);
         }
 
-        ByteBuffer msg = ByteBuffer.allocate(Constants.HEADER_LENGTH + 4 + Constants.ADDRESS_LENGTH);
-        msg.put(Constants.HEADER_SUCCESSOR);
+        ByteBuffer msg = ByteBuffer.allocate(HEADER_LENGTH + 4 + ADDRESS_LENGTH);
+        msg.put(HEADER_SUCCESSOR);
         msg.putInt(lastSuccessor + 1);
         msg.put(nextDeviceAddress.getBytes());
 
@@ -208,16 +227,16 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     private void handleRead(Message msg) {
         ByteBuffer buf;
         switch (msg.arg2) {
-            case Constants.READ_UNKNOWN:
+            case READ_UNKNOWN:
                 Toast.makeText(LobbyActivity.this, "Received unknown format", Toast.LENGTH_SHORT).show();
                 break;
-            case Constants.READ_PING:
-                Toast.makeText(LobbyActivity.this, "Received ping from " + msg.getData().getString(Constants.DEVICE_NAME),
+            case READ_PING:
+                Toast.makeText(LobbyActivity.this, "Received ping from " + msg.getData().getString(DEVICE_NAME),
                         Toast.LENGTH_SHORT).show();
                 break;
-            case Constants.READ_START:
+            case READ_START:
                 // Received START message
-                String startDeviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
+                String startDeviceAddress = msg.getData().getString(DEVICE_ADDRESS);
                 startDevice = connectedDevices.indexOf(startDeviceAddress);
 
                 // Setup unplaced devices, i.e. all devices except for the start device and us
@@ -228,13 +247,13 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     }
                 }
                 break;
-            case Constants.READ_SUCCESSOR:
+            case READ_SUCCESSOR:
                 // Format of pair tuple: header, pair #, pair address
-                // msg.arg1 = Constants.HEADER_LENGTH + 4 + Constants.ADDRESS_LENGTH);
+                // msg.arg1 = HEADER_LENGTH + 4 + ADDRESS_LENGTH);
                 buf = ByteBuffer.wrap((byte[]) msg.obj, 0, msg.arg1);
 
                 // Throw away header
-                buf.get(new byte[Constants.HEADER_LENGTH]);
+                buf.get(new byte[HEADER_LENGTH]);
 
                 lastSuccessor = buf.getInt();
                 byte[] pairedDeviceAddressArr = new byte[17];
@@ -264,15 +283,15 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     chooseSuccessor();
                 }
                 break;
-            case Constants.READ_DEVICES:
+            case READ_DEVICES:
                 // Establish connections with devices that are already in the game
                 buf = ByteBuffer.wrap((byte[]) msg.obj, 0, msg.arg1);
-                buf.get(new byte[Constants.HEADER_LENGTH]);
+                buf.get(new byte[HEADER_LENGTH]);
 
                 int numDevices = buf.getInt();
                 String[] addresses = new String[numDevices];
                 for (int i = 0; i < numDevices; i++) {
-                    byte[] address = new byte[Constants.ADDRESS_LENGTH];
+                    byte[] address = new byte[ADDRESS_LENGTH];
                     buf.get(address);
                     addresses[i] = new String(address);
                 }
@@ -294,9 +313,9 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         public void handleMessage(Message msg) {
             String deviceName, deviceAddress;
             switch (msg.what) {
-                case Constants.MESSAGE_CONNECTED:
-                    deviceName = msg.getData().getString(Constants.DEVICE_NAME);
-                    deviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
+                case MESSAGE_CONNECTED:
+                    deviceName = msg.getData().getString(DEVICE_NAME);
+                    deviceAddress = msg.getData().getString(DEVICE_ADDRESS);
 
                     // Send a message describing which devices we are already connected to
                     sendConnectedDevices(deviceAddress);
@@ -305,19 +324,19 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     mConnectedDevicesAdapter.notifyDataSetChanged();
                     Snackbar.make(mView, "Connected to " + deviceName, Snackbar.LENGTH_LONG).show();
                     break;
-                case Constants.MESSAGE_DISCONNECTED:
-                    deviceName = msg.getData().getString(Constants.DEVICE_NAME);
-                    deviceAddress = msg.getData().getString(Constants.DEVICE_ADDRESS);
+                case MESSAGE_DISCONNECTED:
+                    deviceName = msg.getData().getString(DEVICE_NAME);
+                    deviceAddress = msg.getData().getString(DEVICE_ADDRESS);
 
                     connectedDevices.remove(deviceAddress);
                     mConnectedDevicesAdapter.notifyDataSetChanged();
                     Snackbar.make(mView, "Disconnected from " + deviceName, Snackbar.LENGTH_LONG).show();
                     break;
-                case Constants.MESSAGE_WRITE:
+                case MESSAGE_WRITE:
                     // TODO: do something with what we write out?
                     Log.d(TAG, "Sent data");
                     break;
-                case Constants.MESSAGE_READ:
+                case MESSAGE_READ:
                     handleRead(msg);
                     break;
             }

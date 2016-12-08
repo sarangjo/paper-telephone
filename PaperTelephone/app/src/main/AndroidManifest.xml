@@ -11,13 +11,18 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <android:uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <android:uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <android:uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity"
+        <activity
+            android:name=".MainActivity"
             android:label="Paper Telephone">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,6 +38,7 @@
             android:name=".game.GameActivity"
             android:label="@string/title_activity_game"
             android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".game.EndGameActivity"></activity>
     </application>
 
 </manifest>

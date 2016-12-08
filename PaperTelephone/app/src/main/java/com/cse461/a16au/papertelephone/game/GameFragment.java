@@ -32,4 +32,11 @@ public abstract class GameFragment extends Fragment {
         super.onDetach();
         mListener = null;
     }
+
+    /**
+     * TODO: class documentation
+     */
+    public interface DataSendListener {
+        void sendData(byte[] data);
+    }
 }

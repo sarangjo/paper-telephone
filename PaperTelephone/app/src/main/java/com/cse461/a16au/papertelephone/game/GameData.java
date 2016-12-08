@@ -18,6 +18,7 @@ public class GameData {
     public static int startDevice = -1;
     public static int lastSuccessor = 0;
     public static Set<String> unplacedDevices = new HashSet<>();
+    public static int turnsLeft = 0;
 
     // IN-GAME
     public static CountDownTimer turnTimer = null;

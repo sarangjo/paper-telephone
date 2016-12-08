@@ -10,6 +10,8 @@ public class Constants {
     public static final UUID APP_UUID = UUID.fromString("b914c3a4-e47f-4fa8-b23a-8e55a5981e5f");
     public static final String APP_NAME = "PaperTelephone";
 
+    public static final boolean DEBUG = true;
+
     // Activity intent requests
     public static final int REQUEST_ENABLE_BT = 1;
 

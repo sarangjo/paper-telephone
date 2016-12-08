@@ -6,7 +6,7 @@ package com.cse461.a16au.papertelephone.game;
  */
 
 import android.app.FragmentTransaction;
-import android.content.res.Resources;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -25,7 +25,7 @@ import java.util.ArrayList;
 
 import static com.cse461.a16au.papertelephone.game.GameData.*;
 
-public class GameActivity extends FragmentActivity implements DataSendListener {
+public class GameActivity extends FragmentActivity implements GameFragment.DataSendListener {
     private BluetoothConnectService mConnectService;
     private boolean isPromptMode;
     private GameFragment mFragment;
@@ -61,6 +61,15 @@ public class GameActivity extends FragmentActivity implements DataSendListener {
     public void updateMode() {
         if (GameData.turnTimer != null) {
             GameData.turnTimer.cancel();
+        }
+
+        // Finish game
+        if (!Constants.DEBUG && turnsLeft == 0) {
+            Toast.makeText(this, "Game over!", Toast.LENGTH_LONG).show();
+            Intent intent = new Intent(this, EndGameActivity.class);
+            startActivity(intent);
+            finish();
+            return;
         }
 
         // Start the timer at 30 seconds for the next phase of the game
@@ -118,6 +127,8 @@ public class GameActivity extends FragmentActivity implements DataSendListener {
         isDone = false;
         unfinishedDeviceList = new ArrayList<>(connectedDevices);
         mTimerTextView.setTextColor(getResources().getColor(R.color.colorTimer));
+
+        turnsLeft--;
     }
 
     @Override

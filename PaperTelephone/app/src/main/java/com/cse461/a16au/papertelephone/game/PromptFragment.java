@@ -31,15 +31,18 @@ public class PromptFragment extends GameFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_prompt, container, false);
         Bundle args = getArguments();
+
+        Button sendPromptButton = (Button) view.findViewById(R.id.button_send_prompt);
+
         if (args.getBoolean("start")) {
+            // Different help text for start-of-game
             TextView prompt = (TextView) view.findViewById(R.id.prompt_help);
             prompt.setText("Enter something for someone to draw");
 
             mPromptText = (EditText) view.findViewById(R.id.user_prompt);
             mPromptText.setHint("Enter prompt here");
 
-            Button button = (Button) view.findViewById(R.id.button_send_drawing);
-            button.setText("Send prompt");
+            sendPromptButton.setText("Send prompt");
         } else {
             // Grab image view and display the received image
             mReceivedImageView = (ImageView) view.findViewById(R.id.image_received_image);
@@ -52,10 +55,8 @@ public class PromptFragment extends GameFragment {
             }
 
             mReceivedImageView.setImageBitmap(bitmap);
-
         }
 
-        Button sendPromptButton = (Button) view.findViewById(R.id.button_send_prompt);
         sendPromptButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
