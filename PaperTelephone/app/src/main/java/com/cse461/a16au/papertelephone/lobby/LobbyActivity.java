@@ -174,10 +174,10 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
      */
     private void chooseSuccessor() {
         Iterator<String> iter = unplacedDevices.iterator();
+        boolean isLast = !iter.hasNext();
         String nextDeviceAddress;
-        if (iter.hasNext()) {
+        if (!isLast) {
             nextDeviceAddress = iter.next();
-
             // Remove device from set of unplaced devices
             iter.remove();
         } else {
@@ -194,6 +194,11 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
         for (String address : connectedDevices) {
             mConnectService.write(msg.array(), address);
+        }
+
+        if(isLast) {
+            Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
+            startActivity(intent);
         }
     }
 
