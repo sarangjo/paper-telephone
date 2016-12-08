@@ -16,6 +16,7 @@ import com.cse461.a16au.papertelephone.lobby.LobbyActivity;
 import java.lang.Override;
 
 public class MainActivity extends FragmentActivity {
+    private static final String TAG = "MainActivity";
     private Button buttonStartGame;
 
     @Override
@@ -47,11 +48,11 @@ public class MainActivity extends FragmentActivity {
             case Constants.REQUEST_ENABLE_BT:
                 // Setup game and connect to other devices now that bluetooth is enabled
                 if (resultCode == Activity.RESULT_OK) {
-                    Toast.makeText(this, "Successfully enabled Bluetooth.", Toast.LENGTH_LONG).show();
+                    Log.d(TAG, "Successfully enabled Bluetooth.");
                     buttonStartGame.setEnabled(true);
                 } else {
                     // User did not enable Bluetooth or an error occurred
-                    Log.d(Constants.APP_NAME, "BT not enabled");
+                    Log.d(TAG, "BT not enabled");
                     Toast.makeText(this, R.string.bt_not_enabled_exit,
                             Toast.LENGTH_LONG).show();
                     finish();

@@ -61,6 +61,10 @@ public class BluetoothConnectService {
         mGameHandler = handler;
     }
 
+    public void unregisterGameHandler(Handler gameHandler) {
+        mGameHandler = (mGameHandler.equals(gameHandler) ? null : mGameHandler);
+    }
+
     public void registerMainHandler(Handler handler) {
         mMainHandler = handler;
     }
@@ -426,8 +430,8 @@ public class BluetoothConnectService {
                 // Main Handler
                 else if (Arrays.equals(header, Constants.HEADER_START)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, buffer);
-                } else if (Arrays.equals(header, Constants.HEADER_PAIR)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PAIR, buffer);
+                } else if (Arrays.equals(header, Constants.HEADER_SUCCESSOR)) {
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_SUCCESSOR, buffer);
                 } else if (Arrays.equals(header, Constants.HEADER_DEVICES)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DEVICES, buffer);
                 } else if (Arrays.equals(header, Constants.HEADER_PING)) {

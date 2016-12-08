@@ -10,10 +10,10 @@ public class Constants {
     public static final UUID APP_UUID = UUID.fromString("b914c3a4-e47f-4fa8-b23a-8e55a5981e5f");
     public static final String APP_NAME = "PaperTelephone";
 
-    public static final int REQUEST_CONNECT_DEVICE = 1;
-    public static final int REQUEST_ENABLE_BT = 2;
+    // Activity intent requests
+    public static final int REQUEST_ENABLE_BT = 1;
 
-    // Message sent from Service to Handlers
+    // Message sent from BluetoothConnectService to any Handlers
     public static final int MESSAGE_CONNECTED = 0;
     public static final int MESSAGE_DISCONNECTED = 1;
     public static final int MESSAGE_READ = 2;
@@ -23,7 +23,7 @@ public class Constants {
     public static final String DEVICE_NAME = "device_name";
     public static final String DEVICE_ADDRESS = "device_address";
 
-    // Header
+    // Bluetooth packet system
     public static final int HEADER_LENGTH = 12;
 
     public static final int READ_UNKNOWN = -1;
@@ -37,15 +37,26 @@ public class Constants {
     public static final int READ_PING = 3;
     public static final byte[] HEADER_DEVICES = getHeader("DEVICES");
     public static final int READ_DEVICES = 4;
-    public static final byte[] HEADER_PAIR = getHeader("PAIR");
-    public static final int READ_PAIR = 5;
+    public static final byte[] HEADER_SUCCESSOR = getHeader("SUCCESSOR");
+    public static final int READ_SUCCESSOR = 5;
     public static final byte[] HEADER_DONE = getHeader("DONE");
     public static final int READ_DONE = 6;
 
     public static final int ADDRESS_LENGTH = 17;
+
+    /**
+     * Duration of discoverability at a given time, in seconds.
+     */
     public static final int DISCOVERABLE_TIME = 300;
 
+    /**
+     * Duration of a single turn, in milliseconds.
+     */
+    public static final long TURN_MILLIS = 30000;
 
+    /**
+     * Creates a zero-padded header of the given string that is HEADER_LENGTH bytes long.
+     */
     private static byte[] getHeader(String s) {
         return Arrays.copyOf(s.getBytes(), HEADER_LENGTH);
     }

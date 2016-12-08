@@ -12,10 +12,18 @@ import java.util.Set;
  */
 
 public class GameData {
+    // SETUP
     public static List<String> connectedDevices = new ArrayList<>();
     public static int nextDevice = 0;
     public static int startDevice = -1;
+    public static int lastSuccessor = 0;
     public static Set<String> unplacedDevices = new HashSet<>();
-    public static int lastPair = 0;
+
+    // IN-GAME
     public static CountDownTimer turnTimer = null;
+    /**
+     * A list of the devices that have not finished the current turn.
+     */
+    public static List<String> unfinishedDeviceList = new ArrayList<>();
+    public static boolean isDone;
 }

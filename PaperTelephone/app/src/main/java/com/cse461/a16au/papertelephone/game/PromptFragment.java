@@ -1,6 +1,5 @@
 package com.cse461.a16au.papertelephone.game;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -12,31 +11,32 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
+
+import java.nio.ByteBuffer;
 
 /**
  * Created by sgorti3 on 11/30/2016.
  * TODO: implement and document
  */
 public class PromptFragment extends GameFragment {
-    private PromptSendListener mListener;
-    private View view;
     private ImageView mReceivedImageView;
-
+    private EditText mPromptText;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.fragment_prompt, container, false);
+        View view = inflater.inflate(R.layout.fragment_prompt, container, false);
         Bundle args = getArguments();
-        if(args.getBoolean("start")) {
-            TextView prompt = (TextView) view.findViewById(R.id.prompt);
+        if (args.getBoolean("start")) {
+            TextView prompt = (TextView) view.findViewById(R.id.prompt_help);
             prompt.setText("Enter something for someone to draw");
 
-            EditText editBox = (EditText) view.findViewById(R.id.user_prompt);
-            editBox.setHint("Enter prompt here");
-
+            mPromptText = (EditText) view.findViewById(R.id.user_prompt);
+            mPromptText.setHint("Enter prompt here");
 
             Button button = (Button) view.findViewById(R.id.button_send_drawing);
             button.setText("Send prompt");
@@ -44,11 +44,19 @@ public class PromptFragment extends GameFragment {
             // Grab image view and display the received image
             mReceivedImageView = (ImageView) view.findViewById(R.id.image_received_image);
 
-            displayImage(args.getByteArray("image"));
+            byte[] data = args.getByteArray("image");
+            Bitmap bitmap = null;
+            if (data != null) {
+                bitmap = BitmapFactory.decodeByteArray(data, 0,
+                        data.length);
+            }
+
+            mReceivedImageView.setImageBitmap(bitmap);
+
         }
 
         Button sendPromptButton = (Button) view.findViewById(R.id.button_send_prompt);
-         sendPromptButton.setOnClickListener(new View.OnClickListener() {
+        sendPromptButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 endTurn();
@@ -59,36 +67,20 @@ public class PromptFragment extends GameFragment {
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof DrawingFragment.DrawingSendListener) {
-            mListener = (PromptFragment.PromptSendListener) context;
-        } else {
-            throw new RuntimeException("Must implement DrawingSendListener");
-        }
-    }
-
-    @Override
     public void endTurn() {
-        String prompt = ((EditText) view.findViewById(R.id.user_prompt)).getText().toString();
-        // Build intent with the drawing data
-        byte[] array = prompt.getBytes();
-        mListener.sendPrompt(array);
-    }
+        String input = mPromptText.getText().toString().trim();
 
-    /**
-     * Process an array of bytes into a bitmap and display it in the view
-     *
-     * @param data array of bytes containing image information
-     */
-    private void displayImage(byte[] data) {
-        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0,
-                data.length);
+        if (!input.isEmpty()) {
+            byte[] prompt = input.getBytes();
 
-        mReceivedImageView.setImageBitmap(bitmap);
-    }
+            byte[] header = Constants.HEADER_PROMPT;
+            ByteBuffer buf = ByteBuffer.allocate(header.length + prompt.length);
+            buf.put(header);
+            buf.put(prompt);
 
-    interface PromptSendListener {
-        void sendPrompt(byte[] prompt);
+            mListener.sendData(buf.array());
+        } else {
+            Toast.makeText(getActivity(), "Please submit a prompt.", Toast.LENGTH_SHORT).show();
+        }
     }
 }

@@ -1,7 +1,5 @@
 package com.cse461.a16au.papertelephone.lobby;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,7 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 
 import static com.cse461.a16au.papertelephone.game.GameData.connectedDevices;
-import static com.cse461.a16au.papertelephone.game.GameData.lastPair;
+import static com.cse461.a16au.papertelephone.game.GameData.lastSuccessor;
 import static com.cse461.a16au.papertelephone.game.GameData.nextDevice;
 import static com.cse461.a16au.papertelephone.game.GameData.startDevice;
 import static com.cse461.a16au.papertelephone.game.GameData.unplacedDevices;
@@ -83,7 +81,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         startGameButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                start();
+                startGame();
             }
         });
     }
@@ -131,7 +129,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     /**
      * Establishes an ordering for the connected devices when the user hits the start button
      */
-    private void start() {
+    private void startGame() {
         if (connectedDevices.size() >= 2) {
             byte[] startMsg = Constants.HEADER_START;
 
@@ -184,8 +182,8 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         }
 
         ByteBuffer msg = ByteBuffer.allocate(Constants.HEADER_LENGTH + 4 + Constants.ADDRESS_LENGTH);
-        msg.put(Constants.HEADER_PAIR);
-        msg.putInt(lastPair + 1);
+        msg.put(Constants.HEADER_SUCCESSOR);
+        msg.putInt(lastSuccessor + 1);
         msg.put(nextDeviceAddress.getBytes());
 
         // Set nextDevice field to store which device we will send prompts and drawings to
@@ -230,7 +228,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     }
                 }
                 break;
-            case Constants.READ_PAIR:
+            case Constants.READ_SUCCESSOR:
                 // Format of pair tuple: header, pair #, pair address
                 // msg.arg1 = Constants.HEADER_LENGTH + 4 + Constants.ADDRESS_LENGTH);
                 buf = ByteBuffer.wrap((byte[]) msg.obj, 0, msg.arg1);
@@ -238,7 +236,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 // Throw away header
                 buf.get(new byte[Constants.HEADER_LENGTH]);
 
-                lastPair = buf.getInt();
+                lastSuccessor = buf.getInt();
                 byte[] pairedDeviceAddressArr = new byte[17];
                 buf.get(pairedDeviceAddressArr);
 

@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,7 @@ import com.cse461.a16au.papertelephone.R;
  */
 public class DiscoverableFragment extends Fragment {
     private static final int REQUEST_MAKE_DISCOVERABLE = 1;
+    private static final String TAG = "DiscoverableFragment";
 
     private TextView discoverableView;
 
@@ -51,17 +53,6 @@ public class DiscoverableFragment extends Fragment {
 
     public DiscoverableFragment() {
         // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @return A new instance of fragment DiscoverableFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static DiscoverableFragment newInstance() {
-        return new DiscoverableFragment();
     }
 
     @Override
@@ -108,24 +99,24 @@ public class DiscoverableFragment extends Fragment {
         switch (requestCode) {
             case REQUEST_MAKE_DISCOVERABLE:
                 if (resultCode == Activity.RESULT_CANCELED) {
-                    Toast.makeText(getActivity(), "Did not turn on discovery.", Toast.LENGTH_LONG).show();
+                    Log.d(TAG, "Did not turn on discovery.");
                 } else {
-                    Toast.makeText(getActivity(), "Successfully turned on discovery.", Toast.LENGTH_LONG).show();
+                    Log.d(TAG, "Successfully turned on discovery.");
 //                    makeDiscoverableButton.setEnabled(false);
-                    new CountDownTimer(resultCode * 1000, 1000) {
-                        @Override
-                        public void onTick(long millisUntilFinished) {
-                            // TODO do something
-                            //timeDiscoverableButton.setText(String.format("Discoverable for %d seconds", (millisUntilFinished / 1000)));
-                        }
-
-                        @Override
-                        public void onFinish() {
-                            // TODO: do something
-                            //timeDiscoverableButton.setText(getResources().getString(R.string.not_discoverable));
-                            //makeDiscoverableButton.setEnabled(true);
-                        }
-                    }.start();
+//                    new CountDownTimer(resultCode * 1000, 1000) {
+//                        @Override
+//                        public void onTick(long millisUntilFinished) {
+//                            // TODO do something
+//                            timeDiscoverableButton.setText(String.format("Discoverable for %d seconds", (millisUntilFinished / 1000)));
+//                        }
+//
+//                        @Override
+//                        public void onFinish() {
+//                            // TODO: do something
+//                            timeDiscoverableButton.setText(getResources().getString(R.string.not_discoverable));
+//                            makeDiscoverableButton.setEnabled(true);
+//                        }
+//                    }.start();
                 }
                 break;
         }

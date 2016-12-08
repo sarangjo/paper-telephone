@@ -15,9 +15,11 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
 
 /**
  * Created by siddt on 11/29/2016.
@@ -26,7 +28,6 @@ import java.io.ByteArrayOutputStream;
 
 public class DrawingFragment extends GameFragment {
     private Paint mPaint;
-    private DrawingSendListener mListener;
     private PaintingView paintingView;
 
     @Override
@@ -52,7 +53,7 @@ public class DrawingFragment extends GameFragment {
         // Retrieve and display prompt
         Bundle args = getArguments();
         String prompt = args.getString("prompt");
-        ((TextView) view.findViewById(R.id.prompt_drawing)).setText(prompt);
+        ((TextView) view.findViewById(R.id.drawing_help)).setText(prompt);
 
         // PaintingView for current drawing turn
         paintingView = new DrawingFragment.PaintingView(getActivity());
@@ -70,34 +71,26 @@ public class DrawingFragment extends GameFragment {
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof DrawingSendListener) {
-            mListener = (DrawingSendListener) context;
-        } else {
-            throw new RuntimeException("Must implement DrawingSendListener");
-        }
-    }
-
-    @Override
     public void endTurn() {
-        // Build intent with the drawing data
+        // Convert image to byte array
         Bitmap cache = paintingView.getDrawingCache();
         Bitmap b = cache.copy(cache.getConfig(), true);
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         b.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        byte[] array = stream.toByteArray();
+        byte[] image = stream.toByteArray();
 
-        mListener.sendDrawing(array);
-    }
+        // Create data packet to sent
+        byte[] header = Constants.HEADER_IMAGE;
 
+        ByteBuffer buf = ByteBuffer.allocate(header.length + image.length + 4);
+        buf.put(header);
+        buf.putInt(image.length);
+        buf.put(image);
 
+        mListener.sendData(buf.array());
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
+        // TODO: if no drawing, Toast.makeText(getActivity(), "Please submit a drawing.", Toast.LENGTH_SHORT).show();
     }
 
     public class PaintingView extends View {
@@ -178,9 +171,5 @@ public class DrawingFragment extends GameFragment {
             }
             return true;
         }
-    }
-
-    interface DrawingSendListener {
-        void sendDrawing(byte[] image);
     }
 }
