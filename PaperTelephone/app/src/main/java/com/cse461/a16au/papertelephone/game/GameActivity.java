@@ -13,6 +13,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +31,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
     private boolean isPromptMode;
     private GameFragment mFragment;
     private TextView mTimerTextView;
+    private final String TAG = "GAME_ACTIVITY";
 
     private String prompt;
     private byte[] image;
@@ -135,6 +137,13 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
     public void sendData(byte[] data) {
         // Write this turn's data to our next device
         mConnectService.write(data, connectedDevices.get(nextDevice));
+        Log.d(TAG, "Sent Image/Prompt");
+
+        try {
+            Thread.sleep(250);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // Write done message to all devices
         byte[] header = Constants.HEADER_DONE;
@@ -142,7 +151,12 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         buf.put(header);
 
         for (String device : connectedDevices) {
-            while(!mConnectService.write(buf.array(), device)){}
+            while(true){
+                if(mConnectService.write(buf.array(), device)) {
+                    Log.d(TAG, "Sent Done");
+                    break;
+                }
+            }
         }
 
         isDone = true;
@@ -170,6 +184,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
                             break;
                         case Constants.READ_PROMPT:
                             Toast.makeText(GameActivity.this, "Prompt received!", Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "Read Prompt");
                             prompt = new String((byte[]) msg.obj);
                             if (isDone && unfinishedDeviceList.isEmpty()) {
                                 updateMode();
@@ -178,6 +193,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
                         case Constants.READ_DONE:
                             String name = msg.getData().getString(Constants.DEVICE_NAME);
                             Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "Read Done");
 
                             // Get address of sender and remove it from our list of devices
                             // keeping track of which devices haven't finished yet
