@@ -167,7 +167,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
                             }
                             break;
                         case Constants.READ_PROMPT:
-                            Toast.makeText(GameActivity.this, "Text received!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(GameActivity.this, "Prompt received!", Toast.LENGTH_SHORT).show();
                             prompt = new String((byte[]) msg.obj);
                             if (isDone && unfinishedDeviceList.isEmpty()) {
                                 updateMode();
