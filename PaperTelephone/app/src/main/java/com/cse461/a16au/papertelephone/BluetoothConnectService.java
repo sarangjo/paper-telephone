@@ -378,6 +378,7 @@ public class BluetoothConnectService {
             log("Done listening");
         }
 
+        // TODO: Process the creator of the data in cases
         private void handleRead(byte[] data, int bytes) {
             data = Arrays.copyOfRange(data, 0, bytes);
             // ByteBuffer to wrap our input buffer
@@ -394,37 +395,10 @@ public class BluetoothConnectService {
 
                 // Game handler
                 if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
-                    // Hold onto the full image size for later
-                    int totalImageSize = input.getInt();
-                    int remainingImageSize = totalImageSize;
-                    log("Image Size is " + remainingImageSize);
+                    byte[] imgData = processImage(input, bytes - Constants.HEADER_LENGTH - 4, data).array();
 
-                    // Set up the overall buffer
-                    ByteBuffer imgBuffer = ByteBuffer.allocate(remainingImageSize);
 
-                    // Get the actual image data
-                    byte[] imagePacket = new byte[bytes - Constants.HEADER_LENGTH - 4];
-                    input.get(imagePacket);
-                    imgBuffer.put(imagePacket);
-                    remainingImageSize -= imagePacket.length;
-
-                    while (remainingImageSize > 0) {
-                        try {
-                            bytes = mmInStream.read(data);
-                            log("Received image packet of " + bytes + " bytes");
-
-                            log(remainingImageSize + " bytes left to store image");
-                            imgBuffer.put(Arrays.copyOfRange(data, 0, bytes));
-                            remainingImageSize -= bytes;
-                        } catch (IOException e) {
-                            Log.e(TAG, "Connection disconnected", e);
-                            connectionLost(mmDevice);
-
-                            break;
-                        }
-                    }
-
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, imgBuffer.array());
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, imgData.length, Constants.READ_IMAGE, imgData);
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_PROMPT)) {
                     data = new byte[bytes - Constants.HEADER_LENGTH];
@@ -432,7 +406,19 @@ public class BluetoothConnectService {
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PROMPT, data);
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_DONE)) {
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DONE, data);
+                    input.get(header);
+                    byte[] msgData;
+
+                    if(Arrays.equals(header, Constants.HEADER_IMAGE)) {
+                        msgData = processImage(input, bytes - 2 * Constants.HEADER_LENGTH - 4, data).array();
+                    } else {
+                        msgData = new byte[bytes - Constants.HEADER_LENGTH];
+                        input.get(msgData);
+                    }
+
+
+
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DONE, msgData);
                     currHandler = mGameHandler;
                 }
                 // Main Handler
@@ -458,6 +444,42 @@ public class BluetoothConnectService {
                 msg.setData(bundle);
                 currHandler.sendMessage(msg);
             }
+        }
+
+        public ByteBuffer processImage(ByteBuffer input, int imgBytes, byte[] data) {
+            // Hold onto the full image size for later
+            int totalImageSize = input.getInt();
+            int remainingImageSize = totalImageSize;
+            log("Image Size is " + remainingImageSize);
+
+            // Set up the overall buffer
+            ByteBuffer imgBuffer = ByteBuffer.allocate(remainingImageSize);
+
+            // Get the actual image data
+            byte[] imagePacket = new byte[imgBytes];
+            input.get(imagePacket);
+            imgBuffer.put(imagePacket);
+            remainingImageSize -= imagePacket.length;
+
+            int bytesRead = 0;
+
+            while (remainingImageSize > 0) {
+                try {
+                    bytesRead = mmInStream.read(data);
+                    log("Received image packet of " + bytesRead + " bytes");
+
+                    log(remainingImageSize + " bytes left to store image");
+                    imgBuffer.put(Arrays.copyOfRange(data, 0, bytesRead));
+                    remainingImageSize -= bytesRead;
+                } catch (IOException e) {
+                    Log.e(TAG, "Connection disconnected", e);
+                    connectionLost(mmDevice);
+
+                    break;
+                }
+            }
+
+            return imgBuffer;
         }
 
         public boolean write(byte[] buffer) {

@@ -133,6 +133,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         turnsLeft--;
     }
 
+    // TODO: Send the creator of this thread along with any data we send
     @Override
     public void sendData(byte[] data) {
         // Write this turn's data to our next device
@@ -141,8 +142,9 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
 
         // Write done message to all devices
         byte[] header = Constants.HEADER_DONE;
-        ByteBuffer buf = ByteBuffer.allocate(header.length);
+        ByteBuffer buf = ByteBuffer.allocate(header.length + data.length);
         buf.put(header);
+        buf.put(data);
 
         for (String device : connectedDevices) {
             if(!device.equals(connectedDevices.get(nextDevice))) {
@@ -167,14 +169,24 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
             switch (msg.what) {
                 case Constants.MESSAGE_READ:
                     switch (msg.arg2) {
+                        // TODO: Add the current image/prompt to the corresponding list in the map from addresses to summaries
                         case Constants.READ_IMAGE:
                             Toast.makeText(GameActivity.this, "Image received!", Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "Read Image");
                             image = (byte[]) msg.obj;
                             break;
                         case Constants.READ_PROMPT:
                             Toast.makeText(GameActivity.this, "Prompt received!", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Read Prompt");
                             prompt = new String((byte[]) msg.obj);
+                            break;
+                        case Constants.READ_DONE:
+                            Toast.makeText(GameActivity.this, "Done received!", Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "Read Done");
+
+                            // TODO: Get creator address, uncomment and add this logic to all cases
+                            //String address = msg.getData().getString(/* CREATOR address */);
+                            //addressToSummaries.get(address).add((byte[]) msg.obj);
                             break;
                     }
 

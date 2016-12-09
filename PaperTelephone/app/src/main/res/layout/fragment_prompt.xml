@@ -5,32 +5,32 @@
     android:orientation="vertical">
 
     <TextView
+        android:id="@+id/prompt_help"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="What do you think this drawing is?"
-        android:id="@+id/prompt_help"/>
+        android:paddingBottom="10dp"
+        android:text="What do you think this drawing is?" />
 
     <ImageView
+        android:id="@+id/image_received_image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="Received image"
-        android:id="@+id/image_received_image"/>
+        android:contentDescription="Received image" />
 
 
     <EditText
+        android:id="@+id/user_prompt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:hint="Enter Guess"
         android:ems="10"
-        android:id="@+id/user_prompt" />
+        android:hint="Enter Guess"
+        android:inputType="textPersonName" />
+
     <Button
         android:id="@+id/button_send_prompt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Send Guess!"/>
-
-
+        android:text="Send Guess!" />
 
 
 </LinearLayout>

@@ -3,8 +3,10 @@ package com.cse461.a16au.papertelephone.game;
 import android.os.CountDownTimer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -20,6 +22,7 @@ public class GameData {
     public static int lastSuccessor = 0;
     public static Set<String> unplacedDevices = new HashSet<>();
     public static int turnsLeft = 0;
+    public static Map<String, List<Byte[]>> addressToSummaries = new HashMap<>();
 
     // IN-GAME
     public static CountDownTimer turnTimer = null;
