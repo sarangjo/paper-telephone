@@ -67,8 +67,6 @@ public class PromptFragment extends GameFragment {
         sendPromptButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mProgressBar.setVisibility(ProgressBar.VISIBLE);
-                mLoadingMessage.setVisibility(TextView.VISIBLE);
                 endTurn();
             }
         });
@@ -78,6 +76,9 @@ public class PromptFragment extends GameFragment {
 
     @Override
     public void endTurn() {
+        mProgressBar.setIndeterminate(true);
+        mProgressBar.setVisibility(ProgressBar.VISIBLE);
+        mLoadingMessage.setVisibility(TextView.VISIBLE);
         String input = mPromptText.getText().toString().trim();
 
         if (!input.isEmpty()) {
