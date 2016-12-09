@@ -32,6 +32,7 @@ import java.nio.ByteBuffer;
 public class DrawingFragment extends GameFragment {
     private Paint mPaint;
     private PaintingView paintingView;
+    private String mCreatorAddress;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -45,6 +46,9 @@ public class DrawingFragment extends GameFragment {
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStrokeWidth(12);
+
+        Bundle args = getArguments();
+        mCreatorAddress = args.getString(Constants.CREATOR_ADDRESS);
     }
 
     @Nullable
@@ -87,16 +91,16 @@ public class DrawingFragment extends GameFragment {
         b.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] image = stream.toByteArray();
 
-        // Create data packet to sent
+        // Create data packet to send
         byte[] header = Constants.HEADER_IMAGE;
 
-        ByteBuffer buf = ByteBuffer.allocate(header.length + image.length + 4);
+        ByteBuffer buf = ByteBuffer.allocate(header.length + mCreatorAddress.length() + image.length + 4);
         buf.put(header);
         buf.putInt(image.length);
+        buf.put(mCreatorAddress.getBytes());
         buf.put(image);
 
         mListener.sendData(buf.array());
-
         // TODO: if no drawing, Toast.makeText(getActivity(), "Please submit a drawing.", Toast.LENGTH_SHORT).show();
     }
 

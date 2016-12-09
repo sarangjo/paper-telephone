@@ -35,6 +35,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
 
     private String prompt;
     private byte[] image;
+    private String creatorAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +48,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         mTimerTextView = (TextView) findViewById(R.id.timer);
 
         isPromptMode = true;
+        creatorAddress = null;
         updateMode();
     }
 
@@ -97,6 +99,9 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
             ft.remove(mFragment);
         }
         Bundle args = new Bundle();
+
+        // Set creatorAddress argument
+        args.putString(Constants.CREATOR_ADDRESS, creatorAddress);
         if (isPromptMode) {
             if (mFragment == null) {
                 args.putBoolean("start", true);
@@ -169,7 +174,6 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
             switch (msg.what) {
                 case Constants.MESSAGE_READ:
                     switch (msg.arg2) {
-                        // TODO: Add the current image/prompt to the corresponding list in the map from addresses to summaries
                         case Constants.READ_IMAGE:
                             Toast.makeText(GameActivity.this, "Image received!", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Read Image");
@@ -183,12 +187,12 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
                         case Constants.READ_DONE:
                             Toast.makeText(GameActivity.this, "Done received!", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Read Done");
-
-                            // TODO: Get creator address, uncomment and add this logic to all cases
-                            //String address = msg.getData().getString(/* CREATOR address */);
-                            //addressToSummaries.get(address).add((byte[]) msg.obj);
                             break;
                     }
+
+                    // Add the current image/prompt to the corresponding list in the map from addresses to summaries
+                    creatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
+                    addressToSummaries.get(creatorAddress).add((Byte[]) msg.obj);
 
                     String name = msg.getData().getString(Constants.DEVICE_NAME);
                     Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();

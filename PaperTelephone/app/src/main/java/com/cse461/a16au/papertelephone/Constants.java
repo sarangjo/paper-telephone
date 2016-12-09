@@ -22,6 +22,7 @@ public class Constants {
     public static final int MESSAGE_WRITE = 3;
 
     // Bundle keys
+    public static final String CREATOR_ADDRESS = "creator_address";
     public static final String DEVICE_NAME = "device_name";
     public static final String DEVICE_ADDRESS = "device_address";
 

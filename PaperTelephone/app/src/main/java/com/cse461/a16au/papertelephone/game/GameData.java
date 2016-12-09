@@ -23,6 +23,10 @@ public class GameData {
     public static Set<String> unplacedDevices = new HashSet<>();
     public static int turnsLeft = 0;
     public static Map<String, List<Byte[]>> addressToSummaries = new HashMap<>();
+    /**
+     * This device's mac address
+     */
+    public static String mAddress = null;
 
     // IN-GAME
     public static CountDownTimer turnTimer = null;

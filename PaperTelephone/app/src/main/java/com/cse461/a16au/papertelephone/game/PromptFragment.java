@@ -17,9 +17,9 @@ import android.widget.Toast;
 import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 
-import org.w3c.dom.Text;
-
 import java.nio.ByteBuffer;
+
+import static com.cse461.a16au.papertelephone.game.GameData.mAddress;
 
 /**
  * Created by sgorti3 on 11/30/2016.
@@ -30,6 +30,7 @@ public class PromptFragment extends GameFragment {
     private EditText mPromptText;
     private ProgressBar mProgressBar;
     private TextView mLoadingMessage;
+    private String mCreatorAddress;
 
     @Nullable
     @Override
@@ -50,6 +51,7 @@ public class PromptFragment extends GameFragment {
             mPromptText.setHint("Enter prompt here");
 
             sendPromptButton.setText("Send prompt");
+            mCreatorAddress = mAddress;
         } else {
             // Grab image view and display the received image
             mReceivedImageView = (ImageView) view.findViewById(R.id.image_received_image);
@@ -57,11 +59,11 @@ public class PromptFragment extends GameFragment {
             byte[] data = args.getByteArray("image");
             Bitmap bitmap = null;
             if (data != null) {
-                bitmap = BitmapFactory.decodeByteArray(data, 0,
-                        data.length);
+                bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
             }
             mPromptText = (EditText) view.findViewById(R.id.user_prompt);
             mReceivedImageView.setImageBitmap(bitmap);
+            mCreatorAddress = args.getString(Constants.CREATOR_ADDRESS);
         }
 
         sendPromptButton.setOnClickListener(new View.OnClickListener() {
@@ -85,8 +87,10 @@ public class PromptFragment extends GameFragment {
             byte[] prompt = input.getBytes();
 
             byte[] header = Constants.HEADER_PROMPT;
-            ByteBuffer buf = ByteBuffer.allocate(header.length + prompt.length);
+
+            ByteBuffer buf = ByteBuffer.allocate(header.length + mCreatorAddress.length() + prompt.length);
             buf.put(header);
+            buf.put(mCreatorAddress.getBytes());
             buf.put(prompt);
 
             mListener.sendData(buf.array());

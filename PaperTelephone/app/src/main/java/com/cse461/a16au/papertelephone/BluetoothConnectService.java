@@ -378,7 +378,6 @@ public class BluetoothConnectService {
             log("Done listening");
         }
 
-        // TODO: Process the creator of the data in cases
         private void handleRead(byte[] data, int bytes) {
             data = Arrays.copyOfRange(data, 0, bytes);
             // ByteBuffer to wrap our input buffer
@@ -387,6 +386,8 @@ public class BluetoothConnectService {
             // Message to be passed to the appropriate handler
             Message msg;
             Handler currHandler = mMainHandler;
+            String creatorAddress = null;
+            byte[] creatorAddressArr = new byte[17];
 
             // Extracts header, if any
             if (bytes >= Constants.HEADER_LENGTH) {
@@ -395,17 +396,29 @@ public class BluetoothConnectService {
 
                 // Game handler
                 if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
+                    // Get Creator Address
+                    input.get(creatorAddressArr);
+                    creatorAddress = new String (creatorAddressArr);
+
                     byte[] imgData = processImage(input, bytes - Constants.HEADER_LENGTH - 4, data).array();
 
 
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, imgData.length, Constants.READ_IMAGE, imgData);
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_PROMPT)) {
+                    // Get Creator Address
+                    input.get(creatorAddressArr);
+                    creatorAddress = new String (creatorAddressArr);
+
                     data = new byte[bytes - Constants.HEADER_LENGTH];
                     input.get(data);
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PROMPT, data);
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_DONE)) {
+                    // Get Creator Address
+                    input.get(creatorAddressArr);
+                    creatorAddress = new String (creatorAddressArr);
+
                     input.get(header);
                     byte[] msgData;
 
@@ -416,11 +429,10 @@ public class BluetoothConnectService {
                         input.get(msgData);
                     }
 
-
-
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DONE, msgData);
                     currHandler = mGameHandler;
                 }
+
                 // Main Handler
                 else if (Arrays.equals(header, Constants.HEADER_START)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, data);
@@ -439,6 +451,7 @@ public class BluetoothConnectService {
 
             if (currHandler != null) {
                 Bundle bundle = new Bundle();
+                bundle.putString(Constants.CREATOR_ADDRESS, creatorAddress);
                 bundle.putString(Constants.DEVICE_ADDRESS, mmDevice.getAddress());
                 bundle.putString(Constants.DEVICE_NAME, mmDevice.getName());
                 msg.setData(bundle);

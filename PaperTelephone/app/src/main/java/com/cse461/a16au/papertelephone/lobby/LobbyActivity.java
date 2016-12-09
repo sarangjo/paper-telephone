@@ -44,6 +44,7 @@ import static com.cse461.a16au.papertelephone.Constants.READ_UNKNOWN;
 import static com.cse461.a16au.papertelephone.game.GameData.connectedDeviceNames;
 import static com.cse461.a16au.papertelephone.game.GameData.connectedDevices;
 import static com.cse461.a16au.papertelephone.game.GameData.lastSuccessor;
+import static com.cse461.a16au.papertelephone.game.GameData.mAddress;
 import static com.cse461.a16au.papertelephone.game.GameData.nextDevice;
 import static com.cse461.a16au.papertelephone.game.GameData.startDevice;
 import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
@@ -269,6 +270,10 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 boolean isUs = true;
                 for (String address : connectedDevices) {
                     isUs = isUs && !pairedDeviceAddress.equals(address);
+                }
+
+                if (isUs) {
+                    mAddress = pairedDeviceAddress;
                 }
 
                 // If we are the start device and we are the newly paired device, start game
