@@ -23,7 +23,8 @@ import static com.cse461.a16au.papertelephone.game.GameData.mAddress;
 
 /**
  * Created by sgorti3 on 11/30/2016.
- * TODO: implement and document
+ * Asks the user what they think an image is a drawing of and
+ * forwards there response to GameActivity at the end of a turn.
  */
 public class PromptFragment extends GameFragment {
     private ImageView mReceivedImageView;
@@ -76,6 +77,9 @@ public class PromptFragment extends GameFragment {
         return view;
     }
 
+    /**
+     * Process the end of a turn, packaging the prompt and passing it through mListener to GameActivity
+     */
     @Override
     public void endTurn() {
         mProgressBar.setIndeterminate(true);

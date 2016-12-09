@@ -1,10 +1,9 @@
 package com.cse461.a16au.papertelephone.game;
 
 /**
- * Created by siddt on 11/29/2016.
- * TODO: documentation
+ * Manages the two fragments that compose the game, DrawingFragment, and PromptFragment and handles
+ * the receiving of game data from other devices in order to save it for the next phase of the game.
  */
-
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.graphics.Color;
@@ -76,6 +75,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
             return;
         }
 
+        // TODO: Uncomment and test when we are confident that the rest of the game works as intended
         // Start the timer at 30 seconds for the next phase of the game
         /*GameData.turnTimer = new CountDownTimer(Constants.TURN_MILLIS, 1000) {
             public void onTick(long millisUntilFinished) {
@@ -138,7 +138,11 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         turnsLeft--;
     }
 
-    // TODO: Send the creator of this thread along with any data we send
+    /**
+     * Sends data (image or prompt) to the "next device"
+     * Also sends a DONE packet to all devices in order to inform them that we have completed our turn
+     * @param data
+     */
     @Override
     public void sendData(byte[] data) {
         // Write this turn's data to our next device
@@ -169,6 +173,9 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         }
     }
 
+    /**
+     * Handles packets that the game receives from BluetoothConnectService
+     */
     private final Handler mGameHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {

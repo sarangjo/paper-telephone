@@ -25,8 +25,8 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
 /**
- * Created by siddt on 11/29/2016.
- * TODO documentation
+ * Prompts the user to draw something and records the drawing that a user inputs,
+ * forwards that drawing to GameActivity when the turn is complete
  */
 
 public class DrawingFragment extends GameFragment {
@@ -81,6 +81,9 @@ public class DrawingFragment extends GameFragment {
         return view;
     }
 
+    /**
+     * Process the end of a turn, packaging the image and passing it through mListener to GameActivity
+     */
     @Override
     public void endTurn() {
         // Convert image to byte array
