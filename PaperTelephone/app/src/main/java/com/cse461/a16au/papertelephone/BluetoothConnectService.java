@@ -396,26 +396,26 @@ public class BluetoothConnectService {
                 if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
                     // Hold onto the full image size for later
                     int totalImageSize = input.getInt();
-                    int imageSize = totalImageSize;
-                    log("Image Size is " + imageSize);
+                    int remainingImageSize = totalImageSize;
+                    log("Image Size is " + remainingImageSize);
 
                     // Set up the overall buffer
-                    ByteBuffer img = ByteBuffer.allocate(imageSize);
+                    ByteBuffer imgBuffer = ByteBuffer.allocate(remainingImageSize);
 
                     // Get the actual image data
-                    byte[] imagePacket = new byte[bytes - 4];
+                    byte[] imagePacket = new byte[bytes - Constants.HEADER_LENGTH - 4];
                     input.get(imagePacket);
-                    img.put(imagePacket);
-                    imageSize -= imagePacket.length;
+                    imgBuffer.put(imagePacket);
+                    remainingImageSize -= imagePacket.length;
 
-                    while (imageSize > 0) {
+                    while (remainingImageSize > 0) {
                         try {
                             bytes = mmInStream.read(data);
                             log("Received image packet of " + bytes + " bytes");
 
-                            log(imageSize + " bytes left to store image");
-                            img.put(Arrays.copyOfRange(data, 0, bytes));
-                            imageSize -= bytes;
+                            log(remainingImageSize + " bytes left to store image");
+                            imgBuffer.put(Arrays.copyOfRange(data, 0, bytes));
+                            remainingImageSize -= bytes;
                         } catch (IOException e) {
                             Log.e(TAG, "Connection disconnected", e);
                             connectionLost(mmDevice);
@@ -424,7 +424,7 @@ public class BluetoothConnectService {
                         }
                     }
 
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, img.array());
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, totalImageSize, Constants.READ_IMAGE, imgBuffer.array());
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_PROMPT)) {
                     data = new byte[bytes - Constants.HEADER_LENGTH];
