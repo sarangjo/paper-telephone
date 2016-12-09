@@ -35,7 +35,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
 
     private String prompt;
     private byte[] image;
-    private String creatorAddress;
+    private String mCreatorAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +48,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         mTimerTextView = (TextView) findViewById(R.id.timer);
 
         isPromptMode = true;
-        creatorAddress = null;
+        mCreatorAddress = null;
         updateMode();
     }
 
@@ -101,7 +101,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         Bundle args = new Bundle();
 
         // Set creatorAddress argument
-        args.putString(Constants.CREATOR_ADDRESS, creatorAddress);
+        args.putString(Constants.CREATOR_ADDRESS, mCreatorAddress);
         if (isPromptMode) {
             if (mFragment == null) {
                 args.putBoolean("start", true);
@@ -147,8 +147,9 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
 
         // Write done message to all devices
         byte[] header = Constants.HEADER_DONE;
-        ByteBuffer buf = ByteBuffer.allocate(header.length + data.length);
+        ByteBuffer buf = ByteBuffer.allocate(header.length + mCreatorAddress.length() + data.length);
         buf.put(header);
+        buf.put(mCreatorAddress.getBytes());
         buf.put(data);
 
         for (String device : connectedDevices) {
@@ -191,8 +192,8 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
                     }
 
                     // Add the current image/prompt to the corresponding list in the map from addresses to summaries
-                    creatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
-                    addressToSummaries.get(creatorAddress).add((Byte[]) msg.obj);
+                    mCreatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
+                    addressToSummaries.get(mCreatorAddress).add((Byte[]) msg.obj);
 
                     String name = msg.getData().getString(Constants.DEVICE_NAME);
                     Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
