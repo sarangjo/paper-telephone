@@ -13,10 +13,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
+
+import org.w3c.dom.Text;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -64,6 +67,10 @@ public class DrawingFragment extends GameFragment {
         sendDrawingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ProgressBar pb = (ProgressBar) v.findViewById(R.id.loading);
+                pb.setVisibility(ProgressBar.VISIBLE);
+                TextView loadingMessage = (TextView) v.findViewById(R.id.loading_message);
+                loadingMessage.setVisibility(TextView.VISIBLE);
                 endTurn();
             }
         });
