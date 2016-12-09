@@ -17,6 +17,8 @@ import android.widget.Toast;
 import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 
+import org.w3c.dom.Text;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -26,6 +28,8 @@ import java.nio.ByteBuffer;
 public class PromptFragment extends GameFragment {
     private ImageView mReceivedImageView;
     private EditText mPromptText;
+    private ProgressBar mProgressBar;
+    private TextView mLoadingMessage;
 
     @Nullable
     @Override
@@ -33,6 +37,8 @@ public class PromptFragment extends GameFragment {
         View view = inflater.inflate(R.layout.fragment_prompt, container, false);
         Bundle args = getArguments();
 
+        mProgressBar = (ProgressBar) view.findViewById(R.id.loading);
+        mLoadingMessage = (TextView) view.findViewById(R.id.loading_message);
         Button sendPromptButton = (Button) view.findViewById(R.id.button_send_prompt);
 
         if (args.getBoolean("start")) {
@@ -61,10 +67,8 @@ public class PromptFragment extends GameFragment {
         sendPromptButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ProgressBar pb = (ProgressBar) v.findViewById(R.id.loading);
-                pb.setVisibility(ProgressBar.VISIBLE);
-                TextView loadingMessage = (TextView) v.findViewById(R.id.loading_message);
-                loadingMessage.setVisibility(TextView.VISIBLE);
+                mProgressBar.setVisibility(ProgressBar.VISIBLE);
+                mLoadingMessage.setVisibility(TextView.VISIBLE);
                 endTurn();
             }
         });
