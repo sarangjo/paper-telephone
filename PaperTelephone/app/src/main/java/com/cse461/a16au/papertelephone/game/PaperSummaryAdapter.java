@@ -29,10 +29,10 @@ public class PaperSummaryAdapter extends ArrayAdapter<byte[]> {
 
     @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view;
-        if (position % 2 == 1) {
+        if (position % 2 == 0) {
             TextView text = (TextView) inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
             text.setText(new String(mValues.get(position)));
             view = text;

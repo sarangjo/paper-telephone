@@ -131,8 +131,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
     /**
      * After establishing a connection with another device, send the already-connected devices with it.
-     *
-     * @param deviceAddress
      */
     private void sendConnectedDevices(String deviceAddress) {
         ByteBuffer buf = ByteBuffer.allocate(HEADER_LENGTH + 4 + ADDRESS_LENGTH * connectedDevices.size());
@@ -151,7 +149,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     // TODO: test multiple start logic, Sidd and Jakob seem to have uncovered a bug there
     private void startGameClicked() {
         // TODO: change back to 2
-        if (connectedDevices.size() >= 2) {
+        if (connectedDevices.size() >= 1) {
             for (String currDevice : connectedDevices) {
                 mConnectService.write(HEADER_START, currDevice);
             }

@@ -89,15 +89,17 @@ public class DrawingFragment extends GameFragment {
         b.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] image = stream.toByteArray();
 
+        // Save this to our paper store
+        GameData.saveData(mCreatorAddress, image);
+
         // Create data packet to send
-        ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + mCreatorAddress.length() + image.length + 4);
+        ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + image.length + 4);
         buf.put(Constants.HEADER_IMAGE);
         buf.put(mCreatorAddress.getBytes());
         buf.putInt(image.length);
         buf.put(image);
 
         mListener.sendData(buf.array());
-        // TODO: if no drawing, Toast.makeText(getActivity(), "Please submit a drawing.", Toast.LENGTH_SHORT).show();
     }
 
     public class PaintingView extends View {

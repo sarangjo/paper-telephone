@@ -18,6 +18,7 @@ import com.cse461.a16au.papertelephone.R;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import static com.cse461.a16au.papertelephone.game.GameData.*;
@@ -27,15 +28,18 @@ import static com.cse461.a16au.papertelephone.game.GameData.*;
  * the receiving of game data from other devices in order to save it for the next phase of the game.
  */
 public class GameActivity extends FragmentActivity implements GameFragment.DataSendListener {
+    private final String TAG = "GAME_ACTIVITY";
+
     private BluetoothConnectService mConnectService;
-    private boolean isPromptMode;
+    private boolean mIsPromptMode;
+
     private GameFragment mFragment;
     private TextView mTimerTextView;
-    private final String TAG = "GAME_ACTIVITY";
     private ProgressDialog mProgressDialog;
 
-    private String prompt;
-    private byte[] image;
+    // Details for the next turn
+    private String mNextPrompt;
+    private byte[] mNextImage;
     private String mNextCreatorAddress;
 
     @Override
@@ -54,7 +58,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
             successor.setText("Invalid successor");
         }
 
-        isPromptMode = true;
+        mIsPromptMode = true;
         mNextCreatorAddress = null;
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage("Waiting for Other Players to Complete Their Turn");
@@ -113,7 +117,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
 
         // Set creatorAddress argument
         args.putString(Constants.CREATOR_ADDRESS, mNextCreatorAddress);
-        if (isPromptMode) {
+        if (mIsPromptMode) {
             if (mFragment == null) {
                 args.putBoolean("start", true);
                 mFragment = new PromptFragment();
@@ -121,20 +125,20 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
             } else {
                 args.putBoolean("start", false);
                 // Add the image as an arg to the PromptFragment
-                args.putByteArray("image", image);
+                args.putByteArray("image", mNextImage);
                 mFragment = new PromptFragment();
                 mFragment.setArguments(args);
             }
         } else {
             // Pass the prompt to the DrawingFragment
-            args.putString("prompt", prompt);
+            args.putString("prompt", mNextPrompt);
             mFragment = new DrawingFragment();
             mFragment.setArguments(args);
         }
         ft.add(R.id.game_fragment_container, mFragment).commit();
 
         // Switch modes and setup for start of the next turn
-        isPromptMode = !isPromptMode;
+        mIsPromptMode = !mIsPromptMode;
         startTurn();
     }
 
@@ -152,8 +156,6 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
     /**
      * Sends data (image or prompt) to the "next device"
      * Also sends a DONE packet to all devices in order to inform them that we have completed our turn
-     *
-     * @param data
      */
     @Override
     public void sendData(byte[] data) {
@@ -183,7 +185,6 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         if (unfinishedDeviceList.isEmpty()) {
             updateMode();
         }
-
     }
 
     /**
@@ -199,22 +200,19 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
                     // Add the current image/prompt to the corresponding list in the map from addresses to summaries
                     String creatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
                     byte[] data = (byte[]) msg.obj;
-                    if (!addressToSummaries.containsKey(creatorAddress)) {
-                        addressToSummaries.putIfAbsent(creatorAddress, new ArrayList<byte[]>());
-                    }
-                    addressToSummaries.get(creatorAddress).add(data);
+                    saveData(creatorAddress, data);
 
                     switch (msg.arg2) {
                         case Constants.READ_IMAGE:
                             Toast.makeText(GameActivity.this, "Image received!", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Read Image");
-                            image = (byte[]) msg.obj;
+                            mNextImage = (byte[]) msg.obj;
                             mNextCreatorAddress = creatorAddress;
                             break;
                         case Constants.READ_PROMPT:
                             Toast.makeText(GameActivity.this, "Prompt received!", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Read Prompt");
-                            prompt = new String((byte[]) msg.obj);
+                            mNextPrompt = new String((byte[]) msg.obj);
                             mNextCreatorAddress = creatorAddress;
                             break;
                         case Constants.READ_DONE:

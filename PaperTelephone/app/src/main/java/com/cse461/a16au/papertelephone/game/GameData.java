@@ -87,4 +87,15 @@ public class GameData {
      * prompt, along with the drawings and prompts that followed it
      */
     public static ConcurrentMap<String, List<byte[]>> addressToSummaries = new ConcurrentHashMap<>();
+
+    public static void saveData(String creatorAddress, byte[] data) {
+        List<byte[]> summary;
+        if (addressToSummaries.containsKey(creatorAddress)) {
+            summary = addressToSummaries.get(creatorAddress);
+        } else {
+            summary = new ArrayList<byte[]>();
+        }
+        summary.add(data);
+        addressToSummaries.put(creatorAddress, summary);
+    }
 }

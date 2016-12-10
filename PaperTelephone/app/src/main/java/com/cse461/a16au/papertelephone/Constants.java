@@ -63,4 +63,6 @@ public class Constants {
     private static byte[] getHeader(String s) {
         return Arrays.copyOf(s.getBytes(), HEADER_LENGTH);
     }
+
+    // TODO: maybe define packet headers here
 }

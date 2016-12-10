@@ -83,10 +83,10 @@ public class PromptFragment extends GameFragment {
         if (!input.isEmpty()) {
             byte[] prompt = input.getBytes();
 
-            byte[] header = Constants.HEADER_PROMPT;
+            GameData.saveData(mCreatorAddress, prompt);
 
-            ByteBuffer buf = ByteBuffer.allocate(header.length + mCreatorAddress.length() + prompt.length);
-            buf.put(header);
+            ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + prompt.length);
+            buf.put(Constants.HEADER_PROMPT);
             buf.put(mCreatorAddress.getBytes());
             buf.put(prompt);
 
