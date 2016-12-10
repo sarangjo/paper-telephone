@@ -296,6 +296,7 @@ public class BluetoothConnectService {
             mAdapter.cancelDiscovery();
 
             try {
+                // TODO: timeout for this
                 mmSocket.connect();
             } catch (IOException e) {
                 // Close socket
@@ -365,7 +366,7 @@ public class BluetoothConnectService {
             while (mState == STATE_STARTED) {
                 try {
                     bytes = mmInStream.read(buffer);
-                    log("Received " + bytes + " bytes");
+//                    log("Received " + bytes + " bytes");
 
                     handleRead(buffer, bytes);
                 } catch (IOException e) {
@@ -406,6 +407,8 @@ public class BluetoothConnectService {
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, imgData.length, Constants.READ_IMAGE, imgData);
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_PROMPT)) {
+                    log("Received prompt");
+
                     // Get Creator Address
                     input.get(creatorAddressArr);
                     creatorAddress = new String (creatorAddressArr);
@@ -425,8 +428,10 @@ public class BluetoothConnectService {
                     byte[] msgData;
 
                     if(Arrays.equals(header, Constants.HEADER_IMAGE)) {
+                        log("Received done of type image");
                         msgData = processImage(input, bytes - 2 * Constants.HEADER_LENGTH - Constants.ADDRESS_LENGTH - 4, data).array();
                     } else {
+                        log("Received done of type prompt");
                         msgData = new byte[bytes - Constants.ADDRESS_LENGTH - Constants.HEADER_LENGTH];
                         input.get(msgData);
                     }
@@ -437,17 +442,23 @@ public class BluetoothConnectService {
 
                 // Main Handler
                 else if (Arrays.equals(header, Constants.HEADER_START)) {
+                    log("Received START");
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, data);
                 } else if (Arrays.equals(header, Constants.HEADER_SUCCESSOR)) {
+                    log("Received SUCCESSOR");
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_SUCCESSOR, data);
                 } else if (Arrays.equals(header, Constants.HEADER_DEVICES)) {
+                    log("Received DEVICES");
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DEVICES, data);
                 } else if (Arrays.equals(header, Constants.HEADER_PING)) {
+                    log("Received PING");
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, data);
                 } else {
+                    log("Received UNKNOWN");
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, data);
                 }
             } else {
+                log("Received UNKNOWN");
                 msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, data);
             }
 
@@ -465,7 +476,8 @@ public class BluetoothConnectService {
             // Hold onto the full image size for later
             int totalImageSize = input.getInt();
             int remainingImageSize = totalImageSize;
-            log("Image Size is " + remainingImageSize);
+
+            log("Receiving image of size " + remainingImageSize);
 
             // Set up the overall buffer
             ByteBuffer imgBuffer = ByteBuffer.allocate(remainingImageSize);
@@ -481,11 +493,10 @@ public class BluetoothConnectService {
             while (remainingImageSize > 0) {
                 try {
                     bytesRead = mmInStream.read(data);
-                    log("Received image packet of " + bytesRead + " bytes");
-
-                    log(remainingImageSize + " bytes left to store image");
                     imgBuffer.put(Arrays.copyOfRange(data, 0, bytesRead));
                     remainingImageSize -= bytesRead;
+
+                    log(remainingImageSize + " bytes left to store image");
                 } catch (IOException e) {
                     Log.e(TAG, "Connection disconnected", e);
                     connectionLost(mmDevice);
@@ -527,7 +538,7 @@ public class BluetoothConnectService {
         }
 
         private void log(String str) {
-            Log.d(TAG, "[CONNECTED THREAD " + mmDevice.getAddress() + "] " + str);
+            Log.d(TAG, "[CONNECTED THREAD " + mmDevice.getName() + "] " + str);
         }
     }
 
