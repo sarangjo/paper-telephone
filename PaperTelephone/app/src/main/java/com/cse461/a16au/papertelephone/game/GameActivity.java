@@ -199,7 +199,8 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
 
                     // Add the current image/prompt to the corresponding list in the map from addresses to summaries
                     mCreatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
-                    addressToSummaries.get(mCreatorAddress).add((Byte[]) msg.obj);
+                    byte[] data = (byte[]) msg.obj;
+                    addressToSummaries.get(mCreatorAddress).add(data);
 
                     String name = msg.getData().getString(Constants.DEVICE_NAME);
                     Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();

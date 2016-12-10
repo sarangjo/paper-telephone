@@ -54,7 +54,7 @@ public class GameData {
      * Map from device addresses to their "Summaries" which store the original
      * prompt, along with the drawings and prompts that followed it
      */
-    public static Map<String, List<Byte[]>> addressToSummaries = new HashMap<>();
+    public static Map<String, List<byte[]>> addressToSummaries = new HashMap<>();
 
     /**
      * This device's mac address
