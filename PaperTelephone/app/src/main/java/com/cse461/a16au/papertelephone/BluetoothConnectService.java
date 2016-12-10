@@ -388,7 +388,7 @@ public class BluetoothConnectService {
             Message msg;
             Handler currHandler = mMainHandler;
             String creatorAddress = null;
-            byte[] creatorAddressArr = new byte[17];
+            byte[] creatorAddressArr = new byte[Constants.ADDRESS_LENGTH];
 
             // Extracts header, if any
             if (bytes >= Constants.HEADER_LENGTH) {

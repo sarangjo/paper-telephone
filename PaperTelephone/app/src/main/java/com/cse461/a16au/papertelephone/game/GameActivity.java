@@ -50,7 +50,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         mTimerTextView = (TextView) findViewById(R.id.timer);
         TextView successor = (TextView) findViewById(R.id.successor_text);
         if (nextDevice >= 0) {
-            successor.setText(connectedDeviceNames.get(nextDevice));
+            successor.setText("Next: " + connectedDeviceNames.get(nextDevice));
         } else {
             successor.setText("Invalid successor");
         }
@@ -163,9 +163,8 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         Log.d(TAG, "Sent Image/Prompt");
 
         // Write done message to all devices
-        byte[] header = Constants.HEADER_DONE;
-        ByteBuffer buf = ByteBuffer.allocate(header.length + data.length);
-        buf.put(header);
+        ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + data.length);
+        buf.put(Constants.HEADER_DONE);
         buf.put(data);
 
         for (String device : connectedDevices) {

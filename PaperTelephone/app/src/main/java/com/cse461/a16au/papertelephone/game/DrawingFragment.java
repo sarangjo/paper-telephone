@@ -90,12 +90,10 @@ public class DrawingFragment extends GameFragment {
         byte[] image = stream.toByteArray();
 
         // Create data packet to send
-        byte[] header = Constants.HEADER_IMAGE;
-
-        ByteBuffer buf = ByteBuffer.allocate(header.length + mCreatorAddress.length() + image.length + 4);
-        buf.put(header);
-        buf.putInt(image.length);
+        ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + mCreatorAddress.length() + image.length + 4);
+        buf.put(Constants.HEADER_IMAGE);
         buf.put(mCreatorAddress.getBytes());
+        buf.putInt(image.length);
         buf.put(image);
 
         mListener.sendData(buf.array());
