@@ -425,6 +425,8 @@ public class BluetoothConnectService {
                     input.get(creatorAddressArr);
                     creatorAddress = new String (creatorAddressArr);
 
+                    log("Received Done with creator: " + creatorAddress);
+
                     byte[] msgData;
 
                     if(Arrays.equals(header, Constants.HEADER_IMAGE)) {
@@ -432,7 +434,7 @@ public class BluetoothConnectService {
                         msgData = processImage(input, bytes - 2 * Constants.HEADER_LENGTH - Constants.ADDRESS_LENGTH - 4, data).array();
                     } else {
                         log("Received done of type prompt");
-                        msgData = new byte[bytes - Constants.ADDRESS_LENGTH - Constants.HEADER_LENGTH];
+                        msgData = new byte[bytes - 2 * Constants.HEADER_LENGTH - Constants.ADDRESS_LENGTH];
                         input.get(msgData);
                     }
 
