@@ -8,9 +8,7 @@ package com.cse461.a16au.papertelephone.game;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
@@ -24,6 +22,7 @@ import com.cse461.a16au.papertelephone.R;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import static com.cse461.a16au.papertelephone.game.GameData.*;
 
@@ -37,7 +36,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
 
     private String prompt;
     private byte[] image;
-    private String mCreatorAddress;
+    private String mNextCreatorAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +55,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         }
 
         isPromptMode = true;
-        mCreatorAddress = null;
+        mNextCreatorAddress = null;
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage("Waiting for Other Players to Complete Their Turn");
         updateMode();
@@ -113,7 +112,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         Bundle args = new Bundle();
 
         // Set creatorAddress argument
-        args.putString(Constants.CREATOR_ADDRESS, mCreatorAddress);
+        args.putString(Constants.CREATOR_ADDRESS, mNextCreatorAddress);
         if (isPromptMode) {
             if (mFragment == null) {
                 args.putBoolean("start", true);
@@ -144,7 +143,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
      */
     private void startTurn() {
         isDone = false;
-        unfinishedDeviceList = new ArrayList<>(connectedDevices);
+        unfinishedDeviceList = new ConcurrentSkipListSet<>(connectedDevices);
         mTimerTextView.setTextColor(getResources().getColor(R.color.colorTimer));
 
         turnsLeft--;
@@ -194,30 +193,31 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case Constants.MESSAGE_READ:
+                    // TODO: MAKE SURE EVERYTHING *HERE* IS THREAD-SAFE
+
+                    // Add the current image/prompt to the corresponding list in the map from addresses to summaries
+                    String creatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
+                    byte[] data = (byte[]) msg.obj;
+                    addressToSummaries.putIfAbsent(creatorAddress, new ArrayList<byte[]>()).add(data);
+
                     switch (msg.arg2) {
                         case Constants.READ_IMAGE:
                             Toast.makeText(GameActivity.this, "Image received!", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Read Image");
                             image = (byte[]) msg.obj;
+                            mNextCreatorAddress = creatorAddress;
                             break;
                         case Constants.READ_PROMPT:
                             Toast.makeText(GameActivity.this, "Prompt received!", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Read Prompt");
                             prompt = new String((byte[]) msg.obj);
+                            mNextCreatorAddress = creatorAddress;
                             break;
                         case Constants.READ_DONE:
                             Toast.makeText(GameActivity.this, "Done received!", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Read Done");
                             break;
                     }
-
-                    // Add the current image/prompt to the corresponding list in the map from addresses to summaries
-                    mCreatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
-                    byte[] data = (byte[]) msg.obj;
-                    if (!addressToSummaries.containsKey(mCreatorAddress)) {
-                        addressToSummaries.put(mCreatorAddress, new ArrayList<byte[]>());
-                    }
-                    addressToSummaries.get(mCreatorAddress).add(data);
 
                     String name = msg.getData().getString(Constants.DEVICE_NAME);
                     Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();

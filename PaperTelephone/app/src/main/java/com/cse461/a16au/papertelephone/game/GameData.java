@@ -8,6 +8,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * TODO: class documentation
@@ -51,25 +55,30 @@ public class GameData {
     public static int turnsLeft = 0;
 
     /**
-     * Map from device addresses to their "Summaries" which store the original
-     * prompt, along with the drawings and prompts that followed it
-     */
-    public static Map<String, List<byte[]>> addressToSummaries = new HashMap<>();
-
-    /**
      * This device's mac address
      */
     public static String mAddress = null;
 
     // IN-GAME
+    /**
+     * The timer for each turn.
+     */
     public static CountDownTimer turnTimer = null;
+
     /**
      * A list of the devices that have not finished the current turn.
      */
-    public static List<String> unfinishedDeviceList = new ArrayList<>();
+    public static Set<String> unfinishedDeviceList = new ConcurrentSkipListSet<>();
 
     /**
      * Stores whether or not this device has completed the current turn
      */
     public static boolean isDone;
+
+    // END-GAME
+    /**
+     * Map from device addresses to their "Summaries" which store the original
+     * prompt, along with the drawings and prompts that followed it
+     */
+    public static ConcurrentMap<String, List<byte[]>> addressToSummaries = new ConcurrentHashMap<>();
 }
