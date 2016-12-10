@@ -415,11 +415,13 @@ public class BluetoothConnectService {
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PROMPT, data);
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_DONE)) {
+                    // Get the type of data that this DONE packet contains
+                    input.get(header);
+
                     // Get Creator Address
                     input.get(creatorAddressArr);
                     creatorAddress = new String (creatorAddressArr);
 
-                    input.get(header);
                     byte[] msgData;
 
                     if(Arrays.equals(header, Constants.HEADER_IMAGE)) {

@@ -151,9 +151,8 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
 
         // Write done message to all devices
         byte[] header = Constants.HEADER_DONE;
-        ByteBuffer buf = ByteBuffer.allocate(header.length + mCreatorAddress.length() + data.length);
+        ByteBuffer buf = ByteBuffer.allocate(header.length + data.length);
         buf.put(header);
-        buf.put(mCreatorAddress.getBytes());
         buf.put(data);
 
         for (String device : connectedDevices) {
