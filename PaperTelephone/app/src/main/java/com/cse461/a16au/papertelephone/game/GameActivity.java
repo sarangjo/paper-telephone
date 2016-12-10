@@ -1,10 +1,5 @@
 package com.cse461.a16au.papertelephone.game;
 
-/**
- * Manages the two fragments that compose the game, DrawingFragment, and PromptFragment and handles
- * the receiving of game data from other devices in order to save it for the next phase of the game.
- */
-
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -22,10 +17,15 @@ import com.cse461.a16au.papertelephone.R;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import static com.cse461.a16au.papertelephone.game.GameData.*;
 
+/**
+ * Manages the two fragments that compose the game, DrawingFragment, and PromptFragment and handles
+ * the receiving of game data from other devices in order to save it for the next phase of the game.
+ */
 public class GameActivity extends FragmentActivity implements GameFragment.DataSendListener {
     private BluetoothConnectService mConnectService;
     private boolean isPromptMode;
@@ -77,7 +77,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         }
 
         // Finish game
-        if (!Constants.DEBUG && turnsLeft == 0) {
+        if (/*!Constants.DEBUG && */turnsLeft == 0) {
             Toast.makeText(this, "Game over!", Toast.LENGTH_LONG).show();
             Intent intent = new Intent(this, EndGameActivity.class);
             startActivity(intent);
@@ -158,7 +158,8 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
     @Override
     public void sendData(byte[] data) {
         // Write this turn's data to our next device
-        mConnectService.write(data, connectedDevices.get(nextDevice));
+        // THIS APPARENTLY MODIFIES THE PASSED-IN ARRAY??????????????????????!?!?!?!?!?!?!?
+        mConnectService.write(Arrays.copyOf(data, data.length), connectedDevices.get(nextDevice));
         Log.d(TAG, "Sent Image/Prompt");
 
         // Write done message to all devices
@@ -217,13 +218,11 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
                             mNextCreatorAddress = creatorAddress;
                             break;
                         case Constants.READ_DONE:
-                            Toast.makeText(GameActivity.this, "Done received!", Toast.LENGTH_SHORT).show();
+                            String name = msg.getData().getString(Constants.DEVICE_NAME);
+                            Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Read Done");
                             break;
                     }
-
-                    String name = msg.getData().getString(Constants.DEVICE_NAME);
-                    Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
 
                     // Get address of sender and remove it from our list of devices
                     // keeping track of which devices haven't finished yet

@@ -24,7 +24,6 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 
 import static com.cse461.a16au.papertelephone.Constants.ADDRESS_LENGTH;
-import static com.cse461.a16au.papertelephone.Constants.DEBUG;
 import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
 import static com.cse461.a16au.papertelephone.Constants.DEVICE_NAME;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_DEVICES;
@@ -101,7 +100,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         startGameButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startGame();
+                startGameClicked();
             }
         });
     }
@@ -150,13 +149,11 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
      * Establishes an ordering for the connected devices when the user hits the start button
      */
     // TODO: test multiple start logic, Sidd and Jakob seem to have uncovered a bug there
-    private void startGame() {
+    private void startGameClicked() {
         // TODO: change back to 2
-        if (connectedDevices.size() >= 1) {
-            byte[] startMsg = HEADER_START;
-
+        if (connectedDevices.size() >= 2) {
             for (String currDevice : connectedDevices) {
-                mConnectService.write(startMsg, currDevice);
+                mConnectService.write(HEADER_START, currDevice);
             }
 
             // Sleep for a short time in case another device pressed start at the same time
@@ -167,7 +164,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             }
 
             // TODO: reset all other GameData?
-            turnsLeft = connectedDevices.size();
 
             // TODO: Does this hacky way work?
             String localAddress = android.provider.Settings.Secure.getString(getContentResolver(), "bluetooth_address");
@@ -180,10 +176,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
                 chooseSuccessor();
             }
-        // TODO: REMOVE THIS IN THE FINAL VERSION
-        } else if (connectedDevices.size() == 0 && DEBUG) {
-            Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
-            startActivity(intent);
         } else {
             Toast.makeText(this, "You don't have enough players, the game requires " +
                     "at least 3 players", Toast.LENGTH_LONG).show();
@@ -218,9 +210,17 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         }
 
         if(isLast) {
-            Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
-            startActivity(intent);
+            transitionToGame();
         }
+    }
+
+    private void transitionToGame() {
+        turnsLeft = connectedDevices.size() + 1;
+
+        Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
+        startActivity(intent);
+
+        // TODO: finish?
     }
 
     @Override
@@ -280,9 +280,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 if ((startDevice == -1 && isUs)
                         // If the loop has been completed and all devices have a successor, start game
                         || (startDevice != -1 && pairedDeviceAddress.equals(connectedDevices.get(startDevice)))) {
-                    Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
-                    startActivity(intent);
-                    // TODO: finish() to prevent more callbacks?
+                    transitionToGame();
                     return;
                 }
 

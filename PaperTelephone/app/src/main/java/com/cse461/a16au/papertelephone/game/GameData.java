@@ -1,5 +1,6 @@
 package com.cse461.a16au.papertelephone.game;
 
+import android.bluetooth.BluetoothAdapter;
 import android.os.CountDownTimer;
 
 import java.util.ArrayList;
@@ -58,6 +59,11 @@ public class GameData {
      * This device's mac address
      */
     public static String mAddress = null;
+
+    /**
+     * Our name.
+     */
+    public static String mName = BluetoothAdapter.getDefaultAdapter().getName();
 
     // IN-GAME
     /**

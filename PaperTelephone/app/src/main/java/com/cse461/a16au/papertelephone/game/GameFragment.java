@@ -1,5 +1,6 @@
 package com.cse461.a16au.papertelephone.game;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 
@@ -18,10 +19,10 @@ public abstract class GameFragment extends Fragment {
     public abstract void endTurn();
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof DataSendListener) {
-            mListener = (DataSendListener) context;
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if (activity instanceof DataSendListener) {
+            mListener = (DataSendListener) activity;
         } else {
             throw new RuntimeException("Parent activity must implement DataSendListener.");
         }

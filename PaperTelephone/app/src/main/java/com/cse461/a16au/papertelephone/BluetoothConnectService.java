@@ -421,6 +421,8 @@ public class BluetoothConnectService {
                     // Get the type of data that this DONE packet contains
                     input.get(header);
 
+                    log("Received Done with Header:" + new String(header));
+
                     // Get Creator Address
                     input.get(creatorAddressArr);
                     creatorAddress = new String (creatorAddressArr);
