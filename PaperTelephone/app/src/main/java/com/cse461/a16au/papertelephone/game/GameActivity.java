@@ -6,6 +6,7 @@ package com.cse461.a16au.papertelephone.game;
  */
 
 import android.app.FragmentTransaction;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -32,6 +33,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
     private GameFragment mFragment;
     private TextView mTimerTextView;
     private final String TAG = "GAME_ACTIVITY";
+    private ProgressDialog mProgressDialog;
 
     private String prompt;
     private byte[] image;
@@ -55,6 +57,8 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
 
         isPromptMode = true;
         mCreatorAddress = null;
+        mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setMessage("Waiting for Other Players to Complete Their Turn");
         updateMode();
     }
 
@@ -102,6 +106,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
 
         // Switch out the fragments to update the current mode
         FragmentTransaction ft = getFragmentManager().beginTransaction();
+        mProgressDialog.dismiss();
         if (mFragment != null) {
             ft.remove(mFragment);
         }
@@ -175,9 +180,11 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
             GameData.turnTimer.cancel();
         }
 
+        mProgressDialog.show();
         if (unfinishedDeviceList.isEmpty()) {
             updateMode();
         }
+
     }
 
     /**

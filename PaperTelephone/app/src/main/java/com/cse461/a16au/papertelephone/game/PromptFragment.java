@@ -29,8 +29,6 @@ import static com.cse461.a16au.papertelephone.game.GameData.mAddress;
 public class PromptFragment extends GameFragment {
     private ImageView mReceivedImageView;
     private EditText mPromptText;
-    private ProgressBar mProgressBar;
-    private TextView mLoadingMessage;
     private String mCreatorAddress;
 
     @Nullable
@@ -39,8 +37,6 @@ public class PromptFragment extends GameFragment {
         View view = inflater.inflate(R.layout.fragment_prompt, container, false);
         Bundle args = getArguments();
 
-        mProgressBar = (ProgressBar) view.findViewById(R.id.loading);
-        mLoadingMessage = (TextView) view.findViewById(R.id.loading_message);
         Button sendPromptButton = (Button) view.findViewById(R.id.button_send_prompt);
 
         if (args.getBoolean("start")) {
@@ -82,9 +78,6 @@ public class PromptFragment extends GameFragment {
      */
     @Override
     public void endTurn() {
-        mProgressBar.setIndeterminate(true);
-        mProgressBar.setVisibility(ProgressBar.VISIBLE);
-        mLoadingMessage.setVisibility(TextView.VISIBLE);
         String input = mPromptText.getText().toString().trim();
 
         if (!input.isEmpty()) {

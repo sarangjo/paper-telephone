@@ -32,21 +32,7 @@
         android:layout_height="wrap_content"
         android:text="Send Guess!" />
 
-    <ProgressBar
-        android:id="@+id/loading"
-        android:visibility="invisible"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"/>
 
-    <TextView
-        android:id="@+id/loading_message"
-        android:visibility="invisible"
-        android:text="Waiting For Other Players To Complete Their Turn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:textSize="14sp" />
 
 
 
