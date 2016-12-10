@@ -11,10 +11,12 @@
         android:paddingBottom="10dp"
         android:text="What do you think this drawing is?" />
 
+    <!-- TODO: make this constant -->
+
     <ImageView
         android:id="@+id/image_received_image"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="300dp"
         android:contentDescription="Received image" />
 
 
