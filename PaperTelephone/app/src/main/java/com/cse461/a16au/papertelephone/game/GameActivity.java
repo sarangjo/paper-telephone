@@ -198,7 +198,10 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
                     // Add the current image/prompt to the corresponding list in the map from addresses to summaries
                     String creatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
                     byte[] data = (byte[]) msg.obj;
-                    addressToSummaries.putIfAbsent(creatorAddress, new ArrayList<byte[]>()).add(data);
+                    if (!addressToSummaries.containsKey(creatorAddress)) {
+                        addressToSummaries.putIfAbsent(creatorAddress, new ArrayList<byte[]>());
+                    }
+                    addressToSummaries.get(creatorAddress).add(data);
 
                     switch (msg.arg2) {
                         case Constants.READ_IMAGE:
