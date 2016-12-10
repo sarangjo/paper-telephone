@@ -400,7 +400,7 @@ public class BluetoothConnectService {
                     input.get(creatorAddressArr);
                     creatorAddress = new String (creatorAddressArr);
 
-                    byte[] imgData = processImage(input, bytes - Constants.HEADER_LENGTH - 4, data).array();
+                    byte[] imgData = processImage(input, bytes - Constants.ADDRESS_LENGTH - Constants.HEADER_LENGTH - 4, data).array();
 
 
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, imgData.length, Constants.READ_IMAGE, imgData);
@@ -410,7 +410,7 @@ public class BluetoothConnectService {
                     input.get(creatorAddressArr);
                     creatorAddress = new String (creatorAddressArr);
 
-                    data = new byte[bytes - Constants.HEADER_LENGTH];
+                    data = new byte[bytes - Constants.ADDRESS_LENGTH - Constants.HEADER_LENGTH];
                     input.get(data);
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PROMPT, data);
                     currHandler = mGameHandler;
@@ -425,9 +425,9 @@ public class BluetoothConnectService {
                     byte[] msgData;
 
                     if(Arrays.equals(header, Constants.HEADER_IMAGE)) {
-                        msgData = processImage(input, bytes - 2 * Constants.HEADER_LENGTH - 4, data).array();
+                        msgData = processImage(input, bytes - 2 * Constants.HEADER_LENGTH - Constants.ADDRESS_LENGTH - 4, data).array();
                     } else {
-                        msgData = new byte[bytes - Constants.HEADER_LENGTH];
+                        msgData = new byte[bytes - Constants.ADDRESS_LENGTH - Constants.HEADER_LENGTH];
                         input.get(msgData);
                     }
 
