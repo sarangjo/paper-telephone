@@ -340,7 +340,7 @@ public class BluetoothConnectService {
         private final OutputStream mmOutStream;
 
         ConnectedThread(BluetoothSocket socket, BluetoothDevice device) {
-            Log.d(TAG, "Create connected thread");
+//            Log.d(TAG, "Create connected thread");
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
             mmDevice = device;

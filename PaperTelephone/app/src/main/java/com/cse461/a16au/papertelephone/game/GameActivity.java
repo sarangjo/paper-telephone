@@ -4,6 +4,7 @@ package com.cse461.a16au.papertelephone.game;
  * Manages the two fragments that compose the game, DrawingFragment, and PromptFragment and handles
  * the receiving of game data from other devices in order to save it for the next phase of the game.
  */
+
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.graphics.Color;
@@ -45,6 +46,12 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         mConnectService.registerGameHandler(mGameHandler);
 
         mTimerTextView = (TextView) findViewById(R.id.timer);
+        TextView successor = (TextView) findViewById(R.id.successor_text);
+        if (nextDevice >= 0) {
+            successor.setText(connectedDeviceNames.get(nextDevice));
+        } else {
+            successor.setText("Invalid successor");
+        }
 
         isPromptMode = true;
         mCreatorAddress = null;
@@ -141,6 +148,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
     /**
      * Sends data (image or prompt) to the "next device"
      * Also sends a DONE packet to all devices in order to inform them that we have completed our turn
+     *
      * @param data
      */
     @Override
@@ -156,7 +164,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         buf.put(data);
 
         for (String device : connectedDevices) {
-            if(!device.equals(connectedDevices.get(nextDevice))) {
+            if (!device.equals(connectedDevices.get(nextDevice))) {
                 mConnectService.write(buf.array(), device);
                 Log.d(TAG, "Sent Done");
             }
@@ -200,6 +208,9 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
                     // Add the current image/prompt to the corresponding list in the map from addresses to summaries
                     mCreatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
                     byte[] data = (byte[]) msg.obj;
+                    if (!addressToSummaries.containsKey(mCreatorAddress)) {
+                        addressToSummaries.put(mCreatorAddress, new ArrayList<byte[]>());
+                    }
                     addressToSummaries.get(mCreatorAddress).add(data);
 
                     String name = msg.getData().getString(Constants.DEVICE_NAME);
