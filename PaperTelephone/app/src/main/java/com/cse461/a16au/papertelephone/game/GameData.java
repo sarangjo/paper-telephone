@@ -86,7 +86,7 @@ public class GameData {
      * Map from device addresses to their "Summaries" which store the original
      * prompt, along with the drawings and prompts that followed it
      */
-    public static ConcurrentMap<String, List<byte[]>> addressToSummaries = new ConcurrentHashMap<>();
+    public static ConcurrentMap<String, List<byte[]>> addressToSummaries;
 
     public static void saveData(String creatorAddress, byte[] data) {
         List<byte[]> summary;

@@ -19,6 +19,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import static com.cse461.a16au.papertelephone.game.GameData.*;
@@ -46,6 +47,10 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+
+        // Set up game data
+        turnsLeft = connectedDevices.size() + 1;
+        addressToSummaries = new ConcurrentHashMap<>();
 
         mConnectService = BluetoothConnectService.getInstance();
         mConnectService.registerGameHandler(mGameHandler);

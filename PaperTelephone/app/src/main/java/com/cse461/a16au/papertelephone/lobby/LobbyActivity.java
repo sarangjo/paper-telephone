@@ -213,8 +213,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     }
 
     private void transitionToGame() {
-        turnsLeft = connectedDevices.size() + 1;
-
         Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
         startActivity(intent);
 

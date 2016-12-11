@@ -2,21 +2,22 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_margin="10dp"
     android:orientation="vertical">
 
     <TextView
         android:id="@+id/prompt_help"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="10dp"
         android:text="What do you think this drawing is?" />
 
     <!-- TODO: make this constant -->
 
     <ImageView
         android:id="@+id/image_received_image"
-        android:layout_width="wrap_content"
+        android:layout_width="360dp"
         android:layout_height="300dp"
+        android:layout_gravity="center"
         android:contentDescription="Received image" />
 
 
@@ -25,7 +26,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:text="SAMPLE PROMPT"
         android:hint="Enter Guess"
         android:inputType="textPersonName" />
 
@@ -33,10 +33,6 @@
         android:id="@+id/button_send_prompt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:text="Send Guess!" />
-
-
-
-
-
 </LinearLayout>
