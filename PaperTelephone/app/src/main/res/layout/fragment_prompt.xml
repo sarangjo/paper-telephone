@@ -9,7 +9,8 @@
         android:id="@+id/prompt_help"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="What do you think this drawing is?" />
+        android:textSize="18sp"
+        android:text="@string/prompt_title" />
 
     <!-- TODO: make this constant -->
 
@@ -20,13 +21,12 @@
         android:layout_gravity="center"
         android:contentDescription="Received image" />
 
-
     <EditText
         android:id="@+id/user_prompt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:hint="Enter Guess"
+        android:hint="@string/enter_guess"
         android:inputType="textPersonName" />
 
     <Button
@@ -34,5 +34,5 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="Send Guess!" />
+        android:text="@string/send_guess" />
 </LinearLayout>

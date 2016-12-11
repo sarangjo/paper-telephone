@@ -2,18 +2,27 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_margin="10dp"
     android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/drawing_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Draw the prompt below"
+        android:textSize="16sp" />
 
     <TextView
         android:id="@+id/drawing_help"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Draw a freaking elephant in the area below!"/>
+        android:textSize="16sp" />
 
     <LinearLayout
         android:id="@+id/game_drawing"
-        android:layout_width="match_parent"
+        android:layout_width="360dp"
         android:layout_height="300dp"
+        android:layout_gravity="center"
         android:orientation="vertical" >
     </LinearLayout>
 
@@ -21,8 +30,7 @@
         android:id="@+id/button_send_drawing"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Send Drawing!"/>
-
-
+        android:layout_gravity="center"
+        android:text="@string/send_drawing"/>
 
 </LinearLayout>

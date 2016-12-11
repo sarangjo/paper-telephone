@@ -14,4 +14,9 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="start_game">Start Game</string>
     <string name="title_activity_game">Game Activity</string>
+    <string name="send_guess">Send Guess!</string>
+    <string name="enter_guess">Enter Guess</string>
+    <string name="send_drawing">Send Drawing!</string>
+    <string name="scan">Scan</string>
+    <string name="prompt_title">What do you think this drawing is?</string>
 </resources>
