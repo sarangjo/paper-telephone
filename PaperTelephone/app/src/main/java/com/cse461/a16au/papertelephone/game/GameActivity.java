@@ -32,6 +32,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
     private final String TAG = "GAME_ACTIVITY";
 
     private BluetoothConnectService mConnectService;
+    private GameData mGameData;
     private boolean mIsPromptMode;
 
     private GameFragment mFragment;
@@ -48,8 +49,10 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+        mGameData = GameData.getInstance();
+
         // Set up game data
-        turnsLeft = connectedDevices.size() + 1;
+        turnsLeft = mGameData.getConnectedDevices().size() + 1;
         addressToSummaries = new ConcurrentHashMap<>();
 
         mConnectService = BluetoothConnectService.getInstance();
@@ -58,7 +61,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         mTimerTextView = (TextView) findViewById(R.id.timer);
         TextView successor = (TextView) findViewById(R.id.successor_text);
         if (nextDevice >= 0) {
-            successor.setText("Next: " + connectedDeviceNames.get(nextDevice));
+            successor.setText("Next: " + mGameData.getConnectedDeviceNames().get(nextDevice));
         } else {
             successor.setText("Invalid successor");
         }
@@ -152,7 +155,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
      */
     private void startTurn() {
         isDone = false;
-        unfinishedDeviceList = new ConcurrentSkipListSet<>(connectedDevices);
+        unfinishedDeviceList = new ConcurrentSkipListSet<>(mGameData.getConnectedDevices());
         mTimerTextView.setTextColor(getResources().getColor(R.color.colorTimer));
 
         turnsLeft--;
@@ -166,7 +169,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
     public void sendData(byte[] data) {
         // Write this turn's data to our next device
         // THIS APPARENTLY MODIFIES THE PASSED-IN ARRAY??????????????????????!?!?!?!?!?!?!?
-        mConnectService.write(Arrays.copyOf(data, data.length), connectedDevices.get(nextDevice));
+        mConnectService.write(Arrays.copyOf(data, data.length), mGameData.getConnectedDevice(nextDevice));
         Log.d(TAG, "Sent Image/Prompt");
 
         // Write done message to all devices
@@ -174,8 +177,8 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         buf.put(Constants.HEADER_DONE);
         buf.put(data);
 
-        for (String device : connectedDevices) {
-            if (!device.equals(connectedDevices.get(nextDevice))) {
+        for (String device : mGameData.getConnectedDevices()) {
+            if (!device.equals(mGameData.getConnectedDevice(nextDevice))) {
                 mConnectService.write(buf.array(), device);
                 Log.d(TAG, "Sent Done");
             }

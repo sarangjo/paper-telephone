@@ -1,8 +1,8 @@
 package com.cse461.a16au.papertelephone.game;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -10,10 +10,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.cse461.a16au.papertelephone.R;
-import com.cse461.a16au.papertelephone.lobby.LobbyActivity;
-
-import static com.cse461.a16au.papertelephone.game.GameData.connectedDevices;
-import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
 
 public class EndGameActivity extends AppCompatActivity {
     ListView mSummariesListView;
