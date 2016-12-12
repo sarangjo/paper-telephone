@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -132,11 +133,13 @@ public class BluetoothConnectService {
 
     // CLIENT FUNCTIONS: connect()
 
+    private CountDownTimer mConnectTimer;
+
     /**
      * Connects to the given BluetoothDevice.
      */
     public void connect(String address) {
-        BluetoothDevice device = mAdapter.getRemoteDevice(address);
+        final BluetoothDevice device = mAdapter.getRemoteDevice(address);
 
         Log.d(TAG, "Connecting to: " + device);
 
@@ -149,6 +152,32 @@ public class BluetoothConnectService {
         BluetoothThread connectThread = new ConnectThread(device);
         mConnectThreads.put(device.getAddress(), connectThread);
         connectThread.start();
+
+        // Set timeout for connect thread
+        mConnectTimer = new CountDownTimer(Constants.TIMEOUT_MILLIS, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+            }
+
+            @Override
+            public void onFinish() {
+                BluetoothThread thread;
+                synchronized (BluetoothConnectService.this) {
+                    thread = mConnectThreads.get(device.getAddress());
+                }
+                if (thread != null) {
+                    thread.cancel();
+                }
+
+                // Send error message back to UI
+                Message msg = mMainHandler.obtainMessage(Constants.MESSAGE_CONNECT_FAILED);
+                Bundle bundle = new Bundle();
+                bundle.putString(Constants.DEVICE_ADDRESS, device.getAddress());
+                bundle.putString(Constants.DEVICE_NAME, device.getName());
+                msg.setData(bundle);
+                mMainHandler.sendMessage(msg);
+            }
+        }.start();
     }
 
     // UNIVERSAL FUNCTIONS: connected(), connectionLost(), write()
@@ -317,9 +346,9 @@ public class BluetoothConnectService {
                 return;
             }
 
-            synchronized (mConnectThreads) {
+            synchronized (this) {
+                mConnectTimer.cancel();
                 mConnectThreads.remove(mmDevice.getAddress());
-//                mConnectThread = null;
             }
 
             Log.d(TAG, "[CONNECT THREAD " + mmDevice.getAddress() + "] Finished connect operation");

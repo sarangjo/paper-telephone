@@ -37,6 +37,7 @@ import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECTED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECT_FAILED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_DISCONNECTED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_READ;
+import static com.cse461.a16au.papertelephone.Constants.MIN_PLAYERS;
 import static com.cse461.a16au.papertelephone.Constants.READ_START_ACK;
 import static com.cse461.a16au.papertelephone.Constants.READ_DEVICES;
 import static com.cse461.a16au.papertelephone.Constants.READ_PING;
@@ -72,6 +73,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
      * Main view.
      */
     private View mView;
+    private Button mStartGameButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,13 +106,19 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
         mView = this.findViewById(android.R.id.content);
 
-        Button startGameButton = (Button) findViewById(R.id.button_start_game);
-        startGameButton.setOnClickListener(new View.OnClickListener() {
+        mStartGameButton = (Button) findViewById(R.id.button_start_game);
+        mStartGameButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startGameClicked();
             }
         });
+
+        if (mGameData.getConnectedDevices().size() >= MIN_PLAYERS - 1) {
+            mStartGameButton.setEnabled(true);
+        } else {
+            mStartGameButton.setEnabled(false);
+        }
     }
 
     @Override
@@ -186,8 +194,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
      * Establishes an ordering for the connected devices when the user hits the start button
      */
     private void startGameClicked() {
-        // TODO: change back to 2
-        if (mGameData.getConnectedDevices().size() >= 1) {
+        if (mGameData.getConnectedDevices().size() >= Constants.MIN_PLAYERS - 1) {
             if (mGameData.getStartDevice().length() == Constants.ADDRESS_LENGTH) {
                 return;
             }
@@ -377,6 +384,12 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     if(GameData.connectionChangeListener != null) {
                         GameData.connectionChangeListener.connection(deviceAddress);
                     }
+
+                    if (mGameData.getConnectedDevices().size() >= MIN_PLAYERS - 1) {
+                        mStartGameButton.setEnabled(true);
+                    } else {
+                        mStartGameButton.setEnabled(false);
+                    }
                     break;
                 case MESSAGE_DISCONNECTED:
                     mGameData.removeConnectedDevice(deviceAddress, deviceName);
@@ -385,6 +398,12 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
                     if(GameData.connectionChangeListener != null) {
                         GameData.connectionChangeListener.disconnection(deviceAddress);
+                    }
+
+                    if (mGameData.getConnectedDevices().size() >= MIN_PLAYERS - 1) {
+                        mStartGameButton.setEnabled(true);
+                    } else {
+                        mStartGameButton.setEnabled(false);
                     }
                     break;
                 case MESSAGE_CONNECT_FAILED:

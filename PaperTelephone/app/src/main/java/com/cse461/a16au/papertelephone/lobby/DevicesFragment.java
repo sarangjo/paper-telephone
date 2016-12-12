@@ -24,11 +24,15 @@ import android.widget.TextView;
 
 import com.cse461.a16au.papertelephone.R;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * TODO: class comment
  */
 public class DevicesFragment extends Fragment {
     private static final String TAG = "DevicesFragment";
+    private List<BluetoothDevice> mNewDevices;
 
     private DevicesListAdapter mDevicesAdapter;
     private ProgressBar mScanProgress;
@@ -47,6 +51,7 @@ public class DevicesFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        mNewDevices = new ArrayList<>();
 
         // Register for broadcasts
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
@@ -137,7 +142,6 @@ public class DevicesFragment extends Fragment {
         mScanButton.setEnabled(false);
         mScanProgress.setVisibility(View.VISIBLE);
 
-//        mOldDevicesAdapter.clearNew();
         mDevicesAdapter.clear();
 
         // Request discover from BluetoothAdapter
@@ -168,7 +172,7 @@ public class DevicesFragment extends Fragment {
 
     private class DevicesListAdapter extends ArrayAdapter<BluetoothDevice> {
         DevicesListAdapter(Context context) {
-            super(context, -1);
+            super(context, -1, mNewDevices);
         }
 
         @NonNull

@@ -74,6 +74,14 @@ public class Constants {
      */
     public static final long TURN_MILLIS = 30000;
 
+
+    public static final long TIMEOUT_MILLIS = 10000;
+
+    /**
+     * TODO: change back to 2
+     */
+    public static final int MIN_PLAYERS = 3;
+
     /**
      * Creates a zero-padded header of the given string that is HEADER_LENGTH bytes long.
      */

@@ -15,10 +15,11 @@
     tools:showIn="@layout/activity_lobby">
 
     <Button
+        android:id="@+id/button_start_game"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/button_start_game"
-        android:text="START GAME!!!!"/>
+        android:enabled="false"
+        android:text="START GAME!!!!" />
 
     <fragment
         android:id="@+id/fragment_discoverable"
@@ -33,10 +34,10 @@
         android:layout_height="wrap_content" />
 
     <!--<Button-->
-        <!--android:id="@+id/button_show_devices"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:text="Scan Nearby Devices" />-->
+    <!--android:id="@+id/button_show_devices"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:text="Scan Nearby Devices" />-->
 
     <TextView
         android:id="@+id/title_connected_devices"
