@@ -365,6 +365,10 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     mGameData.addConnectedDevice(deviceAddress, deviceName);
                     mConnectedDevicesNamesAdapter.notifyDataSetChanged();
                     Snackbar.make(mView, "Connected to " + deviceName, Snackbar.LENGTH_LONG).show();
+
+                    if(GameData.connectionChangeListener != null) {
+                        GameData.connectionChangeListener.connection(deviceAddress);
+                    }
                     break;
                 case MESSAGE_DISCONNECTED:
                     deviceName = msg.getData().getString(DEVICE_NAME);
@@ -373,6 +377,10 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     mGameData.removeConnectedDevice(deviceAddress, deviceName);
                     mConnectedDevicesNamesAdapter.notifyDataSetChanged();
                     Snackbar.make(mView, "Disconnected from " + deviceName, Snackbar.LENGTH_LONG).show();
+
+                    if(GameData.connectionChangeListener != null) {
+                        GameData.connectionChangeListener.disconnection(deviceAddress);
+                    }
                     break;
                 case MESSAGE_WRITE:
                     // TODO: do something with what we write out?

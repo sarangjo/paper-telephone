@@ -157,6 +157,8 @@ public class GameData {
      */
     public static boolean isDone;
 
+    public static ConnectionChangeListener connectionChangeListener;
+
     // END-GAME
     /**
      * Map from device addresses to their "Summaries" which store the original

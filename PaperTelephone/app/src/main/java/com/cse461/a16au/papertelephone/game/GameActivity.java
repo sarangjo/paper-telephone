@@ -54,6 +54,18 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
 
         mGameData = GameData.getInstance();
 
+        GameData.connectionChangeListener = new ConnectionChangeListener() {
+            @Override
+            public void disconnection(String address) {
+
+            }
+
+            @Override
+            public void connection(String address) {
+
+            }
+        };
+
         // Set up game data
         turnsLeft = mGameData.getConnectedDevices().size() + 1;
         addressToSummaries = new ConcurrentHashMap<>();
@@ -244,6 +256,9 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
                     if (isDone && unfinishedDeviceList.isEmpty()) {
                         updateMode();
                     }
+                    break;
+                case Constants.MESSAGE_DISCONNECTED:
+                    if(mGameData.getConnectedDevices().size() <= 2);
                     break;
             }
         }
