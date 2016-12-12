@@ -42,10 +42,13 @@ public class GameData {
      */
     private List<String> connectedDeviceNames;
 
+    private Set<String> unackedDevices;
+
     private GameData() {
         this.startDevice = NO_START;
         this.connectedDevices = new ArrayList<>();
         this.connectedDeviceNames = new ArrayList<>();
+        this.unackedDevices = new HashSet<>();
     }
 
     public static GameData getInstance() {
@@ -58,6 +61,10 @@ public class GameData {
 
     public synchronized void setStartDevice(int startDevice) {
         this.startDevice = startDevice;
+    }
+
+    public void setStartDevice(String startDeviceAddress) {
+        this.setStartDevice(getConnectedDevices().indexOf(startDeviceAddress));
     }
 
     public List<String> getConnectedDevices() {
@@ -86,6 +93,22 @@ public class GameData {
         }
     }
 
+    public void setupUnackedDevices() {
+        unackedDevices.addAll(getConnectedDevices());
+    }
+
+    public void removeUnackedDevice(String deviceAddress) {
+        synchronized (this) {
+            unackedDevices.remove(deviceAddress);
+        }
+    }
+
+    public boolean doneAcking() {
+        synchronized (this) {
+            return this.unackedDevices.isEmpty();
+        }
+    }
+
     // SETUP
 
     /**
@@ -111,7 +134,7 @@ public class GameData {
     /**
      * This device's mac address
      */
-    public static String mAddress = null;
+    public static String mLocalAddress = null;
 
     /**
      * Our name.
@@ -151,5 +174,4 @@ public class GameData {
         summary.add(data);
         addressToSummaries.put(creatorAddress, summary);
     }
-
 }

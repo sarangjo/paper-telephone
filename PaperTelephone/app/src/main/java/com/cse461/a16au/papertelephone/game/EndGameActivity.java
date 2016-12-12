@@ -43,7 +43,7 @@ public class EndGameActivity extends AppCompatActivity {
         TextView creatorView = (TextView) findViewById(R.id.view_creator);
         creatorView.setText(GameData.mName);
 
-        ArrayAdapter<byte[]> adapter = new PaperSummaryAdapter(this, GameData.addressToSummaries.get(GameData.mAddress));
+        ArrayAdapter<byte[]> adapter = new PaperSummaryAdapter(this, GameData.addressToSummaries.get(GameData.mLocalAddress));
         mSummariesListView.setAdapter(adapter);
     }
 

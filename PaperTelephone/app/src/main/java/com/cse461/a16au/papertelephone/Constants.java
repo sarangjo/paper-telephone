@@ -44,6 +44,8 @@ public class Constants {
     public static final int READ_SUCCESSOR = 5;
     public static final byte[] HEADER_DONE = getHeader("DONE");
     public static final int READ_DONE = 6;
+    public static final byte[] HEADER_START_ACK = getHeader("ACK");
+    public static final int READ_START_ACK = 7;
 
     public static final int ADDRESS_LENGTH = 17;
 
