@@ -143,6 +143,8 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             case Constants.REQUEST_PLAY_GAME:
                 if (resultCode == RESULT_OK) {
                     // Game ended successfully
+                    GameData.connectionChangeListener = null;
+
                     Toast.makeText(this, "Game over!", Toast.LENGTH_LONG).show();
                     Intent intent = new Intent(this, EndGameActivity.class);
                     startActivityForResult(intent, Constants.REQUEST_END_GAME);
@@ -154,6 +156,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 if (resultCode == Constants.RESULT_LOBBY) {
                     // Back to lobby, reset stuff
                     mGameData.setStartDevice(NO_START);
+
                     // TODO anything else to restart?
                 } else if (resultCode == Constants.RESULT_RESTART) {
                     mGameData.setStartDevice(NO_START);

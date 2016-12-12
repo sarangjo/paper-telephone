@@ -20,7 +20,6 @@ import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
  */
 public class SummaryFragment extends Fragment {
     private String mAddress;
-    private ListView mSummariesListView;
 
     public SummaryFragment() {
         // Required empty public constructor
@@ -43,16 +42,16 @@ public class SummaryFragment extends Fragment {
         GameData gameData = GameData.getInstance();
         TextView creatorView = (TextView) v.findViewById(R.id.view_creator);
 
+        // Find the index of our name
         int positionIndex = gameData.getConnectedDevices().indexOf(mAddress);
-        if (positionIndex >= gameData.getConnectedDeviceNames().size()) {
+        if (positionIndex == -1) {
             // TODO: assume this is us?
             creatorView.setText(GameData.localName);
         } else {
             creatorView.setText(gameData.getConnectedDeviceNames().get(positionIndex));
         }
 
-
-        mSummariesListView = (ListView) v.findViewById(R.id.list_paper_summary);
+        ListView mSummariesListView = (ListView) v.findViewById(R.id.list_paper_summary);
         ArrayAdapter<byte[]> adapter = new SummaryAdapter(getActivity(), GameData.addressToSummaries.get(mAddress));
         mSummariesListView.setAdapter(adapter);
 

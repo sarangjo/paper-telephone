@@ -53,8 +53,6 @@ public class EndGameActivity extends AppCompatActivity {
 
         // ViewPager
         mAddresses = new ArrayList<>(GameData.getInstance().getConnectedDevices());
-        mAddresses.add(GameData.localAddress);
-
         mPager = (ViewPager) findViewById(R.id.pager_summary);
         mPagerAdapter = new SummaryPagerAdapter(getSupportFragmentManager());
 
@@ -73,13 +71,17 @@ public class EndGameActivity extends AppCompatActivity {
         public Fragment getItem(int position) {
             Fragment frag = new SummaryFragment();
             Bundle args = new Bundle();
-            args.putString(DEVICE_ADDRESS, mAddresses.get(position));
+            if (position == 0) {
+                args.putString(DEVICE_ADDRESS, GameData.localAddress);
+            } else {
+                args.putString(DEVICE_ADDRESS, mAddresses.get(position - 1));
+            }
             frag.setArguments(args);
             return frag;
         }
 
         public int getCount() {
-            return mAddresses.size();
+            return mAddresses.size() + 1;
         }
     }
 }
