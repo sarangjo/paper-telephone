@@ -213,7 +213,6 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         // Write this turn's data to our next device
         // THIS APPARENTLY MODIFIES THE PASSED-IN ARRAY??????????????????????!?!?!?!?!?!?!?
         mConnectService.write(Arrays.copyOf(data, data.length), nextDevice);
-        Log.d(TAG, "Sent Image/Prompt");
 
         // Write done message to all devices
         ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + data.length);
@@ -223,7 +222,6 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         for (String device : mGameData.getConnectedDevices()) {
             if (!device.equals(nextDevice)) {
                 mConnectService.write(buf.array(), device);
-                Log.d(TAG, "Sent Done");
             }
         }
 
