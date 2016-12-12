@@ -24,8 +24,6 @@ public class EndGameActivity extends AppCompatActivity {
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
 
-    private ListView mSummariesListView;
-
     private List<String> mAddresses;
 
     @Override
