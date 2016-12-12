@@ -15,6 +15,11 @@ public class Constants {
     // Activity intent requests
     public static final int REQUEST_ENABLE_BT = 1;
     public static final int REQUEST_PLAY_GAME = 2;
+    public static final int REQUEST_END_GAME = 3;
+
+    // End game results
+    public static final int RESULT_LOBBY = 1;
+    public static final int RESULT_RESTART = 2;
 
     // Message sent from BluetoothConnectService to any Handlers
     public static final int MESSAGE_CONNECTED = 0;

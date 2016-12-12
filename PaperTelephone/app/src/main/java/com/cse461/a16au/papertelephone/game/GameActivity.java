@@ -95,9 +95,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
 
         // Finish game
         if (/*!Constants.DEBUG && */turnsLeft == 0) {
-            Toast.makeText(this, "Game over!", Toast.LENGTH_LONG).show();
-            Intent intent = new Intent(this, EndGameActivity.class);
-            startActivity(intent);
+            setResult(RESULT_OK);
             finish();
             return;
         }

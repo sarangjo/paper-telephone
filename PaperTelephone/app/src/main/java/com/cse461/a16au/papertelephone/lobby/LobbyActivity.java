@@ -18,6 +18,7 @@ import android.widget.Toast;
 import com.cse461.a16au.papertelephone.BluetoothConnectService;
 import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
+import com.cse461.a16au.papertelephone.game.EndGameActivity;
 import com.cse461.a16au.papertelephone.game.GameActivity;
 import com.cse461.a16au.papertelephone.game.GameData;
 
@@ -134,6 +135,34 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 //        if (mConnectService != null) {
 //            mConnectService.stop();
 //        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case Constants.REQUEST_PLAY_GAME:
+                if (resultCode == RESULT_OK) {
+                    // Game ended successfully
+                    Toast.makeText(this, "Game over!", Toast.LENGTH_LONG).show();
+                    Intent intent = new Intent(this, EndGameActivity.class);
+                    startActivityForResult(intent, Constants.REQUEST_END_GAME);
+                } else {
+                    Toast.makeText(this, "Game did not end correctly", Toast.LENGTH_LONG).show();
+                }
+                break;
+            case Constants.REQUEST_END_GAME:
+                if (resultCode == Constants.RESULT_LOBBY) {
+                    // Back to lobby, reset stuff
+                    mGameData.setStartDevice(NO_START);
+                    // TODO anything else to restart?
+                } else if (resultCode == Constants.RESULT_RESTART) {
+                    mGameData.setStartDevice(NO_START);
+                    // TODO; do something here
+                } else {
+                    Toast.makeText(this, "End game did not return correctly", Toast.LENGTH_LONG).show();
+                }
+                break;
+        }
     }
 
     /**
