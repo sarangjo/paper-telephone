@@ -22,7 +22,7 @@ import static com.cse461.a16au.papertelephone.Constants.RESULT_LOBBY;
 import static com.cse461.a16au.papertelephone.Constants.RESULT_RESTART;
 
 public class EndGameActivity extends AppCompatActivity {
-    private ViewPager mPager;
+    private final ViewPager mPager = (ViewPager) findViewById(R.id.drawings);
     private PagerAdapter mPagerAdapter;
 
     private List<String> mAddresses;
@@ -52,14 +52,19 @@ public class EndGameActivity extends AppCompatActivity {
         });
 
         // ViewPager
-        mAddresses = new ArrayList<>(GameData.getInstance().getConnectedDevices());
-        mPager = (ViewPager) findViewById(R.id.pager_summary);
-        mPager.setCurrentItem(0, false);
-        mPager.setOffscreenPageLimit(3);    
         mPagerAdapter = new SummaryPagerAdapter(getSupportFragmentManager());
-
-
+        // Set the ViewPagerAdapter into ViewPager
         mPager.setAdapter(mPagerAdapter);
+
+        mPager.setOffscreenPageLimit(3);
+
+        mPager.post(new Runnable() {
+            @Override
+            public void run() {
+                mPager.setCurrentItem(0, true);
+                mPager.setOffscreenPageLimit(3);
+            }
+        });
         //Bind the title indicator to the adapter
         TitlePageIndicator titleIndicator = (TitlePageIndicator)findViewById(R.id.drawings);
         titleIndicator.setViewPager(mPager);
