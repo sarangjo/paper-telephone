@@ -47,7 +47,7 @@
         android:layout_weight="1"/>
 
 
-    <com.viewpagerindicator.TabPageIndicator
+    <com.viewpagerindicator.TitlePageIndicator
         android:id="@+id/drawings"
         android:padding="10dip"
         android:layout_height="wrap_content"

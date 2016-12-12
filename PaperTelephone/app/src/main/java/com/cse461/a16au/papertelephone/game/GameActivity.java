@@ -113,6 +113,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         mNextCreatorAddress = null;
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage("Waiting for Other Players to Complete Their Turn");
+        mProgressDialog.setCancelable(false);
         updateMode();
     }
 
