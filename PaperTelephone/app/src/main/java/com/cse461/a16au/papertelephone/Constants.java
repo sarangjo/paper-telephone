@@ -10,6 +10,9 @@ public class Constants {
     public static final UUID APP_UUID = UUID.fromString("b914c3a4-e47f-4fa8-b23a-8e55a5981e5f");
     public static final String APP_NAME = "PaperTelephone";
 
+    public static final String WE_ARE_START = "START";
+    public static final String NO_START = "NOSTART";
+
     // Activity intent requests
     public static final int REQUEST_ENABLE_BT = 1;
     public static final int REQUEST_PLAY_GAME = 2;
@@ -57,6 +60,8 @@ public class Constants {
     public static final int READ_REQ_SUCCUCCESSOR_RESPONSE = 9;
     public static final byte[] HEADER_NEW_START = getHeader("NEWSTART");
     public static final int READ_NEW_START = 10;
+    public static final byte[] HEADER_GIVE_SUCC = getHeader("GIVESUCC");
+    public static final int READ_GIVE_SUCC = 11;
 
     public static final int ADDRESS_LENGTH = 17;
 

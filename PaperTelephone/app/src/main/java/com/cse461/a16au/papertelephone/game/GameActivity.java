@@ -89,7 +89,10 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
             @Override
             public void connection(String address) {
-
+                if (mGameData.getStartDevice().equals(Constants.WE_ARE_START)) {
+                    mConnectService.write(Constants.HEADER_GIVE_SUCC, address);
+                    nextDevice = address;
+                }
             }
         };
 

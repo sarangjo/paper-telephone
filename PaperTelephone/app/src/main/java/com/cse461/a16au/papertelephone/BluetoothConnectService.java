@@ -472,6 +472,8 @@ public class BluetoothConnectService {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DEVICES, data);
                 } else if (Arrays.equals(header, Constants.HEADER_PING)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, data);
+                } else if (Arrays.equals(header, Constants.HEADER_GIVE_SUCC)) {
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_GIVE_SUCC, data);
                 } else {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, data);
                 }

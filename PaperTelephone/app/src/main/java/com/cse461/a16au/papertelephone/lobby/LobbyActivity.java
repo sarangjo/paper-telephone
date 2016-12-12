@@ -37,15 +37,14 @@ import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECTED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECT_FAILED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_DISCONNECTED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_READ;
-import static com.cse461.a16au.papertelephone.Constants.MESSAGE_WRITE;
 import static com.cse461.a16au.papertelephone.Constants.READ_START_ACK;
 import static com.cse461.a16au.papertelephone.Constants.READ_DEVICES;
 import static com.cse461.a16au.papertelephone.Constants.READ_PING;
 import static com.cse461.a16au.papertelephone.Constants.READ_START;
 import static com.cse461.a16au.papertelephone.Constants.READ_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_UNKNOWN;
-import static com.cse461.a16au.papertelephone.game.GameData.NO_START;
-import static com.cse461.a16au.papertelephone.game.GameData.WE_ARE_START;
+import static com.cse461.a16au.papertelephone.Constants.NO_START;
+import static com.cse461.a16au.papertelephone.Constants.WE_ARE_START;
 import static com.cse461.a16au.papertelephone.game.GameData.lastSuccessor;
 import static com.cse461.a16au.papertelephone.game.GameData.localAddress;
 import static com.cse461.a16au.papertelephone.game.GameData.nextDevice;
@@ -193,7 +192,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 return;
             }
 
-            mGameData.setStartDevice(GameData.WE_ARE_START);
+            mGameData.setStartDevice(Constants.WE_ARE_START);
 
             for (String currDevice : mGameData.getConnectedDevices()) {
                 mConnectService.write(HEADER_START, currDevice);
@@ -370,6 +369,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
     }
 
+    // TODO: add case to handle READ_GIVE_SUCC for a new device that is joining a game
     private final Handler mMainHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {

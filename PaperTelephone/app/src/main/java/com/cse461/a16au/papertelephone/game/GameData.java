@@ -3,27 +3,21 @@ package com.cse461.a16au.papertelephone.game;
 import android.bluetooth.BluetoothAdapter;
 import android.os.CountDownTimer;
 
+import com.cse461.a16au.papertelephone.Constants;
+
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * TODO: class documentation
  */
 
 public class GameData {
-
-    public static final String NO_START = "NOSTART";
-    public static final String WE_ARE_START = "START";
 
     private static final GameData ourInstance = new GameData();
 
@@ -50,7 +44,7 @@ public class GameData {
 //    private boolean isDone;
 
     private GameData() {
-        this.startDevice = NO_START;
+        this.startDevice = Constants.NO_START;
         this.connectedDevices = new ArrayList<>();
         this.connectedDeviceNames = new ArrayList<>();
         this.unackedDevices = new HashSet<>();
