@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -101,16 +102,12 @@ public class DevicesFragment extends Fragment {
 //        list.setOnChildClickListener(mDeviceClickListener);
         ListView list = (ListView) view.findViewById(R.id.list_new_devices);
         list.setAdapter(mDevicesAdapter);
-        list.setOnClickListener(new View.OnClickListener() {
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 // Cancel discovery because it's costly and we're about to connect
                 cancelDiscovery();
-
-                // TODO Gross, get the MAC address from the BluetoothDevice object, not from the string
-                String info = ((TextView) v).getText().toString();
-
-                mConnectDeviceListener.connectDevice(info.substring(info.length() - Constants.ADDRESS_LENGTH));
+                mConnectDeviceListener.connectDevice(mDevicesAdapter.getItem(position).getAddress());
             }
         });
 
