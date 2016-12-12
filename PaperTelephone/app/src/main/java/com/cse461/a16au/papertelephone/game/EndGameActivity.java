@@ -57,6 +57,7 @@ public class EndGameActivity extends AppCompatActivity {
         mPagerAdapter = new SummaryPagerAdapter(getSupportFragmentManager());
 
         mPager.setAdapter(mPagerAdapter);
+        mPager.setCurrentItem(0, false);
         //Bind the title indicator to the adapter
         TitlePageIndicator titleIndicator = (TitlePageIndicator)findViewById(R.id.drawings);
         titleIndicator.setViewPager(mPager);
