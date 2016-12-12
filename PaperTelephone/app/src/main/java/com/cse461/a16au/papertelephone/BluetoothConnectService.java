@@ -405,6 +405,8 @@ public class BluetoothConnectService {
                 byte[] header = new byte[Constants.HEADER_LENGTH];
                 input.get(header);
 
+                log("Received: " + new String(header));
+
                 // Game handler
                 if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
                     // Get Creator Address
@@ -417,8 +419,6 @@ public class BluetoothConnectService {
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, imgData.length, Constants.READ_IMAGE, imgData);
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_PROMPT)) {
-                    log("Received prompt");
-
                     // Get Creator Address
                     input.get(creatorAddressArr);
                     creatorAddress = new String(creatorAddressArr);
@@ -431,21 +431,19 @@ public class BluetoothConnectService {
                     // Get the type of data that this DONE packet contains
                     input.get(header);
 
-                    log("Received Done with Header:" + new String(header));
+                    log("Done Header:" + new String(header));
 
                     // Get Creator Address
                     input.get(creatorAddressArr);
                     creatorAddress = new String(creatorAddressArr);
 
-                    log("Received Done with creator: " + creatorAddress);
+                    log("Done Creator: " + creatorAddress);
 
                     byte[] msgData;
 
                     if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
-                        log("Received done of type image");
                         msgData = processImage(input, bytes - 2 * Constants.HEADER_LENGTH - Constants.ADDRESS_LENGTH - 4, data).array();
                     } else {
-                        log("Received done of type prompt");
                         msgData = new byte[bytes - 2 * Constants.HEADER_LENGTH - Constants.ADDRESS_LENGTH];
                         input.get(msgData);
                     }
@@ -465,26 +463,19 @@ public class BluetoothConnectService {
 
                 // Main Handler
                 else if (Arrays.equals(header, Constants.HEADER_START)) {
-                    log("Received START");
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, data);
                 } else if (Arrays.equals(header, Constants.HEADER_START_ACK)) {
-                    log("Received START ACK");
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START_ACK, data);
                 } else if (Arrays.equals(header, Constants.HEADER_SUCCESSOR)) {
-                    log("Received SUCCESSOR");
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_SUCCESSOR, data);
                 } else if (Arrays.equals(header, Constants.HEADER_DEVICES)) {
-                    log("Received DEVICES");
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DEVICES, data);
                 } else if (Arrays.equals(header, Constants.HEADER_PING)) {
-                    log("Received PING");
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, data);
                 } else {
-                    log("Received UNKNOWN");
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, data);
                 }
             } else {
-                log("Received UNKNOWN");
                 msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, data);
             }
 

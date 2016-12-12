@@ -47,6 +47,8 @@ public class GameData {
      */
     private Set<String> unackedDevices;
 
+//    private boolean isDone;
+
     private GameData() {
         this.startDevice = NO_START;
         this.connectedDevices = new ArrayList<>();
@@ -115,6 +117,7 @@ public class GameData {
      * Keeps track of how many devices have been chosen so far in that start game process
      */
     public static int lastSuccessor = 0;
+
 
     /**
      * Set of devices that have not been chosen as a successor in the start game process
