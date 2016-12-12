@@ -1,21 +1,30 @@
 package com.cse461.a16au.papertelephone.game;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.cse461.a16au.papertelephone.R;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
 import static com.cse461.a16au.papertelephone.Constants.RESULT_LOBBY;
 import static com.cse461.a16au.papertelephone.Constants.RESULT_RESTART;
 
 public class EndGameActivity extends AppCompatActivity {
-    ListView mSummariesListView;
+    private ViewPager mPager;
+    private PagerAdapter mPagerAdapter;
+
+    private List<String> mAddresses;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,14 +50,30 @@ public class EndGameActivity extends AppCompatActivity {
             }
         });
 
-        mSummariesListView = (ListView) findViewById(R.id.list_paper_summary);
+        // ViewPager
+        mAddresses = new ArrayList<>(GameData.addressToSummaries.keySet());
 
-        TextView creatorView = (TextView) findViewById(R.id.view_creator);
-        creatorView.setText(GameData.mName);
-
-        ArrayAdapter<byte[]> adapter = new PaperSummaryAdapter(this, GameData.addressToSummaries.get(GameData.mLocalAddress));
-        mSummariesListView.setAdapter(adapter);
+        mPager = (ViewPager) findViewById(R.id.pager_summary);
+        mPagerAdapter = new SummaryPagerAdapter(getSupportFragmentManager());
+        mPager.setAdapter(mPagerAdapter);
     }
 
+    private class SummaryPagerAdapter extends FragmentStatePagerAdapter {
+        public SummaryPagerAdapter(FragmentManager manager) {
+            super(manager);
+        }
 
+        @Override
+        public Fragment getItem(int position) {
+            Fragment frag = new SummaryFragment();
+            Bundle args = new Bundle();
+            args.putString(DEVICE_ADDRESS, mAddresses.get(position));
+            frag.setArguments(args);
+            return frag;
+        }
+
+        public int getCount() {
+            return mAddresses.size();
+        }
+    }
 }

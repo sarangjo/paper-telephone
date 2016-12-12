@@ -327,7 +327,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 buf.get(new byte[HEADER_LENGTH]);
 
                 lastSuccessor = buf.getInt();
-                byte[] pairedDeviceAddressArr = new byte[17];
+                byte[] pairedDeviceAddressArr = new byte[ADDRESS_LENGTH];
                 buf.get(pairedDeviceAddressArr);
 
                 String pairedDeviceAddress = new String(pairedDeviceAddressArr);
