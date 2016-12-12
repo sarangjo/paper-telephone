@@ -307,6 +307,15 @@ public class BluetoothConnectService {
                     Log.e(TAG, "Unable to close socket during connection failure", e2);
                 }
                 Log.e(TAG, "Unable to connect to device", e);
+
+                // Send error message back to UI
+                Message msg = mMainHandler.obtainMessage(Constants.MESSAGE_CONNECT_FAILED);
+                Bundle bundle = new Bundle();
+                bundle.putString(Constants.DEVICE_ADDRESS, mmDevice.getAddress());
+                bundle.putString(Constants.DEVICE_NAME, mmDevice.getName());
+                msg.setData(bundle);
+                mMainHandler.sendMessage(msg);
+
                 return;
             }
 

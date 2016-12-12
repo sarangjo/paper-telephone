@@ -34,6 +34,7 @@ import static com.cse461.a16au.papertelephone.Constants.HEADER_PING;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_START;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECTED;
+import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECT_FAILED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_DISCONNECTED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_READ;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_WRITE;
@@ -251,7 +252,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         mConnectService.connect(address);
     }
 
-    private void handleRead(Message msg) {
+    private void handleRead(Message msg, String deviceAddress, String deviceName) {
         ByteBuffer buf;
         switch (msg.arg2) {
             case READ_UNKNOWN:
@@ -262,15 +263,12 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                         Toast.LENGTH_SHORT).show();
                 break;
             case READ_START:
-                // Received START message
-                String newStartDeviceAddress = msg.getData().getString(DEVICE_ADDRESS);
-
                 // Set the START device
                 if (mGameData.getStartDevice().equals(NO_START)) {
-                    mGameData.setStartDevice(newStartDeviceAddress);
+                    mGameData.setStartDevice(deviceAddress);
 
                     // Ack the new start device
-                    mConnectService.write(Constants.HEADER_START_ACK, newStartDeviceAddress);
+                    mConnectService.write(Constants.HEADER_START_ACK, deviceAddress);
                 } else {
                     String currentStartDevice;
                     if (mGameData.getStartDevice().equals(WE_ARE_START)) {
@@ -280,12 +278,12 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     }
 
                     // Check preference by address comparison
-                    if (currentStartDevice.compareTo(newStartDeviceAddress) > 0) {
+                    if (currentStartDevice.compareTo(deviceAddress) > 0) {
                         // Update our start device to be the one with the lower address
-                        mGameData.setStartDevice(newStartDeviceAddress);
+                        mGameData.setStartDevice(deviceAddress);
 
                         // Re-ack the new start device
-                        mConnectService.write(Constants.HEADER_START_ACK, newStartDeviceAddress);
+                        mConnectService.write(Constants.HEADER_START_ACK, deviceAddress);
                     } else {
                         // We are still start device, so this does not affect anything
                         return;
@@ -295,14 +293,12 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 // Setup unplaced devices, i.e. all devices except for the start device and us
                 unplacedDevices.clear();
                 for (String currDevice: mGameData.getConnectedDevices()) {
-                    if (!currDevice.equals(newStartDeviceAddress)) {
+                    if (!currDevice.equals(deviceAddress)) {
                         unplacedDevices.add(currDevice);
                     }
                 }
                 break;
             case READ_START_ACK:
-                String deviceAddress = msg.getData().getString(DEVICE_ADDRESS);
-
                 mGameData.removeUnackedDevice(deviceAddress);
                 if (mGameData.doneAcking()) {
                     // Setup unplaced devices, i.e. all devices except for us
@@ -377,12 +373,10 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     private final Handler mMainHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            String deviceName, deviceAddress;
+            String deviceName = msg.getData().getString(DEVICE_NAME);
+            String deviceAddress = msg.getData().getString(DEVICE_ADDRESS);
             switch (msg.what) {
                 case MESSAGE_CONNECTED:
-                    deviceName = msg.getData().getString(DEVICE_NAME);
-                    deviceAddress = msg.getData().getString(DEVICE_ADDRESS);
-
                     // Send a message describing which devices we are already connected to
                     sendConnectedDevices(deviceAddress);
 
@@ -395,9 +389,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     }
                     break;
                 case MESSAGE_DISCONNECTED:
-                    deviceName = msg.getData().getString(DEVICE_NAME);
-                    deviceAddress = msg.getData().getString(DEVICE_ADDRESS);
-
                     mGameData.removeConnectedDevice(deviceAddress, deviceName);
                     mConnectedDevicesNamesAdapter.notifyDataSetChanged();
                     Snackbar.make(mView, "Disconnected from " + deviceName, Snackbar.LENGTH_LONG).show();
@@ -406,8 +397,11 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                         GameData.connectionChangeListener.disconnection(deviceAddress);
                     }
                     break;
+                case MESSAGE_CONNECT_FAILED:
+                    Snackbar.make(mView, "Unable to connect: " + deviceName + ". Please try again.", Snackbar.LENGTH_LONG).show();
+                    break;
                 case MESSAGE_READ:
-                    handleRead(msg);
+                    handleRead(msg, deviceAddress, deviceName);
                     break;
             }
         }

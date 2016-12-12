@@ -24,6 +24,7 @@ public class Constants {
     public static final int MESSAGE_DISCONNECTED = 1;
     public static final int MESSAGE_READ = 2;
     public static final int MESSAGE_WRITE = 3;
+    public static final int MESSAGE_CONNECT_FAILED = 4;
 
     // Bundle keys
     public static final String CREATOR_ADDRESS = "creator_address";
