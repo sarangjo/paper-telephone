@@ -159,7 +159,8 @@ public class DevicesFragment extends Fragment {
 
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                mDevicesAdapter.add(device);
+                if (!mNewDevices.contains(device))
+                    mDevicesAdapter.add(device);
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 cancelDiscovery();
             }
