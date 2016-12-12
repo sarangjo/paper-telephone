@@ -11,6 +11,9 @@ import android.widget.TextView;
 
 import com.cse461.a16au.papertelephone.R;
 
+import static com.cse461.a16au.papertelephone.Constants.RESULT_LOBBY;
+import static com.cse461.a16au.papertelephone.Constants.RESULT_RESTART;
+
 public class EndGameActivity extends AppCompatActivity {
     ListView mSummariesListView;
 
@@ -25,6 +28,7 @@ public class EndGameActivity extends AppCompatActivity {
         returnToLobbyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                setResult(RESULT_LOBBY);
                 finish();
             }
         });
@@ -32,8 +36,7 @@ public class EndGameActivity extends AppCompatActivity {
         restartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(EndGameActivity.this, GameActivity.class);
-                startActivity(intent);
+                setResult(RESULT_RESTART);
                 finish();
             }
         });

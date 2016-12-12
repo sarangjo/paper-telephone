@@ -42,6 +42,9 @@ public class GameData {
      */
     private List<String> connectedDeviceNames;
 
+    /**
+     * Devices that have not acked our start yet.
+     */
     private Set<String> unackedDevices;
 
     private GameData() {
