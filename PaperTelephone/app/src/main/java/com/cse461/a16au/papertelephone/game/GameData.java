@@ -129,7 +129,7 @@ public class GameData {
     /**
      * This device's mac address
      */
-    public static String mLocalAddress = null;
+    public static String localAddress = null;
 
     /**
      * Our name.

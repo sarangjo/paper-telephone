@@ -400,7 +400,7 @@ public class BluetoothConnectService {
                 if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
                     // Get Creator Address
                     input.get(creatorAddressArr);
-                    creatorAddress = new String (creatorAddressArr);
+                    creatorAddress = new String(creatorAddressArr);
 
                     byte[] imgData = processImage(input, bytes - Constants.ADDRESS_LENGTH - Constants.HEADER_LENGTH - 4, data).array();
 
@@ -412,7 +412,7 @@ public class BluetoothConnectService {
 
                     // Get Creator Address
                     input.get(creatorAddressArr);
-                    creatorAddress = new String (creatorAddressArr);
+                    creatorAddress = new String(creatorAddressArr);
 
                     data = new byte[bytes - Constants.ADDRESS_LENGTH - Constants.HEADER_LENGTH];
                     input.get(data);
@@ -426,13 +426,13 @@ public class BluetoothConnectService {
 
                     // Get Creator Address
                     input.get(creatorAddressArr);
-                    creatorAddress = new String (creatorAddressArr);
+                    creatorAddress = new String(creatorAddressArr);
 
                     log("Received Done with creator: " + creatorAddress);
 
                     byte[] msgData;
 
-                    if(Arrays.equals(header, Constants.HEADER_IMAGE)) {
+                    if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
                         log("Received done of type image");
                         msgData = processImage(input, bytes - 2 * Constants.HEADER_LENGTH - Constants.ADDRESS_LENGTH - 4, data).array();
                     } else {
@@ -443,10 +443,10 @@ public class BluetoothConnectService {
 
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DONE, msgData);
                     currHandler = mGameHandler;
-                } else if(Arrays.equals(header, Constants.HEADER_REQ_SUCCESSOR)) {
+                } else if (Arrays.equals(header, Constants.HEADER_REQ_SUCCESSOR)) {
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_REQ_SUCCUCCESSOR, data);
                     currHandler = mGameHandler;
-                } else if(Arrays.equals(header, Constants.HEADER_REQ_SUCCESSOR_RESPONSE)) {
+                } else if (Arrays.equals(header, Constants.HEADER_REQ_SUCCESSOR_RESPONSE)) {
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_REQ_SUCCUCCESSOR_RESPONSE, data);
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_NEW_START)) {
@@ -527,15 +527,12 @@ public class BluetoothConnectService {
 
         public boolean write(byte[] buffer) {
             try {
-                mmOutStream.write(buffer);
+                if (buffer.length >= Constants.HEADER_LENGTH)
+                    log("Send: " + new String(Arrays.copyOfRange(buffer, 0, Constants.HEADER_LENGTH)));
+                else
+                    log("Send: " + new String(buffer));
 
-                // Send the name back to UI
-                Message msg = mMainHandler.obtainMessage(Constants.MESSAGE_WRITE);
-                Bundle bundle = new Bundle();
-                bundle.putString(Constants.DEVICE_NAME, mmDevice.getName());
-                bundle.putString(Constants.DEVICE_ADDRESS, mmDevice.getAddress());
-                msg.setData(bundle);
-                return mMainHandler.sendMessage(msg);
+                mmOutStream.write(buffer);
             } catch (IOException e) {
                 Log.e(TAG, "Exception during write", e);
             }

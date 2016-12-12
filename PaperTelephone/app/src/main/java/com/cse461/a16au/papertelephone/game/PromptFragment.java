@@ -18,7 +18,7 @@ import com.cse461.a16au.papertelephone.R;
 
 import java.nio.ByteBuffer;
 
-import static com.cse461.a16au.papertelephone.game.GameData.mLocalAddress;
+import static com.cse461.a16au.papertelephone.game.GameData.localAddress;
 
 /**
  * Created by sgorti3 on 11/30/2016.
@@ -47,7 +47,7 @@ public class PromptFragment extends GameFragment {
             mPromptText.setHint("Enter prompt here");
 
             sendPromptButton.setText("Send prompt");
-            mCreatorAddress = mLocalAddress;
+            mCreatorAddress = localAddress;
         } else {
             // Grab image view and display the received image
             mReceivedImageView = (ImageView) view.findViewById(R.id.image_received_image);

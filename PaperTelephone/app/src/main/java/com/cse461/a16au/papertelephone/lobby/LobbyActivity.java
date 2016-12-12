@@ -46,7 +46,7 @@ import static com.cse461.a16au.papertelephone.Constants.READ_UNKNOWN;
 import static com.cse461.a16au.papertelephone.game.GameData.NO_START;
 import static com.cse461.a16au.papertelephone.game.GameData.WE_ARE_START;
 import static com.cse461.a16au.papertelephone.game.GameData.lastSuccessor;
-import static com.cse461.a16au.papertelephone.game.GameData.mLocalAddress;
+import static com.cse461.a16au.papertelephone.game.GameData.localAddress;
 import static com.cse461.a16au.papertelephone.game.GameData.nextDevice;
 import static com.cse461.a16au.papertelephone.game.GameData.unplacedDevices;
 
@@ -85,7 +85,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         mConnectService.registerMainHandler(mMainHandler);
 
         // Get out own local MAC address
-        mLocalAddress = android.provider.Settings.Secure.getString(getContentResolver(), "bluetooth_address");
+        localAddress = android.provider.Settings.Secure.getString(getContentResolver(), "bluetooth_address");
 
         mGameData = GameData.getInstance();
 
@@ -196,13 +196,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             }
 
             mGameData.setupUnackedDevices();
-
-//            // Set up our unplaced devices list and initiate the START process
-//            for (String address : mGameData.getConnectedDevices()) {
-//                unplacedDevices.add(address);
-//            }
-
-//            chooseSuccessor();
         } else {
             Toast.makeText(this, "You don't have enough players, the game requires " +
                     "at least 3 players", Toast.LENGTH_LONG).show();
@@ -278,7 +271,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 } else {
                     String currentStartDevice;
                     if (mGameData.getStartDevice().equals(WE_ARE_START)) {
-                        currentStartDevice = mLocalAddress;
+                        currentStartDevice = localAddress;
                     } else {
                         currentStartDevice = mGameData.getStartDevice();
                     }
@@ -409,10 +402,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     if(GameData.connectionChangeListener != null) {
                         GameData.connectionChangeListener.disconnection(deviceAddress);
                     }
-                    break;
-                case MESSAGE_WRITE:
-                    // TODO: do something with what we write out?
-                    Log.d(TAG, "Sent data");
                     break;
                 case MESSAGE_READ:
                     handleRead(msg);

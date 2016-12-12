@@ -41,10 +41,16 @@ public class SummaryFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_summary, container, false);
 
         GameData gameData = GameData.getInstance();
-        int positionIndex = gameData.getConnectedDevices().indexOf(mAddress);
-
         TextView creatorView = (TextView) v.findViewById(R.id.view_creator);
-        creatorView.setText(gameData.getConnectedDeviceNames().get(positionIndex));
+
+        int positionIndex = gameData.getConnectedDevices().indexOf(mAddress);
+        if (positionIndex == -1) {
+            // TODO: assume this is us?
+            creatorView.setText(GameData.mName);
+        } else {
+            creatorView.setText(gameData.getConnectedDeviceNames().get(positionIndex));
+        }
+
 
         mSummariesListView = (ListView) v.findViewById(R.id.list_paper_summary);
         ArrayAdapter<byte[]> adapter = new SummaryAdapter(getActivity(), GameData.addressToSummaries.get(mAddress));
