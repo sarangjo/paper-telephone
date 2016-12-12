@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -20,9 +18,7 @@ import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +32,7 @@ import static com.cse461.a16au.papertelephone.game.GameData.nextDevice;
 import static com.cse461.a16au.papertelephone.game.GameData.saveData;
 import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
 import static com.cse461.a16au.papertelephone.game.GameData.unfinishedDeviceList;
+import static com.cse461.a16au.papertelephone.game.GameData.unplacedDevices;
 
 /**
  * Manages the two fragments that compose the game, DrawingFragment, and PromptFragment and handles
@@ -76,6 +73,8 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                     finish();
                     return;
                 }
+
+                unfinishedDeviceList.remove(address);
 
                 if(nextDevice.equals(address)) {
                     successors = new CopyOnWriteArrayList<>();
