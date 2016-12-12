@@ -104,7 +104,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         mTimerTextView = (TextView) findViewById(R.id.timer);
         TextView successor = (TextView) findViewById(R.id.successor_text);
         if (nextDevice != null) {
-            successor.setText("Next: " + nextDevice);
+            successor.setText("Next: " + mGameData.getConnectedDeviceNames().get(mGameData.getConnectedDevices().indexOf(nextDevice)));
         } else {
             successor.setText("Invalid successor");
         }
