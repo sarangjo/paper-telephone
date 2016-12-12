@@ -62,7 +62,6 @@ public class EndGameActivity extends AppCompatActivity {
             @Override
             public void run() {
                 mPager.setCurrentItem(0, true);
-                mPager.setOffscreenPageLimit(3);
             }
         });
         //Bind the title indicator to the adapter
