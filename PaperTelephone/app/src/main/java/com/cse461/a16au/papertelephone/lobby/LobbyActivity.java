@@ -217,7 +217,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
     private void transitionToGame() {
         Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, Constants.REQUEST_PLAY_GAME);
     }
 
     @Override
@@ -244,7 +244,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 if (mGameData.getStartDevice() == NO_START) {
                     mGameData.setStartDevice(newStartDeviceAddress);
 
-                    // Re-ack the new start device
+                    // Ack the new start device
                     mConnectService.write(Constants.HEADER_START_ACK, newStartDeviceAddress);
                 } else {
                     String currentStartDevice;
