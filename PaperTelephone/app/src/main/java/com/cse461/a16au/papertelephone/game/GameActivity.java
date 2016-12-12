@@ -290,7 +290,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                             buf.put(nextDevice.getBytes());
 
                             mConnectService.write(buf.array(), msg.getData().getString(Constants.DEVICE_ADDRESS));
-                            break;
+                            return;
                         case Constants.READ_REQ_SUCCUCCESSOR_RESPONSE:
                             buf = ByteBuffer.wrap((byte[]) msg.obj);
                             buf.get(new byte[Constants.HEADER_LENGTH]);
@@ -317,10 +317,11 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
 
                             }
-                            break;
+
+                            return;
                         case Constants.READ_NEW_START:
                             mGameData.setStartDevice(msg.getData().getString(Constants.DEVICE_ADDRESS));
-                            break;
+                            return;
                     }
 
                     // Get address of sender and remove it from our list of devices
