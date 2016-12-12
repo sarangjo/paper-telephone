@@ -172,7 +172,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 //            for (String address : mGameData.getConnectedDevices()) {
 //                unplacedDevices.add(address);
 //            }
-//
+
 //            chooseSuccessor();
         } else {
             Toast.makeText(this, "You don't have enough players, the game requires " +
@@ -261,6 +261,9 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
                         // Re-ack the new start device
                         mConnectService.write(Constants.HEADER_START_ACK, newStartDeviceAddress);
+                    } else {
+                        // We are still start device, so this does not affect anything
+                        return;
                     }
                 }
 
@@ -281,10 +284,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     // Setup unplaced devices, i.e. all devices except for us
                     unplacedDevices.clear();
                     for (int i = 0; i < mGameData.getConnectedDevices().size(); i++) {
-                        String currDevice = mGameData.getConnectedDevice(i);
-                        if (!currDevice.equals(mLocalAddress)) {
-                            unplacedDevices.add(currDevice);
-                        }
+                        unplacedDevices.add(mGameData.getConnectedDevice(i));
                     }
 
                     chooseSuccessor();
