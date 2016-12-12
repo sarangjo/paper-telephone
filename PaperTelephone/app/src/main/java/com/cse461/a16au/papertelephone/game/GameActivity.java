@@ -67,7 +67,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         GameData.connectionChangeListener = new ConnectionChangeListener() {
             @Override
             public void disconnection(String address) {
-                if(mGameData.getConnectedDevices().size() < 2) {
+                if (mGameData.getConnectedDevices().size() < 2) {
                     Toast.makeText(GameActivity.this, "You no longer have enough players, going to summary page", Toast.LENGTH_LONG).show();
                     setResult(RESULT_OK);
                     finish();
@@ -76,11 +76,11 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
                 unfinishedDeviceList.remove(address);
 
-                if(nextDevice.equals(address)) {
+                if (nextDevice.equals(address)) {
                     successors = new CopyOnWriteArrayList<>();
 
                     // Ask other devices for their successors
-                    for(String device: mGameData.getConnectedDevices()) {
+                    for (String device : mGameData.getConnectedDevices()) {
                         mConnectService.write(Constants.HEADER_REQ_SUCCESSOR, device);
                     }
 
@@ -245,6 +245,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                 case Constants.MESSAGE_READ:
                     // TODO: MAKE SURE EVERYTHING *HERE* IS THREAD-SAFE
                     String creatorAddress;
+                    String name;
                     byte[] data;
 
 
@@ -252,34 +253,33 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                         case Constants.READ_IMAGE:
                             // Add the current image/prompt to the corresponding list in the map from addresses to summaries
                             creatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
+                            name = msg.getData().getString(Constants.DEVICE_NAME);
                             data = (byte[]) msg.obj;
                             saveData(creatorAddress, data);
 
-                            Toast.makeText(GameActivity.this, "Image received!", Toast.LENGTH_SHORT).show();
-                            Log.d(TAG, "Read Image");
+                            Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
                             mNextImage = (byte[]) msg.obj;
                             mNextCreatorAddress = creatorAddress;
                             break;
                         case Constants.READ_PROMPT:
                             // Add the current image/prompt to the corresponding list in the map from addresses to summaries
                             creatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
+                            name = msg.getData().getString(Constants.DEVICE_NAME);
                             data = (byte[]) msg.obj;
                             saveData(creatorAddress, data);
 
-                            Toast.makeText(GameActivity.this, "Prompt received!", Toast.LENGTH_SHORT).show();
-                            Log.d(TAG, "Read Prompt");
+                            Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
                             mNextPrompt = new String((byte[]) msg.obj);
                             mNextCreatorAddress = creatorAddress;
                             break;
                         case Constants.READ_DONE:
                             // Add the current image/prompt to the corresponding list in the map from addresses to summaries
                             creatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
+                            name = msg.getData().getString(Constants.DEVICE_NAME);
                             data = (byte[]) msg.obj;
                             saveData(creatorAddress, data);
 
-                            String name = msg.getData().getString(Constants.DEVICE_NAME);
                             Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
-                            Log.d(TAG, "Read Done");
                             break;
                         case Constants.READ_REQ_SUCCUCCESSOR:
                             ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH);
@@ -300,7 +300,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                             if (successors.size() == mGameData.getConnectedDevices().size()) {
                                 Set<String> unplacedSuccessors = new HashSet<>(mGameData.getConnectedDevices());
 
-                                for(String device: successors) {
+                                for (String device : successors) {
                                     unplacedSuccessors.remove(device);
                                 }
 

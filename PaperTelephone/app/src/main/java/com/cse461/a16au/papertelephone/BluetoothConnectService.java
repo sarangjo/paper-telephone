@@ -154,8 +154,6 @@ public class BluetoothConnectService {
     // UNIVERSAL FUNCTIONS: connected(), connectionLost(), write()
 
     private synchronized void connected(BluetoothSocket socket, BluetoothDevice remoteDevice) {
-        Log.d(TAG, "Connected to: " + remoteDevice.getName() + " at " + remoteDevice.getAddress());
-
         // Start the new ConnectedThread
         BluetoothThread connectedThread = new ConnectedThread(socket, remoteDevice);
         mConnectedThreads.put(remoteDevice.getAddress(), connectedThread);
