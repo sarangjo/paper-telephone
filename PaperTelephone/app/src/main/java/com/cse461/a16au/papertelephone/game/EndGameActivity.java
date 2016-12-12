@@ -52,7 +52,8 @@ public class EndGameActivity extends AppCompatActivity {
         });
 
         // ViewPager
-        mAddresses = new ArrayList<>(GameData.addressToSummaries.keySet());
+        mAddresses = new ArrayList<>(GameData.getInstance().getConnectedDevices());
+        mAddresses.add(GameData.localAddress);
 
         mPager = (ViewPager) findViewById(R.id.pager_summary);
         mPagerAdapter = new SummaryPagerAdapter(getSupportFragmentManager());
