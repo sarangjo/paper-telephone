@@ -52,14 +52,17 @@ public class EndGameActivity extends AppCompatActivity {
         });
 
         // ViewPager
+        mPagerAdapter = new SummaryPagerAdapter(getSupportFragmentManager());
         mAddresses = new ArrayList<>(GameData.getInstance().getConnectedDevices());
         mPager = (ViewPager) findViewById(R.id.pager_summary);
         mPager.setCurrentItem(0, false);
-        mPager.setOffscreenPageLimit(3);    
-        mPagerAdapter = new SummaryPagerAdapter(getSupportFragmentManager());
+        mPager.setOffscreenPageLimit(3);
 
-
+        if(mPager.getAdapter() != null) {
+            mPager.setAdapter(null);
+        }
         mPager.setAdapter(mPagerAdapter);
+        mPager.setCurrentItem(0, false);
         //Bind the title indicator to the adapter
         TitlePageIndicator titleIndicator = (TitlePageIndicator)findViewById(R.id.drawings);
         titleIndicator.setViewPager(mPager);
