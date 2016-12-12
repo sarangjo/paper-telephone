@@ -7,10 +7,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.DataSetObserver;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -21,30 +17,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.ExpandableListView;
-import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
-
-import java.util.List;
 
 /**
  * TODO: class comment
  */
 public class DevicesFragment extends Fragment {
     private static final String TAG = "DevicesFragment";
-
-    /**
-     * TODO
-     */
-    private OldDevicesListAdapter mOldDevicesAdapter;
 
     private DevicesListAdapter mDevicesAdapter;
     private ProgressBar mScanProgress;
@@ -78,6 +62,8 @@ public class DevicesFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_devices, container, false);
 
         mScanProgress = (ProgressBar) view.findViewById(R.id.scanning_progress_bar);
+        mScanProgress.setIndeterminate(true);
+
         mScanButton = (Button) view.findViewById(R.id.button_scan_devices);
         mScanButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -86,21 +72,9 @@ public class DevicesFragment extends Fragment {
                 doDiscovery();
             }
         });
-//        mOldDevicesAdapter = new OldDevicesListAdapter(getActivity());
 
-        // Get a set of currently paired devices
-//        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-
-        // If there are paired devices, add each one to the ArrayAdapter
-//        for (BluetoothDevice device : pairedDevices) {
-//            mOldDevicesAdapter.addPairedDevice(device.getName() + "\n" + device.getAddress());
-//        }
-
-        // Expandable list view
-//        ExpandableListView list = (ExpandableListView) view.findViewById(R.id.list_potential_devices);
-//        list.setAdapter(mOldDevicesAdapter);
-//        list.setOnChildClickListener(mDeviceClickListener);
         ListView list = (ListView) view.findViewById(R.id.list_new_devices);
+        mDevicesAdapter = new DevicesListAdapter(getActivity());
         list.setAdapter(mDevicesAdapter);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -110,6 +84,9 @@ public class DevicesFragment extends Fragment {
                 mConnectDeviceListener.connectDevice(mDevicesAdapter.getItem(position).getAddress());
             }
         });
+
+        // Start discovery right away
+        doDiscovery();
 
         return view;
     }
@@ -146,6 +123,7 @@ public class DevicesFragment extends Fragment {
             mBluetoothAdapter.cancelDiscovery();
         }
         mScanButton.setEnabled(true);
+        mScanProgress.setVisibility(View.GONE);
     }
 
     /**
@@ -157,10 +135,10 @@ public class DevicesFragment extends Fragment {
         ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
 
         mScanButton.setEnabled(false);
-        mScanProgress.setIndeterminate(true);
         mScanProgress.setVisibility(View.VISIBLE);
 
 //        mOldDevicesAdapter.clearNew();
+        mDevicesAdapter.clear();
 
         // Request discover from BluetoothAdapter
         mBluetoothAdapter.startDiscovery();
@@ -189,11 +167,8 @@ public class DevicesFragment extends Fragment {
     }
 
     private class DevicesListAdapter extends ArrayAdapter<BluetoothDevice> {
-        private final List<BluetoothDevice> mValues;
-
-        public DevicesListAdapter(Context context, List<BluetoothDevice> values) {
-            super(context, -1, values);
-            mValues = values;
+        DevicesListAdapter(Context context) {
+            super(context, -1);
         }
 
         @NonNull
@@ -202,10 +177,10 @@ public class DevicesFragment extends Fragment {
             LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View view = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
             TextView text = (TextView) view.findViewById(android.R.id.text1);
-            BluetoothDevice device = mValues.get(position);
+            BluetoothDevice device = getItem(position);
             text.setText(device.getName() + "\n" + device.getAddress());
             if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
-                text.setTextColor(Color.GREEN);
+                text.setTextColor(getResources().getColor(R.color.colorPairedDevice));
             }
             return view;
         }
