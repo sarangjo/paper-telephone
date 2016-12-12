@@ -44,9 +44,9 @@ public class SummaryFragment extends Fragment {
         TextView creatorView = (TextView) v.findViewById(R.id.view_creator);
 
         int positionIndex = gameData.getConnectedDevices().indexOf(mAddress);
-        if (positionIndex == -1) {
+        if (positionIndex >= gameData.getConnectedDeviceNames().size()) {
             // TODO: assume this is us?
-            creatorView.setText(GameData.mName);
+            creatorView.setText(GameData.localName);
         } else {
             creatorView.setText(gameData.getConnectedDeviceNames().get(positionIndex));
         }

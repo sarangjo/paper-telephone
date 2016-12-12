@@ -134,7 +134,7 @@ public class GameData {
     /**
      * Our name.
      */
-    public static String mName = BluetoothAdapter.getDefaultAdapter().getName();
+    public static String localName = BluetoothAdapter.getDefaultAdapter().getName();
 
     // IN-GAME
     /**
