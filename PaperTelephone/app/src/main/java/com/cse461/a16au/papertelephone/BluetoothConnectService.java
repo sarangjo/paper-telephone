@@ -448,6 +448,9 @@ public class BluetoothConnectService {
                 else if (Arrays.equals(header, Constants.HEADER_START)) {
                     log("Received START");
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, data);
+                } else if (Arrays.equals(header, Constants.HEADER_START_ACK)) {
+                    log("Received START ACK");
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START_ACK, data);
                 } else if (Arrays.equals(header, Constants.HEADER_SUCCESSOR)) {
                     log("Received SUCCESSOR");
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_SUCCESSOR, data);

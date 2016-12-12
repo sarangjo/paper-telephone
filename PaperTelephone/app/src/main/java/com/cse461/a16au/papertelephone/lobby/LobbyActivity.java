@@ -16,6 +16,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.cse461.a16au.papertelephone.BluetoothConnectService;
+import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 import com.cse461.a16au.papertelephone.game.GameActivity;
 import com.cse461.a16au.papertelephone.game.GameData;
@@ -35,15 +36,17 @@ import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECTED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_DISCONNECTED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_READ;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_WRITE;
+import static com.cse461.a16au.papertelephone.Constants.READ_START_ACK;
 import static com.cse461.a16au.papertelephone.Constants.READ_DEVICES;
 import static com.cse461.a16au.papertelephone.Constants.READ_PING;
 import static com.cse461.a16au.papertelephone.Constants.READ_START;
 import static com.cse461.a16au.papertelephone.Constants.READ_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_UNKNOWN;
+import static com.cse461.a16au.papertelephone.game.GameData.NO_START;
+import static com.cse461.a16au.papertelephone.game.GameData.WE_ARE_START;
 import static com.cse461.a16au.papertelephone.game.GameData.lastSuccessor;
-import static com.cse461.a16au.papertelephone.game.GameData.mAddress;
+import static com.cse461.a16au.papertelephone.game.GameData.mLocalAddress;
 import static com.cse461.a16au.papertelephone.game.GameData.nextDevice;
-import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
 import static com.cse461.a16au.papertelephone.game.GameData.unplacedDevices;
 
 /**
@@ -81,7 +84,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         mConnectService.registerMainHandler(mMainHandler);
 
         // Get out own local MAC address
-        mAddress = android.provider.Settings.Secure.getString(getContentResolver(), "bluetooth_address");
+        mLocalAddress = android.provider.Settings.Secure.getString(getContentResolver(), "bluetooth_address");
 
         mGameData = GameData.getInstance();
 
@@ -163,32 +166,14 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 mConnectService.write(HEADER_START, currDevice);
             }
 
-            // Sleep for a short time in case another device pressed start at the same time
-            try {
-                Thread.sleep(250);
-            } catch (InterruptedException e) {
-                Log.e(TAG, "Failed to sleep", e);
-            }
+            mGameData.setupUnackedDevices();
 
-            // Did someone else hit start game as well?
-            if (mGameData.getStartDevice() >= 0) {
-                // Check preference by address comparison
-                String otherStart = mGameData.getConnectedDevice(mGameData.getStartDevice());
-                if (GameData.mAddress.compareTo(otherStart) < 0) {
-                    // We're still start!
-                    mGameData.setStartDevice(GameData.WE_ARE_START);
-                } else {
-                    // If not, they are start - do nothing, and ignore this call to startGame(), let handleRead do the rest
-                    return;
-                }
-            }
+//            // Set up our unplaced devices list and initiate the START process
+//            for (String address : mGameData.getConnectedDevices()) {
+//                unplacedDevices.add(address);
+//            }
 
-            // Set up our unplaced devices list and initiate the START process
-            for (String address : mGameData.getConnectedDevices()) {
-                unplacedDevices.add(address);
-            }
-
-            chooseSuccessor();
+//            chooseSuccessor();
         } else {
             Toast.makeText(this, "You don't have enough players, the game requires " +
                     "at least 3 players", Toast.LENGTH_LONG).show();
@@ -232,7 +217,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
     private void transitionToGame() {
         Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, Constants.REQUEST_PLAY_GAME);
     }
 
     @Override
@@ -253,29 +238,56 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 break;
             case READ_START:
                 // Received START message
-                String startDeviceAddress = msg.getData().getString(DEVICE_ADDRESS);
-                if (mGameData.getStartDevice() >= 0) {
-                    // Device "C" receives multiple STARTS
-                    String currentStartDevice = mGameData.getConnectedDevice(mGameData.getStartDevice());
+                String newStartDeviceAddress = msg.getData().getString(DEVICE_ADDRESS);
+
+                // Set the START device
+                if (mGameData.getStartDevice() == NO_START) {
+                    mGameData.setStartDevice(newStartDeviceAddress);
+
+                    // Ack the new start device
+                    mConnectService.write(Constants.HEADER_START_ACK, newStartDeviceAddress);
+                } else {
+                    String currentStartDevice;
+                    if (mGameData.getStartDevice() == WE_ARE_START) {
+                        currentStartDevice = mLocalAddress;
+                    } else {
+                        currentStartDevice = mGameData.getConnectedDevice(mGameData.getStartDevice());
+                    }
 
                     // Check preference by address comparison
-                    if (currentStartDevice.compareTo(startDeviceAddress) > 0) {
+                    if (currentStartDevice.compareTo(newStartDeviceAddress) > 0) {
                         // Update our start device to be the one with the lower address
-                        mGameData.setStartDevice(mGameData.getConnectedDevices().indexOf(startDeviceAddress));
-                    }
-                } else {
-                    // NO_START or WE_ARE_START
-                    mGameData.setStartDevice(mGameData.getConnectedDevices().indexOf(startDeviceAddress));
-                }
+                        mGameData.setStartDevice(mGameData.getConnectedDevices().indexOf(newStartDeviceAddress));
 
+                        // Re-ack the new start device
+                        mConnectService.write(Constants.HEADER_START_ACK, newStartDeviceAddress);
+                    } else {
+                        // We are still start device, so this does not affect anything
+                        return;
+                    }
+                }
 
                 // Setup unplaced devices, i.e. all devices except for the start device and us
                 unplacedDevices.clear();
                 for (int i = 0; i < mGameData.getConnectedDevices().size(); i++) {
                     String currDevice = mGameData.getConnectedDevice(i);
-                    if (!currDevice.equals(startDeviceAddress)) {
+                    if (!currDevice.equals(newStartDeviceAddress)) {
                         unplacedDevices.add(currDevice);
                     }
+                }
+                break;
+            case READ_START_ACK:
+                String deviceAddress = msg.getData().getString(DEVICE_ADDRESS);
+
+                mGameData.removeUnackedDevice(deviceAddress);
+                if (mGameData.doneAcking()) {
+                    // Setup unplaced devices, i.e. all devices except for us
+                    unplacedDevices.clear();
+                    for (int i = 0; i < mGameData.getConnectedDevices().size(); i++) {
+                        unplacedDevices.add(mGameData.getConnectedDevice(i));
+                    }
+
+                    chooseSuccessor();
                 }
                 break;
             case READ_SUCCESSOR:
@@ -335,6 +347,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 }
                 break;
         }
+
     }
 
     private final Handler mMainHandler = new Handler() {

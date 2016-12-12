@@ -14,6 +14,7 @@ public class Constants {
 
     // Activity intent requests
     public static final int REQUEST_ENABLE_BT = 1;
+    public static final int REQUEST_PLAY_GAME = 2;
 
     // Message sent from BluetoothConnectService to any Handlers
     public static final int MESSAGE_CONNECTED = 0;
@@ -44,6 +45,8 @@ public class Constants {
     public static final int READ_SUCCESSOR = 5;
     public static final byte[] HEADER_DONE = getHeader("DONE");
     public static final int READ_DONE = 6;
+    public static final byte[] HEADER_START_ACK = getHeader("ACK");
+    public static final int READ_START_ACK = 7;
 
     public static final int ADDRESS_LENGTH = 17;
 

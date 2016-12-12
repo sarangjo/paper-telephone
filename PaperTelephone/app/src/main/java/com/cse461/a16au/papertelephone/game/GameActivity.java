@@ -16,13 +16,16 @@ import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import static com.cse461.a16au.papertelephone.game.GameData.*;
+import static com.cse461.a16au.papertelephone.game.GameData.addressToSummaries;
+import static com.cse461.a16au.papertelephone.game.GameData.isDone;
+import static com.cse461.a16au.papertelephone.game.GameData.nextDevice;
+import static com.cse461.a16au.papertelephone.game.GameData.saveData;
+import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
+import static com.cse461.a16au.papertelephone.game.GameData.unfinishedDeviceList;
 
 /**
  * Manages the two fragments that compose the game, DrawingFragment, and PromptFragment and handles
@@ -88,6 +91,8 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
             GameData.turnTimer.cancel();
         }
 
+        mProgressDialog.dismiss();
+
         // Finish game
         if (/*!Constants.DEBUG && */turnsLeft == 0) {
             Toast.makeText(this, "Game over!", Toast.LENGTH_LONG).show();
@@ -117,7 +122,6 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
 
         // Switch out the fragments to update the current mode
         FragmentTransaction ft = getFragmentManager().beginTransaction();
-        mProgressDialog.dismiss();
         if (mFragment != null) {
             ft.remove(mFragment);
         }

@@ -10,7 +10,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,7 +18,7 @@ import com.cse461.a16au.papertelephone.R;
 
 import java.nio.ByteBuffer;
 
-import static com.cse461.a16au.papertelephone.game.GameData.mAddress;
+import static com.cse461.a16au.papertelephone.game.GameData.mLocalAddress;
 
 /**
  * Created by sgorti3 on 11/30/2016.
@@ -48,7 +47,7 @@ public class PromptFragment extends GameFragment {
             mPromptText.setHint("Enter prompt here");
 
             sendPromptButton.setText("Send prompt");
-            mCreatorAddress = mAddress;
+            mCreatorAddress = mLocalAddress;
         } else {
             // Grab image view and display the received image
             mReceivedImageView = (ImageView) view.findViewById(R.id.image_received_image);
