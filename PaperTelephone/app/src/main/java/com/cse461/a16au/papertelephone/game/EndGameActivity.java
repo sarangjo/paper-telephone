@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import com.cse461.a16au.papertelephone.R;
+import com.viewpagerindicator.TitlePageIndicator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +56,10 @@ public class EndGameActivity extends AppCompatActivity {
 
         mPager = (ViewPager) findViewById(R.id.pager_summary);
         mPagerAdapter = new SummaryPagerAdapter(getSupportFragmentManager());
+
+        //Bind the title indicator to the adapter
+        TitlePageIndicator titleIndicator = (TitlePageIndicator)findViewById(R.id.drawings);
+        titleIndicator.setViewPager(mPager);
         mPager.setAdapter(mPagerAdapter);
     }
 
