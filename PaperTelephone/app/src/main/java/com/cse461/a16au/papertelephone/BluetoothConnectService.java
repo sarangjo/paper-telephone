@@ -12,6 +12,7 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -441,6 +442,15 @@ public class BluetoothConnectService {
                     }
 
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DONE, msgData);
+                    currHandler = mGameHandler;
+                } else if(Arrays.equals(header, Constants.HEADER_REQ_SUCCESSOR)) {
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_REQ_SUCCUCCESSOR, data);
+                    currHandler = mGameHandler;
+                } else if(Arrays.equals(header, Constants.HEADER_REQ_SUCCESSOR_RESPONSE)) {
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_REQ_SUCCUCCESSOR_RESPONSE, data);
+                    currHandler = mGameHandler;
+                } else if (Arrays.equals(header, Constants.HEADER_NEW_START)) {
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_NEW_START, data);
                     currHandler = mGameHandler;
                 }
 

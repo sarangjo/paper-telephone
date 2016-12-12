@@ -185,7 +185,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     private void startGameClicked() {
         // TODO: change back to 2
         if (mGameData.getConnectedDevices().size() >= 1) {
-            if (mGameData.getStartDevice() >= 0) {
+            if (mGameData.getStartDevice().length() == Constants.ADDRESS_LENGTH) {
                 return;
             }
 
@@ -223,7 +223,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             nextDeviceAddress = iter.next();
             iter.remove();
         } else {
-            nextDeviceAddress = mGameData.getConnectedDevice(mGameData.getStartDevice());
+            nextDeviceAddress = mGameData.getStartDevice();
         }
 
         // Set up the successor packet
@@ -233,7 +233,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         msg.put(nextDeviceAddress.getBytes());
 
         // Set nextDevice field to store which device we will send prompts and drawings to
-        nextDevice = mGameData.getConnectedDevices().indexOf(nextDeviceAddress);
+        nextDevice = nextDeviceAddress;
 
         for (String address : mGameData.getConnectedDevices()) {
             mConnectService.write(msg.array(), address);
@@ -270,23 +270,23 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 String newStartDeviceAddress = msg.getData().getString(DEVICE_ADDRESS);
 
                 // Set the START device
-                if (mGameData.getStartDevice() == NO_START) {
+                if (mGameData.getStartDevice().equals(NO_START)) {
                     mGameData.setStartDevice(newStartDeviceAddress);
 
                     // Ack the new start device
                     mConnectService.write(Constants.HEADER_START_ACK, newStartDeviceAddress);
                 } else {
                     String currentStartDevice;
-                    if (mGameData.getStartDevice() == WE_ARE_START) {
+                    if (mGameData.getStartDevice().equals(WE_ARE_START)) {
                         currentStartDevice = mLocalAddress;
                     } else {
-                        currentStartDevice = mGameData.getConnectedDevice(mGameData.getStartDevice());
+                        currentStartDevice = mGameData.getStartDevice();
                     }
 
                     // Check preference by address comparison
                     if (currentStartDevice.compareTo(newStartDeviceAddress) > 0) {
                         // Update our start device to be the one with the lower address
-                        mGameData.setStartDevice(mGameData.getConnectedDevices().indexOf(newStartDeviceAddress));
+                        mGameData.setStartDevice(newStartDeviceAddress);
 
                         // Re-ack the new start device
                         mConnectService.write(Constants.HEADER_START_ACK, newStartDeviceAddress);
@@ -298,8 +298,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
                 // Setup unplaced devices, i.e. all devices except for the start device and us
                 unplacedDevices.clear();
-                for (int i = 0; i < mGameData.getConnectedDevices().size(); i++) {
-                    String currDevice = mGameData.getConnectedDevice(i);
+                for (String currDevice: mGameData.getConnectedDevices()) {
                     if (!currDevice.equals(newStartDeviceAddress)) {
                         unplacedDevices.add(currDevice);
                     }
@@ -312,8 +311,8 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 if (mGameData.doneAcking()) {
                     // Setup unplaced devices, i.e. all devices except for us
                     unplacedDevices.clear();
-                    for (int i = 0; i < mGameData.getConnectedDevices().size(); i++) {
-                        unplacedDevices.add(mGameData.getConnectedDevice(i));
+                    for (String device: mGameData.getConnectedDevices()) {
+                        unplacedDevices.add(device);
                     }
 
                     chooseSuccessor();
@@ -340,9 +339,9 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 }
 
                 // If we are the start device and we are the newly paired device, start game
-                if ((mGameData.getStartDevice() == -1 && isUs)
+                if ((mGameData.getStartDevice().equals(WE_ARE_START) && isUs)
                         // If the loop has been completed and all devices have a successor, start game
-                        || (mGameData.getStartDevice() != -1 && pairedDeviceAddress.equals(mGameData.getConnectedDevice(mGameData.getStartDevice())))) {
+                        || (!mGameData.getStartDevice().equals(WE_ARE_START) && pairedDeviceAddress.equals(mGameData.getStartDevice()))) {
                     transitionToGame();
                     return;
                 }

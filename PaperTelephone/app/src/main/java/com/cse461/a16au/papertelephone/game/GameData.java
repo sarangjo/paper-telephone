@@ -22,15 +22,15 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 public class GameData {
 
-    public static final int NO_START = -2;
-    public static final int WE_ARE_START = -1;
+    public static final String NO_START = "NOSTART";
+    public static final String WE_ARE_START = "START";
 
     private static final GameData ourInstance = new GameData();
 
     /**
      * Index of the device that started the game, -1 if it is this device
      */
-    private int startDevice;
+    private String startDevice;
 
     /**
      * List of all connected device address
@@ -58,24 +58,16 @@ public class GameData {
         return ourInstance;
     }
 
-    public synchronized int getStartDevice() {
+    public synchronized String getStartDevice() {
         return startDevice;
     }
 
-    public synchronized void setStartDevice(int startDevice) {
+    public synchronized void setStartDevice(String startDevice) {
         this.startDevice = startDevice;
-    }
-
-    public void setStartDevice(String startDeviceAddress) {
-        this.setStartDevice(getConnectedDevices().indexOf(startDeviceAddress));
     }
 
     public List<String> getConnectedDevices() {
         return Collections.unmodifiableList(connectedDevices);
-    }
-
-    public String getConnectedDevice(int index) {
-        return getConnectedDevices().get(index);
     }
 
     public List<String> getConnectedDeviceNames() {
@@ -117,7 +109,7 @@ public class GameData {
     /**
      * Index of this device's successor in the list of connectedDevices
      */
-    public static int nextDevice = 0;
+    public static String nextDevice = null;
 
     /**
      * Keeps track of how many devices have been chosen so far in that start game process
