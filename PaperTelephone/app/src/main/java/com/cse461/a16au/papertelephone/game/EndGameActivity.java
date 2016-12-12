@@ -56,10 +56,11 @@ public class EndGameActivity extends AppCompatActivity {
         mPager = (ViewPager) findViewById(R.id.pager_summary);
         mPagerAdapter = new SummaryPagerAdapter(getSupportFragmentManager());
 
+        mPager.setAdapter(mPagerAdapter);
         //Bind the title indicator to the adapter
         TitlePageIndicator titleIndicator = (TitlePageIndicator)findViewById(R.id.drawings);
         titleIndicator.setViewPager(mPager);
-        mPager.setAdapter(mPagerAdapter);
+
     }
 
     private class SummaryPagerAdapter extends FragmentStatePagerAdapter {
