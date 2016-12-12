@@ -26,8 +26,7 @@ public class Constants {
     public static final int MESSAGE_CONNECTED = 0;
     public static final int MESSAGE_DISCONNECTED = 1;
     public static final int MESSAGE_READ = 2;
-    public static final int MESSAGE_WRITE = 3;
-    public static final int MESSAGE_CONNECT_FAILED = 4;
+    public static final int MESSAGE_CONNECT_FAILED = 3;
 
     // Bundle keys
     public static final String CREATOR_ADDRESS = "creator_address";
@@ -54,14 +53,14 @@ public class Constants {
     public static final int READ_DONE = 6;
     public static final byte[] HEADER_START_ACK = getHeader("ACK");
     public static final int READ_START_ACK = 7;
-    public static final byte[] HEADER_REQ_SUCCESSOR = getHeader("REQSUCC");
-    public static final int READ_REQ_SUCCUCCESSOR = 8;
-    public static final byte[] HEADER_REQ_SUCCESSOR_RESPONSE = getHeader("REQSUCCR");
-    public static final int READ_REQ_SUCCUCCESSOR_RESPONSE = 9;
+    public static final byte[] HEADER_REQUEST_SUCCESSOR = getHeader("REQSUCC");
+    public static final int READ_REQUEST_SUCCESSOR = 8;
+    public static final byte[] HEADER_RESPONSE_SUCCESSOR = getHeader("REQSUCCR");
+    public static final int READ_RESPONSE_SUCCESSOR = 9;
     public static final byte[] HEADER_NEW_START = getHeader("NEWSTART");
     public static final int READ_NEW_START = 10;
-    public static final byte[] HEADER_GIVE_SUCC = getHeader("GIVESUCC");
-    public static final int READ_GIVE_SUCC = 11;
+    public static final byte[] HEADER_GIVE_SUCCESSOR = getHeader("GIVESUCC");
+    public static final int READ_GIVE_SUCCESSOR = 11;
 
     public static final int ADDRESS_LENGTH = 17;
 
@@ -81,6 +80,4 @@ public class Constants {
     private static byte[] getHeader(String s) {
         return Arrays.copyOf(s.getBytes(), HEADER_LENGTH);
     }
-
-    // TODO: maybe define packet headers here
 }

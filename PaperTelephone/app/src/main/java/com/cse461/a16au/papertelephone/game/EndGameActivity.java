@@ -9,10 +9,8 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ListView;
 
 import com.cse461.a16au.papertelephone.R;
-import com.viewpagerindicator.TitlePageIndicator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +20,6 @@ import static com.cse461.a16au.papertelephone.Constants.RESULT_LOBBY;
 import static com.cse461.a16au.papertelephone.Constants.RESULT_RESTART;
 
 public class EndGameActivity extends AppCompatActivity {
-    private ViewPager mPager;
-    private PagerAdapter mPagerAdapter;
 
     private List<String> mAddresses;
 
@@ -52,20 +48,20 @@ public class EndGameActivity extends AppCompatActivity {
         });
 
         // ViewPager
-        mPagerAdapter = new SummaryPagerAdapter(getSupportFragmentManager());
+        PagerAdapter pagerAdapter = new SummaryPagerAdapter(getSupportFragmentManager());
         mAddresses = new ArrayList<>(GameData.getInstance().getConnectedDevices());
-        mPager = (ViewPager) findViewById(R.id.pager_summary);
+        ViewPager pager = (ViewPager) findViewById(R.id.pager_summary);
 
-        if(mPager.getAdapter() != null) {
-            mPager.setAdapter(null);
+        if(pager.getAdapter() != null) {
+            pager.setAdapter(null);
         }
-        mPager.setAdapter(mPagerAdapter);
-        mPager.setCurrentItem(0, false);
+        pager.setAdapter(pagerAdapter);
+        pager.setCurrentItem(0, false);
 
     }
 
     private class SummaryPagerAdapter extends FragmentStatePagerAdapter {
-        public SummaryPagerAdapter(FragmentManager manager) {
+        SummaryPagerAdapter(FragmentManager manager) {
             super(manager);
         }
 

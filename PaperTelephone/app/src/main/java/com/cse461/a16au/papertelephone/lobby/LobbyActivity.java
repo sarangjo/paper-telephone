@@ -45,9 +45,9 @@ import static com.cse461.a16au.papertelephone.Constants.READ_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_UNKNOWN;
 import static com.cse461.a16au.papertelephone.Constants.NO_START;
 import static com.cse461.a16au.papertelephone.Constants.WE_ARE_START;
-import static com.cse461.a16au.papertelephone.game.GameData.lastSuccessor;
+import static com.cse461.a16au.papertelephone.game.GameData.lastSuccessorNumber;
 import static com.cse461.a16au.papertelephone.game.GameData.localAddress;
-import static com.cse461.a16au.papertelephone.game.GameData.nextDevice;
+import static com.cse461.a16au.papertelephone.game.GameData.successor;
 import static com.cse461.a16au.papertelephone.game.GameData.unplacedDevices;
 
 /**
@@ -62,7 +62,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     private ArrayAdapter<String> mConnectedDevicesNamesAdapter;
 
     /**
-     * Our bluetooth service
+     * Our bluetooth service to handle all bluetooth connections
      */
     private BluetoothConnectService mConnectService = null;
 
@@ -132,9 +132,9 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         super.onDestroy();
 
         // TODO: Stop connect service to stop connections and shut down?
-//        if (mConnectService != null) {
-//            mConnectService.stop();
-//        }
+        if (mConnectService != null) {
+            mConnectService.stop();
+        }
     }
 
     @Override
@@ -225,11 +225,11 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         // Set up the successor packet
         ByteBuffer msg = ByteBuffer.allocate(HEADER_LENGTH + 4 + ADDRESS_LENGTH);
         msg.put(HEADER_SUCCESSOR);
-        msg.putInt(lastSuccessor + 1);
+        msg.putInt(lastSuccessorNumber + 1);
         msg.put(nextDeviceAddress.getBytes());
 
         // Set nextDevice field to store which device we will send prompts and drawings to
-        nextDevice = nextDeviceAddress;
+        successor = nextDeviceAddress;
 
         for (String address : mGameData.getConnectedDevices()) {
             mConnectService.write(msg.array(), address);
@@ -258,8 +258,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 Toast.makeText(LobbyActivity.this, "Received unknown format", Toast.LENGTH_SHORT).show();
                 break;
             case READ_PING:
-                Toast.makeText(LobbyActivity.this, "Received ping from " + msg.getData().getString(DEVICE_NAME),
-                        Toast.LENGTH_SHORT).show();
+                Toast.makeText(LobbyActivity.this, "Received ping from " + deviceName, Toast.LENGTH_SHORT).show();
                 break;
             case READ_START:
                 // Set the START device
@@ -284,7 +283,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                         // Re-ack the new start device
                         mConnectService.write(Constants.HEADER_START_ACK, deviceAddress);
                     } else {
-                        // We are still start device, so this does not affect anything
+                        // We are still start device, so we ignore this
                         return;
                     }
                 }
@@ -299,7 +298,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 break;
             case READ_START_ACK:
                 mGameData.removeUnackedDevice(deviceAddress);
-                if (mGameData.doneAcking()) {
+                if (mGameData.isDoneAcking()) {
                     // Setup unplaced devices, i.e. all devices except for us
                     unplacedDevices.clear();
                     for (String device: mGameData.getConnectedDevices()) {
@@ -310,53 +309,45 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 }
                 break;
             case READ_SUCCESSOR:
-                // Format of pair tuple: header, pair #, pair address
-                // msg.arg1 = HEADER_LENGTH + 4 + ADDRESS_LENGTH);
-                buf = ByteBuffer.wrap((byte[]) msg.obj, 0, msg.arg1);
+                buf = ByteBuffer.wrap((byte[]) msg.obj);
 
-                // Throw away header
-                buf.get(new byte[HEADER_LENGTH]);
+                // Get the successor number and successor address
+                lastSuccessorNumber = buf.getInt();
+                byte[] successorAddressArr = new byte[ADDRESS_LENGTH];
+                buf.get(successorAddressArr);
 
-                lastSuccessor = buf.getInt();
-                byte[] pairedDeviceAddressArr = new byte[ADDRESS_LENGTH];
-                buf.get(pairedDeviceAddressArr);
+                String successorAddress = new String(successorAddressArr);
+                unplacedDevices.remove(successorAddress);
 
-                String pairedDeviceAddress = new String(pairedDeviceAddressArr);
-                unplacedDevices.remove(pairedDeviceAddress);
-
+                // Check if we are the chosen successor
                 boolean isUs = true;
                 for (String address : mGameData.getConnectedDevices()) {
-                    isUs = isUs && !pairedDeviceAddress.equals(address);
+                    isUs = isUs && !successorAddress.equals(address);
                 }
 
-                // If we are the start device and we are the newly paired device, start game
+                // If we are the start device and we are the new successor, start game
                 if ((mGameData.getStartDevice().equals(WE_ARE_START) && isUs)
                         // If the loop has been completed and all devices have a successor, start game
-                        || (!mGameData.getStartDevice().equals(WE_ARE_START) && pairedDeviceAddress.equals(mGameData.getStartDevice()))) {
+                        || (!mGameData.getStartDevice().equals(WE_ARE_START) && successorAddress.equals(mGameData.getStartDevice()))) {
                     transitionToGame();
                     return;
                 }
 
-                // If removing from the set returns false that means we are the
-                // newly paired device so we need to choose our successor
+                // If removing from the set returns false that means we are the newly paired device
                 if (isUs) {
                     chooseSuccessor();
                 }
                 break;
             case READ_DEVICES:
                 // Establish connections with devices that are already in the game
-                buf = ByteBuffer.wrap((byte[]) msg.obj, 0, msg.arg1);
-                buf.get(new byte[HEADER_LENGTH]);
+                buf = ByteBuffer.wrap((byte[]) msg.obj);
 
                 int numDevices = buf.getInt();
-                String[] addresses = new String[numDevices];
                 for (int i = 0; i < numDevices; i++) {
                     byte[] address = new byte[ADDRESS_LENGTH];
                     buf.get(address);
-                    addresses[i] = new String(address);
-                }
+                    String addr = new String(address);
 
-                for (String addr : addresses) {
                     if (mGameData.getConnectedDevices().indexOf(addr) >= 0) {
                         // this has already been connected to!
                         Log.d(TAG, "Already connected to " + addr);
@@ -365,11 +356,10 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     }
                 }
                 break;
+            // TODO: add case to handle READ_GIVE_SUCCESSOR for a new device that is joining a game
         }
-
     }
 
-    // TODO: add case to handle READ_GIVE_SUCC for a new device that is joining a game
     private final Handler mMainHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {

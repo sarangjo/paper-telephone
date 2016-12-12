@@ -21,10 +21,22 @@ public class GameData {
 
     private static final GameData ourInstance = new GameData();
 
+    // The start device
+
     /**
      * Index of the device that started the game, -1 if it is this device
      */
     private String startDevice;
+
+    public synchronized String getStartDevice() {
+        return startDevice;
+    }
+
+    public synchronized void setStartDevice(String startDevice) {
+        this.startDevice = startDevice;
+    }
+
+    // Devices we are currently connected to
 
     /**
      * List of all connected device address
@@ -36,32 +48,6 @@ public class GameData {
      */
     private List<String> connectedDeviceNames;
 
-    /**
-     * Devices that have not acked our start yet.
-     */
-    private Set<String> unackedDevices;
-
-//    private boolean isDone;
-
-    private GameData() {
-        this.startDevice = Constants.NO_START;
-        this.connectedDevices = new ArrayList<>();
-        this.connectedDeviceNames = new ArrayList<>();
-        this.unackedDevices = new HashSet<>();
-    }
-
-    public static GameData getInstance() {
-        return ourInstance;
-    }
-
-    public synchronized String getStartDevice() {
-        return startDevice;
-    }
-
-    public synchronized void setStartDevice(String startDevice) {
-        this.startDevice = startDevice;
-    }
-
     public List<String> getConnectedDevices() {
         return Collections.unmodifiableList(connectedDevices);
     }
@@ -70,34 +56,76 @@ public class GameData {
         return Collections.unmodifiableList(connectedDeviceNames);
     }
 
-    public void addConnectedDevice(String address, String name) {
-        synchronized (this) {
-            this.connectedDevices.add(address);
-            this.connectedDeviceNames.add(name);
-        }
+    public synchronized void addConnectedDevice(String address, String name) {
+        this.connectedDevices.add(address);
+        this.connectedDeviceNames.add(name);
     }
 
-    public void removeConnectedDevice(String address, String name) {
-        synchronized (this) {
-            this.connectedDevices.remove(address);
-            this.connectedDeviceNames.remove(name);
-        }
+    public synchronized void removeConnectedDevice(String address, String name) {
+        this.connectedDevices.remove(address);
+        this.connectedDeviceNames.remove(name);
     }
+
+    // Devices who haven't ack'ed our START packet yet
+
+    /**
+     * Devices that have not acked our start yet.
+     */
+    private Set<String> unackedDevices;
 
     public void setupUnackedDevices() {
         unackedDevices.addAll(getConnectedDevices());
     }
 
-    public void removeUnackedDevice(String deviceAddress) {
-        synchronized (this) {
-            unackedDevices.remove(deviceAddress);
-        }
+    public synchronized void removeUnackedDevice(String deviceAddress) {
+        unackedDevices.remove(deviceAddress);
     }
 
-    public boolean doneAcking() {
-        synchronized (this) {
-            return this.unackedDevices.isEmpty();
-        }
+    public boolean isDoneAcking() {
+        return this.unackedDevices.isEmpty();
+    }
+
+    // Turn-based bookkeeping
+
+    /**
+     * Stores whether or not this device has completed the current turn
+     */
+    private boolean isDone;
+
+    public void setTurnDone(boolean done) {
+        isDone = done;
+    }
+
+    // Devices who are not finished with their turns
+
+    /**
+     * A list of the devices that have not finished the current turn.
+     */
+    private Set<String> unfinishedDeviceList;
+
+    public synchronized void deviceTurnFinished(String address) {
+        unfinishedDeviceList.remove(address);
+    }
+
+    public synchronized void setupUnfinishedDevices(List<String> devices) {
+        unfinishedDeviceList.addAll(devices);
+    }
+
+    public synchronized boolean isRoundOver() {
+        return isDone && unfinishedDeviceList.isEmpty();
+    }
+
+    private GameData() {
+        this.startDevice = Constants.NO_START;
+        this.connectedDevices = new ArrayList<>();
+        this.connectedDeviceNames = new ArrayList<>();
+        this.unackedDevices = new HashSet<>();
+        this.isDone = false;
+        this.unfinishedDeviceList = new HashSet<>();
+    }
+
+    public static GameData getInstance() {
+        return ourInstance;
     }
 
     // SETUP
@@ -105,13 +133,12 @@ public class GameData {
     /**
      * Index of this device's successor in the list of connectedDevices
      */
-    public static String nextDevice = null;
+    public static String successor = null;
 
     /**
      * Keeps track of how many devices have been chosen so far in that start game process
      */
-    public static int lastSuccessor = 0;
-
+    public static int lastSuccessorNumber = 0;
 
     /**
      * Set of devices that have not been chosen as a successor in the start game process
@@ -134,20 +161,11 @@ public class GameData {
     public static String localName = BluetoothAdapter.getDefaultAdapter().getName();
 
     // IN-GAME
+
     /**
      * The timer for each turn.
      */
     public static CountDownTimer turnTimer = null;
-
-    /**
-     * A list of the devices that have not finished the current turn.
-     */
-    public static Set<String> unfinishedDeviceList = new ConcurrentSkipListSet<>();
-
-    /**
-     * Stores whether or not this device has completed the current turn
-     */
-    public static boolean isDone;
 
     public static ConnectionChangeListener connectionChangeListener;
 
@@ -168,4 +186,5 @@ public class GameData {
         summary.add(data);
         addressToSummaries.put(creatorAddress, summary);
     }
+
 }

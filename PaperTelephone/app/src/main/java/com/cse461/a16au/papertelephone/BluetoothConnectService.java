@@ -184,7 +184,7 @@ public class BluetoothConnectService {
     }
 
     /**
-     * Write to ConnectedThread synchronously.
+     * Write to ConnectedThread synchronously. Can potentially modify the given array.
      *
      * @return success
      */
@@ -387,101 +387,95 @@ public class BluetoothConnectService {
             log("Done listening");
         }
 
-        private void handleRead(byte[] data, int bytes) {
-            data = Arrays.copyOfRange(data, 0, bytes);
-            // ByteBuffer to wrap our input buffer
-            ByteBuffer input = ByteBuffer.wrap(data);
+        private void handleRead(byte[] input, int bytes) {
+            input = Arrays.copyOfRange(input, 0, bytes);
 
             // Message to be passed to the appropriate handler
             Message msg;
+            Bundle bundle = new Bundle();
             Handler currHandler = mMainHandler;
-            String creatorAddress = null;
             byte[] creatorAddressArr = new byte[Constants.ADDRESS_LENGTH];
 
             // Extracts header, if any
             if (bytes >= Constants.HEADER_LENGTH) {
-                byte[] header = new byte[Constants.HEADER_LENGTH];
-                input.get(header);
-
+                byte[] header = Arrays.copyOf(input, Constants.HEADER_LENGTH);
                 log("Received: " + new String(header));
+
+                // ByteBuffer to wrap our input array
+                ByteBuffer dataBuffer = ByteBuffer.wrap(Arrays.copyOfRange(input, Constants.HEADER_LENGTH, bytes));
 
                 // Game handler
                 if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
                     // Get Creator Address
-                    input.get(creatorAddressArr);
-                    creatorAddress = new String(creatorAddressArr);
+                    dataBuffer.get(creatorAddressArr);
+                    bundle.putString(Constants.CREATOR_ADDRESS, new String(creatorAddressArr));
 
-                    byte[] imgData = processImage(input, bytes - Constants.ADDRESS_LENGTH - Constants.HEADER_LENGTH - 4, data).array();
-
+                    byte[] imgData = processImage(dataBuffer, bytes - Constants.ADDRESS_LENGTH - Constants.HEADER_LENGTH - 4, input);
 
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, imgData.length, Constants.READ_IMAGE, imgData);
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_PROMPT)) {
                     // Get Creator Address
-                    input.get(creatorAddressArr);
-                    creatorAddress = new String(creatorAddressArr);
+                    dataBuffer.get(creatorAddressArr);
+                    bundle.putString(Constants.CREATOR_ADDRESS, new String(creatorAddressArr));
 
-                    data = new byte[bytes - Constants.ADDRESS_LENGTH - Constants.HEADER_LENGTH];
-                    input.get(data);
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PROMPT, data);
+                    input = new byte[bytes - Constants.ADDRESS_LENGTH - Constants.HEADER_LENGTH];
+                    dataBuffer.get(input);
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PROMPT, input);
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_DONE)) {
                     // Get the type of data that this DONE packet contains
-                    input.get(header);
+                    dataBuffer.get(header);
+
+                    dataBuffer.get(creatorAddressArr);
+                    bundle.putString(Constants.CREATOR_ADDRESS, new String(creatorAddressArr));
 
                     log("Done Header:" + new String(header));
 
-                    // Get Creator Address
-                    input.get(creatorAddressArr);
-                    creatorAddress = new String(creatorAddressArr);
-
-                    log("Done Creator: " + creatorAddress);
-
-                    byte[] msgData;
+                    // Determine which type of DONE message we received
+                    byte[] doneData;
 
                     if (Arrays.equals(header, Constants.HEADER_IMAGE)) {
-                        msgData = processImage(input, bytes - 2 * Constants.HEADER_LENGTH - Constants.ADDRESS_LENGTH - 4, data).array();
+                        doneData = processImage(dataBuffer, bytes - 2 * Constants.HEADER_LENGTH - Constants.ADDRESS_LENGTH - 4, input);
                     } else {
-                        msgData = new byte[bytes - 2 * Constants.HEADER_LENGTH - Constants.ADDRESS_LENGTH];
-                        input.get(msgData);
+                        doneData = new byte[bytes - 2 * Constants.HEADER_LENGTH - Constants.ADDRESS_LENGTH];
+                        dataBuffer.get(doneData);
                     }
 
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DONE, msgData);
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DONE, doneData);
                     currHandler = mGameHandler;
-                } else if (Arrays.equals(header, Constants.HEADER_REQ_SUCCESSOR)) {
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_REQ_SUCCUCCESSOR, data);
+                } else if (Arrays.equals(header, Constants.HEADER_REQUEST_SUCCESSOR)) {
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_REQUEST_SUCCESSOR, dataBuffer.array());
                     currHandler = mGameHandler;
-                } else if (Arrays.equals(header, Constants.HEADER_REQ_SUCCESSOR_RESPONSE)) {
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_REQ_SUCCUCCESSOR_RESPONSE, data);
+                } else if (Arrays.equals(header, Constants.HEADER_RESPONSE_SUCCESSOR)) {
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_RESPONSE_SUCCESSOR, dataBuffer.array());
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_NEW_START)) {
-                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_NEW_START, data);
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_NEW_START, dataBuffer.array());
                     currHandler = mGameHandler;
                 }
 
                 // Main Handler
                 else if (Arrays.equals(header, Constants.HEADER_START)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, data);
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, dataBuffer.array());
                 } else if (Arrays.equals(header, Constants.HEADER_START_ACK)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START_ACK, data);
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START_ACK, dataBuffer.array());
                 } else if (Arrays.equals(header, Constants.HEADER_SUCCESSOR)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_SUCCESSOR, data);
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_SUCCESSOR, dataBuffer.array());
                 } else if (Arrays.equals(header, Constants.HEADER_DEVICES)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DEVICES, data);
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DEVICES, dataBuffer.array());
                 } else if (Arrays.equals(header, Constants.HEADER_PING)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, data);
-                } else if (Arrays.equals(header, Constants.HEADER_GIVE_SUCC)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_GIVE_SUCC, data);
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, dataBuffer.array());
+                } else if (Arrays.equals(header, Constants.HEADER_GIVE_SUCCESSOR)) {
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_GIVE_SUCCESSOR, dataBuffer.array());
                 } else {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, data);
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, dataBuffer.array());
                 }
             } else {
-                msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, data);
+                msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, input);
             }
 
             if (currHandler != null) {
-                Bundle bundle = new Bundle();
-                bundle.putString(Constants.CREATOR_ADDRESS, creatorAddress);
                 bundle.putString(Constants.DEVICE_ADDRESS, mmDevice.getAddress());
                 bundle.putString(Constants.DEVICE_NAME, mmDevice.getName());
                 msg.setData(bundle);
@@ -489,7 +483,7 @@ public class BluetoothConnectService {
             }
         }
 
-        public ByteBuffer processImage(ByteBuffer input, int imgBytes, byte[] data) {
+        public byte[] processImage(ByteBuffer input, int imgBytes, byte[] data) {
             // Hold onto the full image size for later
             int totalImageSize = input.getInt();
             int remainingImageSize = totalImageSize;
@@ -522,7 +516,7 @@ public class BluetoothConnectService {
                 }
             }
 
-            return imgBuffer;
+            return imgBuffer.array();
         }
 
         public boolean write(byte[] buffer) {

@@ -2,19 +2,15 @@ package com.cse461.a16au.papertelephone.game;
 
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
-import android.app.usage.ConfigurationStats;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.cse461.a16au.papertelephone.BluetoothConnectService;
-import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 
 import java.nio.ByteBuffer;
@@ -23,16 +19,30 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static com.cse461.a16au.papertelephone.Constants.ADDRESS_LENGTH;
+import static com.cse461.a16au.papertelephone.Constants.CREATOR_ADDRESS;
+import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
+import static com.cse461.a16au.papertelephone.Constants.DEVICE_NAME;
+import static com.cse461.a16au.papertelephone.Constants.HEADER_DONE;
+import static com.cse461.a16au.papertelephone.Constants.HEADER_GIVE_SUCCESSOR;
+import static com.cse461.a16au.papertelephone.Constants.HEADER_LENGTH;
+import static com.cse461.a16au.papertelephone.Constants.HEADER_NEW_START;
+import static com.cse461.a16au.papertelephone.Constants.HEADER_REQUEST_SUCCESSOR;
+import static com.cse461.a16au.papertelephone.Constants.HEADER_RESPONSE_SUCCESSOR;
+import static com.cse461.a16au.papertelephone.Constants.MESSAGE_READ;
+import static com.cse461.a16au.papertelephone.Constants.READ_DONE;
+import static com.cse461.a16au.papertelephone.Constants.READ_IMAGE;
+import static com.cse461.a16au.papertelephone.Constants.READ_NEW_START;
+import static com.cse461.a16au.papertelephone.Constants.READ_PROMPT;
+import static com.cse461.a16au.papertelephone.Constants.READ_REQUEST_SUCCESSOR;
+import static com.cse461.a16au.papertelephone.Constants.READ_RESPONSE_SUCCESSOR;
+import static com.cse461.a16au.papertelephone.Constants.WE_ARE_START;
 import static com.cse461.a16au.papertelephone.game.GameData.addressToSummaries;
-import static com.cse461.a16au.papertelephone.game.GameData.isDone;
-import static com.cse461.a16au.papertelephone.game.GameData.nextDevice;
 import static com.cse461.a16au.papertelephone.game.GameData.saveData;
+import static com.cse461.a16au.papertelephone.game.GameData.successor;
 import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
-import static com.cse461.a16au.papertelephone.game.GameData.unfinishedDeviceList;
-import static com.cse461.a16au.papertelephone.game.GameData.unplacedDevices;
 
 /**
  * Manages the two fragments that compose the game, DrawingFragment, and PromptFragment and handles
@@ -67,31 +77,34 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         GameData.connectionChangeListener = new ConnectionChangeListener() {
             @Override
             public void disconnection(String address) {
+                // Device was dropped in the middle of the game
                 if (mGameData.getConnectedDevices().size() < 2) {
+                    mProgressDialog.dismiss();
                     Toast.makeText(GameActivity.this, "You no longer have enough players, going to summary page", Toast.LENGTH_LONG).show();
                     setResult(RESULT_OK);
                     finish();
                     return;
                 }
 
-                unfinishedDeviceList.remove(address);
+                mGameData.deviceTurnFinished(address);
 
-                if (nextDevice.equals(address)) {
+                // In the case that the dropped address was our successor, we have to get a new successor
+                if (successor.equals(address)) {
                     successors = new CopyOnWriteArrayList<>();
 
                     // Ask other devices for their successors
                     for (String device : mGameData.getConnectedDevices()) {
-                        mConnectService.write(Constants.HEADER_REQ_SUCCESSOR, device);
+                        mConnectService.write(HEADER_REQUEST_SUCCESSOR, device);
                     }
-
                 }
             }
 
             @Override
             public void connection(String address) {
-                if (mGameData.getStartDevice().equals(Constants.WE_ARE_START)) {
-                    mConnectService.write(Constants.HEADER_GIVE_SUCC, address);
-                    nextDevice = address;
+                // New connection made, let it be our successor
+                if (mGameData.getStartDevice().equals(WE_ARE_START)) {
+                    mConnectService.write(HEADER_GIVE_SUCCESSOR, address);
+                    successor = address;
                 }
             }
         };
@@ -105,8 +118,8 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
         mTimerTextView = (TextView) findViewById(R.id.timer);
         TextView successor = (TextView) findViewById(R.id.successor_text);
-        if (nextDevice != null) {
-            successor.setText("Next: " + mGameData.getConnectedDeviceNames().get(mGameData.getConnectedDevices().indexOf(nextDevice)));
+        if (GameData.successor != null) {
+            successor.setText("Next: " + mGameData.getConnectedDeviceNames().get(mGameData.getConnectedDevices().indexOf(GameData.successor)));
         } else {
             successor.setText("Invalid successor");
         }
@@ -116,6 +129,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage("Waiting for Other Players to Complete Their Turn");
         mProgressDialog.setCancelable(false);
+
         updateMode();
     }
 
@@ -124,6 +138,12 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         super.onDestroy();
 
         mConnectService.unregisterGameHandler(mGameHandler);
+    }
+
+    @Override
+    public void onBackPressed() {
+        // TODO: ask for confirmation first
+        // TODO: intentionally disconnect from other devices to signal leaving from gaming
     }
 
     /**
@@ -145,7 +165,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
         // TODO: Uncomment and test when we are confident that the rest of the game works as intended
         // Start the timer at 30 seconds for the next phase of the game
-        /*GameData.turnTimer = new CountDownTimer(Constants.TURN_MILLIS, 1000) {
+        /*GameData.turnTimer = new CountDownTimer(TURN_MILLIS, 1000) {
             public void onTick(long millisUntilFinished) {
                 mTimerTextView.setText(String.format("%2ds", millisUntilFinished / 1000));
             }
@@ -169,71 +189,68 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         Bundle args = new Bundle();
 
         // Set creatorAddress argument
-        args.putString(Constants.CREATOR_ADDRESS, mNextCreatorAddress);
+        args.putString(CREATOR_ADDRESS, mNextCreatorAddress);
+        // TODO: this is assuming that prompt is always the start; what about for devices joining in middle?
         if (mIsPromptMode) {
             if (mFragment == null) {
                 args.putBoolean("start", true);
-                mFragment = new PromptFragment();
-                mFragment.setArguments(args);
             } else {
                 args.putBoolean("start", false);
-                // Add the image as an arg to the PromptFragment
+                // Pass the image as an arg to the PromptFragment
                 args.putByteArray("image", mNextImage);
-                mFragment = new PromptFragment();
-                mFragment.setArguments(args);
             }
+            mFragment = new PromptFragment();
         } else {
             // Pass the prompt to the DrawingFragment
             args.putString("prompt", mNextPrompt);
             mFragment = new DrawingFragment();
-            mFragment.setArguments(args);
         }
+        mFragment.setArguments(args);
         ft.add(R.id.game_fragment_container, mFragment).commit();
 
         // Switch modes and setup for start of the next turn
         mIsPromptMode = !mIsPromptMode;
-        startTurn();
+        startRound();
     }
 
     /**
      * Sets up our data structures for the start of a turn.
      */
-    private void startTurn() {
-        isDone = false;
-        unfinishedDeviceList = new ConcurrentSkipListSet<>(mGameData.getConnectedDevices());
+    private void startRound() {
+        mGameData.setTurnDone(false);
+        mGameData.setupUnfinishedDevices(mGameData.getConnectedDevices());
         mTimerTextView.setTextColor(getResources().getColor(R.color.colorTimer));
 
         turnsLeft--;
     }
 
     /**
-     * Sends data (image or prompt) to the "next device"
-     * Also sends a DONE packet to all devices in order to inform them that we have completed our turn
+     * Sends data (image or prompt) to our successor. Also sends a DONE packet to all devices in order
+     * to inform them that we have completed our turn.
      */
     @Override
     public void sendData(byte[] data) {
         // Write this turn's data to our next device
-        // THIS APPARENTLY MODIFIES THE PASSED-IN ARRAY??????????????????????!?!?!?!?!?!?!?
-        mConnectService.write(Arrays.copyOf(data, data.length), nextDevice);
+        mConnectService.write(Arrays.copyOf(data, data.length), successor);
 
         // Write done message to all devices
-        ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + data.length);
-        buf.put(Constants.HEADER_DONE);
+        ByteBuffer buf = ByteBuffer.allocate(HEADER_LENGTH + data.length);
+        buf.put(HEADER_DONE);
         buf.put(data);
 
         for (String device : mGameData.getConnectedDevices()) {
-            if (!device.equals(nextDevice)) {
+            if (!device.equals(successor)) {
                 mConnectService.write(buf.array(), device);
             }
         }
 
-        isDone = true;
+        mGameData.setTurnDone(true);
         if (GameData.turnTimer != null) {
             GameData.turnTimer.cancel();
         }
 
         mProgressDialog.show();
-        if (unfinishedDeviceList.isEmpty()) {
+        if (mGameData.isRoundOver()) {
             updateMode();
         }
     }
@@ -244,97 +261,75 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
     private final Handler mGameHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case Constants.MESSAGE_READ:
-                    // TODO: MAKE SURE EVERYTHING *HERE* IS THREAD-SAFE
-                    String creatorAddress;
-                    String name;
-                    byte[] data;
+            if (msg.what == MESSAGE_READ) {
+                String creatorAddress = msg.getData().getString(CREATOR_ADDRESS);
+                String address = msg.getData().getString(DEVICE_ADDRESS);
+                String name = msg.getData().getString(DEVICE_NAME);
 
+                switch (msg.arg2) {
+                    case READ_IMAGE:
+                    case READ_PROMPT:
+                    case READ_DONE:
+                        // Add the current image/prompt to the corresponding list in the map from addresses to summaries
+                        byte[] data = (byte[]) msg.obj;
+                        saveData(creatorAddress, data);
+                        Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
 
-                    switch (msg.arg2) {
-                        case Constants.READ_IMAGE:
-                            // Add the current image/prompt to the corresponding list in the map from addresses to summaries
-                            creatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
-                            name = msg.getData().getString(Constants.DEVICE_NAME);
-                            data = (byte[]) msg.obj;
-                            saveData(creatorAddress, data);
-
-                            Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
-                            mNextImage = (byte[]) msg.obj;
+                        if (msg.arg2 == READ_IMAGE) {
+                            mNextImage = data;
                             mNextCreatorAddress = creatorAddress;
-                            break;
-                        case Constants.READ_PROMPT:
-                            // Add the current image/prompt to the corresponding list in the map from addresses to summaries
-                            creatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
-                            name = msg.getData().getString(Constants.DEVICE_NAME);
-                            data = (byte[]) msg.obj;
-                            saveData(creatorAddress, data);
-
-                            Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
-                            mNextPrompt = new String((byte[]) msg.obj);
+                        } else if (msg.arg2 == READ_PROMPT) {
+                            mNextPrompt = new String(data);
                             mNextCreatorAddress = creatorAddress;
-                            break;
-                        case Constants.READ_DONE:
-                            // Add the current image/prompt to the corresponding list in the map from addresses to summaries
-                            creatorAddress = msg.getData().getString(Constants.CREATOR_ADDRESS);
-                            name = msg.getData().getString(Constants.DEVICE_NAME);
-                            data = (byte[]) msg.obj;
-                            saveData(creatorAddress, data);
+                        }
 
-                            Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
-                            break;
-                        case Constants.READ_REQ_SUCCUCCESSOR:
-                            ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH);
-                            buf.put(Constants.HEADER_REQ_SUCCESSOR_RESPONSE);
-                            buf.put(nextDevice.getBytes());
+                        // TODO: MAKE SURE EVERYTHING *HERE* IS THREAD-SAFE
 
-                            mConnectService.write(buf.array(), msg.getData().getString(Constants.DEVICE_ADDRESS));
-                            return;
-                        case Constants.READ_REQ_SUCCUCCESSOR_RESPONSE:
-                            buf = ByteBuffer.wrap((byte[]) msg.obj);
-                            buf.get(new byte[Constants.HEADER_LENGTH]);
-                            byte[] successor = new byte[Constants.ADDRESS_LENGTH];
-                            buf.get(successor);
-                            String successorAddress = new String(successor);
+                        mGameData.deviceTurnFinished(address);
 
-                            successors.add(successorAddress);
+                        // If we are done and all other devices are done we move on to the next round
+                        if (mGameData.isRoundOver()) {
+                            updateMode();
+                        }
+                        break;
+                    case READ_REQUEST_SUCCESSOR:
+                        // A device is requesting our successor, so just send it
+                        ByteBuffer buf = ByteBuffer.allocate(HEADER_LENGTH + ADDRESS_LENGTH);
+                        buf.put(HEADER_RESPONSE_SUCCESSOR);
+                        buf.put(successor.getBytes());
 
-                            if (successors.size() == mGameData.getConnectedDevices().size()) {
-                                Set<String> unplacedSuccessors = new HashSet<>(mGameData.getConnectedDevices());
+                        mConnectService.write(buf.array(), address);
+                        break;
+                    case READ_RESPONSE_SUCCESSOR:
+                        buf = ByteBuffer.wrap((byte[]) msg.obj);
+                        byte[] successor = new byte[ADDRESS_LENGTH];
+                        buf.get(successor);
+                        String successorAddress = new String(successor);
 
-                                for (String device : successors) {
-                                    unplacedSuccessors.remove(device);
-                                }
+                        successors.add(successorAddress);
 
-                                if (nextDevice.equals(mGameData.getStartDevice())) {
-                                    for (String device : mGameData.getConnectedDevices()) {
-                                        mConnectService.write(Constants.HEADER_NEW_START, device);
-                                    }
-                                }
+                        if (successors.size() == mGameData.getConnectedDevices().size()) {
+                            Set<String> unplacedSuccessors = new HashSet<>(mGameData.getConnectedDevices());
 
-                                nextDevice = unplacedSuccessors.iterator().next();
-
-
+                            for (String device : successors) {
+                                unplacedSuccessors.remove(device);
                             }
 
-                            return;
-                        case Constants.READ_NEW_START:
-                            mGameData.setStartDevice(msg.getData().getString(Constants.DEVICE_ADDRESS));
-                            return;
-                    }
+                            if (GameData.successor.equals(mGameData.getStartDevice())) {
+                                for (String device : mGameData.getConnectedDevices()) {
+                                    mConnectService.write(HEADER_NEW_START, device);
+                                }
+                            }
 
-                    // Get address of sender and remove it from our list of devices
-                    // keeping track of which devices haven't finished yet
-                    String address = msg.getData().getString(Constants.DEVICE_ADDRESS);
-                    unfinishedDeviceList.remove(address);
+                            GameData.successor = unplacedSuccessors.iterator().next();
+                        }
 
-                    // If we are done and all other devices are done we move on to the
-                    // next phase of the game by calling updateMode()
-                    if (isDone && unfinishedDeviceList.isEmpty()) {
-                        updateMode();
-                    }
-                    break;
+                        break;
+                    case READ_NEW_START:
+                        mGameData.setStartDevice(address);
+                        // TODO: anything else to do here?
+                        break;
+                }
             }
         }
     };
