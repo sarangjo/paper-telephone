@@ -18,8 +18,6 @@ import android.widget.TextView;
 import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 
-import org.w3c.dom.Text;
-
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 

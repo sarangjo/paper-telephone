@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -31,7 +33,7 @@ import static com.cse461.a16au.papertelephone.game.GameData.unfinishedDeviceList
  * Manages the two fragments that compose the game, DrawingFragment, and PromptFragment and handles
  * the receiving of game data from other devices in order to save it for the next phase of the game.
  */
-public class GameActivity extends FragmentActivity implements GameFragment.DataSendListener {
+public class GameActivity extends AppCompatActivity implements GameFragment.DataSendListener {
     private final String TAG = "GAME_ACTIVITY";
 
     private BluetoothConnectService mConnectService;
@@ -51,6 +53,8 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         mGameData = GameData.getInstance();
 
@@ -106,7 +110,7 @@ public class GameActivity extends FragmentActivity implements GameFragment.DataS
         mProgressDialog.dismiss();
 
         // Finish game
-        if (/*!Constants.DEBUG && */turnsLeft == 0) {
+        if (turnsLeft == 0) {
             setResult(RESULT_OK);
             finish();
             return;

@@ -19,10 +19,10 @@ import java.util.List;
  * TODO: class documentation
  */
 
-public class PaperSummaryAdapter extends ArrayAdapter<byte[]> {
+public class SummaryAdapter extends ArrayAdapter<byte[]> {
     private final List<byte[]> mValues;
 
-    public PaperSummaryAdapter(Context context, List<byte[]> values) {
+    public SummaryAdapter(Context context, List<byte[]> values) {
         super(context, -1, values);
         mValues = values;
     }
