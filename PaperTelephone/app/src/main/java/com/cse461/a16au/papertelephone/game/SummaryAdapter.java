@@ -33,7 +33,8 @@ public class SummaryAdapter extends ArrayAdapter<byte[]> {
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view;
         byte[] obj = mValues.get(position);
-        if (position % 2 == 0) {
+        if (!GameData.doesEndOnPrompt) position--;
+        if (mValues.size() - position % 2 == 1) {
             TextView text = (TextView) inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
             text.setText(new String(obj));
             view = text;
