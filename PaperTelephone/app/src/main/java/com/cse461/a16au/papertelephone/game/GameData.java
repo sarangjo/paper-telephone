@@ -233,8 +233,8 @@ public class GameData {
             summary = new ArrayList<>();
         }
         // Checking if we are double-receiving the same data
-        Object latest = summary.get(summary.size() - 1);
-        if (summary.size() == 0 || (latest instanceof String && data instanceof String) || (latest instanceof Bitmap && data instanceof Bitmap)) {
+        if (summary.size() == 0 || (summary.get(summary.size() - 1) instanceof String && data instanceof String)
+                || (summary.get(summary.size() - 1) instanceof Bitmap && data instanceof Bitmap)) {
             summary.add(data);
         }
         addressToSummaries.put(creatorAddress, summary);
