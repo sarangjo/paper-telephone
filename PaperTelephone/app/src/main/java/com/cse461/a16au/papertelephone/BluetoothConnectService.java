@@ -486,11 +486,12 @@ public class BluetoothConnectService {
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DTG, dataBuffer.array());
                     currHandler = mGameHandler;
                 } else if (Arrays.equals(header, Constants.HEADER_GIVE_SUCCESSOR)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_GIVE_SUCCESSOR, dataBuffer.array());
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_GIVE_SUCCESSOR, dataBuffer.array());
                     currHandler = mGameHandler;
-                }
-
                 // Main Handler
+                } else if(Arrays.equals(header, Constants.HEADER_RETURN_TO_LOBBY)) {
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_RTL, dataBuffer.array());
+                }
                 else if (Arrays.equals(header, Constants.HEADER_START)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, dataBuffer.array());
                 } else if (Arrays.equals(header, Constants.HEADER_START_ACK)) {

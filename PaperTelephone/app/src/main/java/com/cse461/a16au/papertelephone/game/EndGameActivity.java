@@ -10,6 +10,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
+import com.cse461.a16au.papertelephone.BluetoothConnectService;
+import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ import static com.cse461.a16au.papertelephone.Constants.RESULT_RESTART;
 public class EndGameActivity extends AppCompatActivity {
 
     private List<String> mAddresses;
+    private BluetoothConnectService mConnectService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,9 +34,14 @@ public class EndGameActivity extends AppCompatActivity {
         Button returnToLobbyButton = (Button) findViewById(R.id.button_return_to_lobby);
         Button restartButton = (Button) findViewById(R.id.button_restart);
 
+        mConnectService = BluetoothConnectService.getInstance();
+
         returnToLobbyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                for(String device : GameData.getInstance().getConnectedDevices()) {
+                    mConnectService.write(Constants.HEADER_RETURN_TO_LOBBY, device);
+                }
                 setResult(RESULT_LOBBY);
                 finish();
             }

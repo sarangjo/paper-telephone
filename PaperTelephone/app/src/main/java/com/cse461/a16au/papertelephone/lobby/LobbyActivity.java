@@ -41,6 +41,7 @@ import static com.cse461.a16au.papertelephone.Constants.MESSAGE_DISCONNECTED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_READ;
 import static com.cse461.a16au.papertelephone.Constants.MIN_PLAYERS;
 import static com.cse461.a16au.papertelephone.Constants.READ_GIVE_SUCCESSOR;
+import static com.cse461.a16au.papertelephone.Constants.READ_RTL;
 import static com.cse461.a16au.papertelephone.Constants.READ_START_ACK;
 import static com.cse461.a16au.papertelephone.Constants.READ_DEVICES;
 import static com.cse461.a16au.papertelephone.Constants.READ_PING;
@@ -206,7 +207,13 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
      * Establishes an ordering for the connected devices when the user hits the start button
      */
     private void startGameClicked() {
-        if (mGameData.getConnectedDevices().size() >= Constants.MIN_PLAYERS - 1) {
+        boolean allLobbied = true;
+
+        for(String device: mGameData.getConnectedDevices()) {
+            allLobbied = allLobbied && mGameData.getLobbiedDevices().contains(device);
+        }
+
+        if (mGameData.getConnectedDevices().size() >= Constants.MIN_PLAYERS - 1 && allLobbied) {
             if (mGameData.getStartDevice().length() == Constants.ADDRESS_LENGTH) {
                 return;
             }
@@ -219,8 +226,13 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
             mGameData.setupUnackedDevices();
         } else {
-            Toast.makeText(this, "You don't have enough players, the game requires " +
-                    "at least 3 players", Toast.LENGTH_LONG).show();
+            if(!allLobbied) {
+                Toast.makeText(this, "All connected devices have not returned to the lobby." , Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "You don't have enough players, the game requires " +
+                        "at least 3 players", Toast.LENGTH_LONG).show();
+            }
+
         }
     }
 
@@ -382,6 +394,9 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     }
                 }
                 break;
+            case READ_RTL:
+                Toast.makeText(LobbyActivity.this, deviceName + " has returned to lobby", Toast.LENGTH_SHORT);
+                mGameData.addLobbiedDevice(deviceAddress);
         }
     }
 
@@ -396,6 +411,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     sendConnectedDevices(deviceAddress);
 
                     mGameData.addConnectedDevice(deviceAddress, deviceName);
+                    mGameData.addLobbiedDevice(deviceAddress);
                     mConnectedDevicesNamesAdapter.notifyDataSetChanged();
 //                    Snackbar.make(mView, "Connected to " + deviceName, Snackbar.LENGTH_LONG).show();
                     Toast.makeText(LobbyActivity.this, "Connected to " + deviceName, Toast.LENGTH_SHORT).show();

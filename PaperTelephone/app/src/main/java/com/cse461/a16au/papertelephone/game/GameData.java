@@ -44,6 +44,11 @@ public class GameData {
     private List<String> connectedDevices;
 
     /**
+     * List of all lobbied devices
+     */
+    private Set<String> lobbiedDevices;
+
+    /**
      * List of all connected device names
      */
     private List<String> connectedDeviceNames;
@@ -59,6 +64,14 @@ public class GameData {
     public synchronized void addConnectedDevice(String address, String name) {
         this.connectedDevices.add(address);
         this.connectedDeviceNames.add(name);
+    }
+
+    public synchronized void addLobbiedDevice(String address) {
+        this.lobbiedDevices.add(address);
+    }
+
+    public Set<String> getLobbiedDevices() {
+        return Collections.unmodifiableSet(lobbiedDevices);
     }
 
     public synchronized void removeConnectedDevice(String address, String name) {
@@ -143,6 +156,7 @@ public class GameData {
         this.isDone = false;
         this.unfinishedDeviceList = new HashSet<>();
         this.devicesToConnectTo = new HashSet<>();
+        this.lobbiedDevices = new HashSet<>();
     }
 
     public static GameData getInstance() {
@@ -175,6 +189,7 @@ public class GameData {
      * This device's mac address
      */
     public static String localAddress = null;
+
 
     /**
      * Our name.

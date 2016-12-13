@@ -63,6 +63,8 @@ public class Constants {
     public static final int READ_GIVE_SUCCESSOR = 11;
     public static final byte[] HEADER_DTG = getHeader("DTG");
     public static final int READ_DTG = 12;
+    public static final byte[] HEADER_RETURN_TO_LOBBY = getHeader("RETLOBBY");
+    public static final int READ_RTL = 13;
 
     public static final int ADDRESS_LENGTH = 17;
 
