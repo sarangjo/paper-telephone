@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     tools:context="com.cse461.a16au.papertelephone.lobby.DiscoverableFragment">
 
+
     <TextView
         android:id="@+id/view_discoverable"
         android:layout_width="wrap_content"
