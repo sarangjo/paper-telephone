@@ -14,12 +14,12 @@ import java.util.List;
  * TODO: class documentation
  */
 
-class OldDevicesListAdapter extends BaseExpandableListAdapter {
+class DevicesListAdapter extends BaseExpandableListAdapter {
     private List<String> pairedDevices;
     private List<String> newDevices;
     private LayoutInflater inflater;
 
-    public OldDevicesListAdapter(Activity act) {
+    public DevicesListAdapter(Activity act) {
         pairedDevices = new ArrayList<>();
         newDevices = new ArrayList<>();
         inflater = act.getLayoutInflater();
