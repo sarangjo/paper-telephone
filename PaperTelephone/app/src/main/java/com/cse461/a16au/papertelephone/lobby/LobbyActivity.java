@@ -159,6 +159,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 if (resultCode == RESULT_OK) {
                     // Game ended successfully
                     GameData.connectionChangeListener = null;
+                    isGameActive = false;
 
                     Toast.makeText(this, "Game over!", Toast.LENGTH_LONG).show();
                     Intent intent = new Intent(this, EndGameActivity.class);
@@ -437,7 +438,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     mConnectedDevicesNamesAdapter.notifyDataSetChanged();
 //                    Snackbar.make(mView, "Connected to " + deviceName, Snackbar.LENGTH_LONG).show();
                     Toast.makeText(LobbyActivity.this, "Connected to " + deviceName, Toast.LENGTH_SHORT).show();
-                    
+
                     // Update the button's enabled-ness
                     if (mGameData.getConnectedDevices().size() >= MIN_PLAYERS - 1 && !isGameActive) {
                         mStartGameButton.setEnabled(true);
