@@ -369,6 +369,12 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                             }
 
                             GameData.successor = unplacedSuccessors.iterator().next();
+
+                            // Send our current prompt/image to the new successor
+                            if(mDoneMsg != null) {
+                                byte[] dataMsg = Arrays.copyOfRange(mDoneMsg, HEADER_LENGTH, mDoneMsg.length);
+                                mConnectService.write(dataMsg, address);
+                            }
                         }
 
                         break;
