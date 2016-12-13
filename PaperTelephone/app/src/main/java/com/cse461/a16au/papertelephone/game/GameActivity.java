@@ -115,7 +115,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
                 // New connection made, let it be our successor
                 if (mGameData.getStartDevice().equals(WE_ARE_START)) {
-                    ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + 4);
+                    ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + 1);
                     buf.put(HEADER_GIVE_SUCCESSOR);
                     buf.put(GameData.successor.getBytes());
                     buf.put(mIsPromptMode ? (byte) 1 : (byte) 0);
