@@ -6,6 +6,7 @@ import android.os.CountDownTimer;
 import com.cse461.a16au.papertelephone.Constants;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -202,9 +203,12 @@ public class GameData {
         if (addressToSummaries.containsKey(creatorAddress)) {
             summary = addressToSummaries.get(creatorAddress);
         } else {
-            summary = new ArrayList<byte[]>();
+            summary = new ArrayList<>();
         }
-        summary.add(data);
+        // Checking if we are double-receiving the same data
+        if (summary.size() == 0 || !Arrays.equals(summary.get(summary.size() - 1), data)) {
+            summary.add(data);
+        }
         addressToSummaries.put(creatorAddress, summary);
     }
 }
