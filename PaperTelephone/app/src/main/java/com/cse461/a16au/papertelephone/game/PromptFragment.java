@@ -89,7 +89,7 @@ public class PromptFragment extends GameFragment {
             buf.put(mCreatorAddress.getBytes());
             buf.put(prompt);
 
-            mListener.sendData(buf.array());
+            mListener.sendTurnData(buf.array());
         } else {
             Toast.makeText(getActivity(), "Please submit a prompt.", Toast.LENGTH_SHORT).show();
         }

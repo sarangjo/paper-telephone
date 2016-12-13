@@ -97,7 +97,7 @@ public class DrawingFragment extends GameFragment {
         buf.putInt(image.length);
         buf.put(image);
 
-        mListener.sendData(buf.array());
+        mListener.sendTurnData(buf.array());
     }
 
     public class PaintingView extends View {

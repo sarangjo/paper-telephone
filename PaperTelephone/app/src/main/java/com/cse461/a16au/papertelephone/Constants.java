@@ -61,6 +61,8 @@ public class Constants {
     public static final int READ_NEW_START = 10;
     public static final byte[] HEADER_GIVE_SUCCESSOR = getHeader("GIVESUCC");
     public static final int READ_GIVE_SUCCESSOR = 11;
+    public static final byte[] HEADER_DTG = getHeader("DTG");
+    public static final int READ_DTG = 12;
 
     public static final int ADDRESS_LENGTH = 17;
 
@@ -81,6 +83,7 @@ public class Constants {
      * TODO: change back to 2
      */
     public static final int MIN_PLAYERS = 3;
+    public static final String JOIN_MID_GAME = "join_mid_game";
 
     /**
      * Creates a zero-padded header of the given string that is HEADER_LENGTH bytes long.

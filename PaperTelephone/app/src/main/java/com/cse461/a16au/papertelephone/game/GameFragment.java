@@ -38,6 +38,6 @@ public abstract class GameFragment extends Fragment {
      * TODO: class documentation
      */
     public interface DataSendListener {
-        void sendData(byte[] data);
+        void sendTurnData(byte[] data);
     }
 }

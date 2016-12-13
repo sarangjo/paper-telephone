@@ -27,13 +27,17 @@ import static com.cse461.a16au.papertelephone.Constants.CREATOR_ADDRESS;
 import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
 import static com.cse461.a16au.papertelephone.Constants.DEVICE_NAME;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_DONE;
+import static com.cse461.a16au.papertelephone.Constants.HEADER_DTG;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_GIVE_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_LENGTH;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_NEW_START;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_REQUEST_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_RESPONSE_SUCCESSOR;
+import static com.cse461.a16au.papertelephone.Constants.JOIN_MID_GAME;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_READ;
 import static com.cse461.a16au.papertelephone.Constants.READ_DONE;
+import static com.cse461.a16au.papertelephone.Constants.READ_DTG;
+import static com.cse461.a16au.papertelephone.Constants.READ_GIVE_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_IMAGE;
 import static com.cse461.a16au.papertelephone.Constants.READ_NEW_START;
 import static com.cse461.a16au.papertelephone.Constants.READ_PROMPT;
@@ -59,13 +63,14 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
     private GameFragment mFragment;
     private TextView mTimerTextView;
     private ProgressDialog mProgressDialog;
+    private ProgressDialog mWaitingDialog;
 
     // Details for the next turn
     private String mNextPrompt;
     private byte[] mNextImage;
     private String mNextCreatorAddress;
     private List<String> successors;
-    private byte[] doneMsg;
+    private byte[] mDoneMsg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,24 +112,28 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
                 // New connection made, let it be our successor
                 if (mGameData.getStartDevice().equals(WE_ARE_START)) {
-                    ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH);
+                    ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + 4);
                     buf.put(HEADER_GIVE_SUCCESSOR);
                     buf.put(successor.getBytes());
-
-                    // Send our current prompt/image to the new device
-                    byte[] dataMsg = Arrays.copyOfRange(doneMsg, HEADER_LENGTH, doneMsg.length);
-                    mConnectService.write(dataMsg, address);
+                    buf.put(mIsPromptMode ? (byte) 1 : (byte) 0);
 
                     mConnectService.write(buf.array(), address);
+
+                    // Send our current prompt/image to the new device
+                    if (mDoneMsg != null) {
+                        byte[] dataMsg = Arrays.copyOfRange(mDoneMsg, HEADER_LENGTH, mDoneMsg.length);
+                        mConnectService.write(dataMsg, address);
+                    }
+
                     successor = address;
                 } else {
-                    mConnectService.write(doneMsg, address);
+                    if (mDoneMsg != null)
+                        mConnectService.write(mDoneMsg, address);
                 }
             }
         };
 
         // Set up game data
-        turnsLeft = mGameData.getConnectedDevices().size() + 1;
         addressToSummaries = new ConcurrentHashMap<>();
 
         mConnectService = BluetoothConnectService.getInstance();
@@ -138,13 +147,31 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
             successor.setText("Invalid successor");
         }
 
-        mIsPromptMode = true;
         mNextCreatorAddress = null;
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage("Waiting for Other Players to Complete Their Turn");
         mProgressDialog.setCancelable(false);
 
-        updateMode();
+        if (getIntent().getBooleanExtra(JOIN_MID_GAME, false)) {
+            // joining mid-game
+            for (String device : mGameData.getConnectedDevices()) {
+                mConnectService.write(HEADER_DTG, device);
+            }
+
+            mWaitingDialog = new ProgressDialog(this);
+            mWaitingDialog.setMessage("Waiting to join game...");
+            mWaitingDialog.setCancelable(false);
+            mWaitingDialog.show();
+
+            startRound();
+        } else {
+            // starting new game
+            turnsLeft = mGameData.getConnectedDevices().size() + 1;
+            mIsPromptMode = true;
+
+            updateMode();
+            startRound();
+        }
     }
 
     @Override
@@ -179,21 +206,21 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
         // TODO: Uncomment and test when we are confident that the rest of the game works as intended
         // Start the timer at 30 seconds for the next phase of the game
-        /*GameData.turnTimer = new CountDownTimer(TURN_MILLIS, 1000) {
-            public void onTick(long millisUntilFinished) {
-                mTimerTextView.setText(String.format("%2ds", millisUntilFinished / 1000));
-            }
-
-            public void onFinish() {
-                // End the turn, sending the drawing or prompt if it hasn't already been sent
-                if (!isDone) {
-                    mFragment.endTurn();
-                    isDone = true;
-                }
-                mTimerTextView.setText("00s");
-                mTimerTextView.setTextColor(Color.RED);
-            }
-        }.start();*/
+//        GameData.turnTimer = new CountDownTimer(TURN_MILLIS, 1000) {
+//            public void onTick(long millisUntilFinished) {
+//                mTimerTextView.setText(String.format("%2ds", millisUntilFinished / 1000));
+//            }
+//
+//            public void onFinish() {
+//                // End the turn, sending the drawing or prompt if it hasn't already been sent
+//                if (!isDone) {
+//                    mFragment.endTurn();
+//                    isDone = true;
+//                }
+//                mTimerTextView.setText("00s");
+//                mTimerTextView.setTextColor(Color.RED);
+//            }
+//        }.start();
 
         // Switch out the fragments to update the current mode
         FragmentTransaction ft = getFragmentManager().beginTransaction();
@@ -204,15 +231,16 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
         // Set creatorAddress argument
         args.putString(CREATOR_ADDRESS, mNextCreatorAddress);
-        // TODO: this is assuming that prompt is always the start; what about for devices joining in middle?
+
+        // Check if this is the start of the game or not
+        if (mFragment == null) {
+            args.putBoolean("start", true);
+        } else {
+            args.putBoolean("start", false);
+        }
         if (mIsPromptMode) {
-            if (mFragment == null) {
-                args.putBoolean("start", true);
-            } else {
-                args.putBoolean("start", false);
-                // Pass the image as an arg to the PromptFragment
-                args.putByteArray("image", mNextImage);
-            }
+            // Pass the image as an arg to the PromptFragment
+            args.putByteArray("image", mNextImage);
             mFragment = new PromptFragment();
         } else {
             // Pass the prompt to the DrawingFragment
@@ -222,16 +250,15 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         mFragment.setArguments(args);
         ft.add(R.id.game_fragment_container, mFragment).commit();
 
-        // Switch modes and setup for start of the next turn
+        // In preparation for the next round
         mIsPromptMode = !mIsPromptMode;
-        startRound();
     }
 
     /**
      * Sets up our data structures for the start of a turn.
      */
     private void startRound() {
-        doneMsg = null;
+        mDoneMsg = null;
         mGameData.setTurnDone(false);
         mGameData.setupUnfinishedDevices(mGameData.getConnectedDevices());
         mTimerTextView.setTextColor(getResources().getColor(R.color.colorTimer));
@@ -244,7 +271,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
      * to inform them that we have completed our turn.
      */
     @Override
-    public void sendData(byte[] data) {
+    public void sendTurnData(byte[] data) {
         // Write this turn's data to our next device
         mConnectService.write(Arrays.copyOf(data, data.length), successor);
 
@@ -253,11 +280,11 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         buf.put(HEADER_DONE);
         buf.put(data);
 
-        doneMsg = buf.array();
+        mDoneMsg = buf.array();
 
         for (String device : mGameData.getConnectedDevices()) {
             if (!device.equals(successor)) {
-                mConnectService.write(doneMsg, device);
+                mConnectService.write(mDoneMsg, device);
             }
         }
 
@@ -269,6 +296,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         mProgressDialog.show();
         if (mGameData.isRoundOver()) {
             updateMode();
+            startRound();
         }
     }
 
@@ -307,6 +335,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                         // If we are done and all other devices are done we move on to the next round
                         if (mGameData.isRoundOver()) {
                             updateMode();
+                            startRound();
                         }
                         break;
                     case READ_REQUEST_SUCCESSOR:
@@ -318,6 +347,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                         mConnectService.write(buf.array(), address);
                         break;
                     case READ_RESPONSE_SUCCESSOR:
+                        // Getting the successors from all the other devices
                         buf = ByteBuffer.wrap((byte[]) msg.obj);
                         byte[] successor = new byte[ADDRESS_LENGTH];
                         buf.get(successor);
@@ -345,6 +375,22 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                     case READ_NEW_START:
                         mGameData.setStartDevice(address);
                         // TODO: anything else to do here?
+                        break;
+                    case READ_GIVE_SUCCESSOR:
+                        buf = ByteBuffer.wrap((byte[]) msg.obj);
+
+                        byte[] successorAddressArr = new byte[Constants.ADDRESS_LENGTH];
+                        buf.get(successorAddressArr);
+                        GameData.successor = new String(successorAddressArr);
+
+                        // Now we're ready to start playing!
+                        mIsPromptMode = buf.get() == (byte) 1;
+                        mWaitingDialog.dismiss();
+
+                        updateMode();
+                        break;
+                    case READ_DTG:
+                        GameData.connectionChangeListener.connection(address);
                         break;
                 }
             }

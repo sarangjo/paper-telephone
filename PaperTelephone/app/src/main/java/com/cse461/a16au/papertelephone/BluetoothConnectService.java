@@ -482,6 +482,12 @@ public class BluetoothConnectService {
                 } else if (Arrays.equals(header, Constants.HEADER_NEW_START)) {
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_NEW_START, dataBuffer.array());
                     currHandler = mGameHandler;
+                } else if (Arrays.equals(header, Constants.HEADER_DTG)) {
+                    msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DTG, dataBuffer.array());
+                    currHandler = mGameHandler;
+                } else if (Arrays.equals(header, Constants.HEADER_GIVE_SUCCESSOR)) {
+                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_GIVE_SUCCESSOR, dataBuffer.array());
+                    currHandler = mGameHandler;
                 }
 
                 // Main Handler
@@ -495,8 +501,6 @@ public class BluetoothConnectService {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_DEVICES, dataBuffer.array());
                 } else if (Arrays.equals(header, Constants.HEADER_PING)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_PING, dataBuffer.array());
-                } else if (Arrays.equals(header, Constants.HEADER_GIVE_SUCCESSOR)) {
-                    msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_GIVE_SUCCESSOR, dataBuffer.array());
                 } else {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, dataBuffer.array());
                 }

@@ -66,6 +66,22 @@ public class GameData {
         this.connectedDeviceNames.remove(name);
     }
 
+    // Devices we need to connect to in order to be part of the group
+
+    private Set<String> devicesToConnectTo;
+
+    public synchronized void addDeviceToConnectTo(String address) {
+        devicesToConnectTo.add(address);
+    }
+
+    public synchronized void removeDeviceToConnectTo(String address) {
+        devicesToConnectTo.remove(address);
+    }
+
+    public synchronized boolean isDoneConnectingToGameDevices() {
+        return devicesToConnectTo.isEmpty();
+    }
+
     // Devices who haven't ack'ed our START packet yet
 
     /**
@@ -126,6 +142,7 @@ public class GameData {
         this.unackedDevices = new HashSet<>();
         this.isDone = false;
         this.unfinishedDeviceList = new HashSet<>();
+        this.devicesToConnectTo = new HashSet<>();
     }
 
     public static GameData getInstance() {
@@ -190,5 +207,4 @@ public class GameData {
         summary.add(data);
         addressToSummaries.put(creatorAddress, summary);
     }
-
 }

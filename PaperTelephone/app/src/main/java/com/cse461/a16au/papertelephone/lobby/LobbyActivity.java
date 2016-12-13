@@ -23,7 +23,9 @@ import com.cse461.a16au.papertelephone.game.GameActivity;
 import com.cse461.a16au.papertelephone.game.GameData;
 
 import java.nio.ByteBuffer;
+import java.util.BitSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import static com.cse461.a16au.papertelephone.Constants.ADDRESS_LENGTH;
 import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
@@ -50,6 +52,7 @@ import static com.cse461.a16au.papertelephone.Constants.WE_ARE_START;
 import static com.cse461.a16au.papertelephone.game.GameData.lastSuccessorNumber;
 import static com.cse461.a16au.papertelephone.game.GameData.localAddress;
 import static com.cse461.a16au.papertelephone.game.GameData.successor;
+import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
 import static com.cse461.a16au.papertelephone.game.GameData.unplacedDevices;
 
 /**
@@ -75,6 +78,8 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
      */
     private View mView;
     private Button mStartGameButton;
+
+    private boolean isGameActive = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,6 +188,12 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     private void sendConnectedDevices(String deviceAddress) {
         ByteBuffer buf = ByteBuffer.allocate(HEADER_LENGTH + 4 + ADDRESS_LENGTH * mGameData.getConnectedDevices().size());
         buf.put(HEADER_DEVICES);
+        // Tell the new device if we are in a game or not
+        if (GameData.connectionChangeListener == null) {
+            buf.putInt(0);
+        } else {
+            buf.putInt(turnsLeft);
+        }
         buf.putInt(mGameData.getConnectedDevices().size());
         for (String address : mGameData.getConnectedDevices()) {
             buf.put(address.getBytes());
@@ -350,6 +361,12 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 // Establish connections with devices that are already in the game
                 buf = ByteBuffer.wrap((byte[]) msg.obj);
 
+                int newTurnsLeft = buf.getInt();
+                isGameActive = newTurnsLeft > 0;
+                if (isGameActive) {
+                    turnsLeft = newTurnsLeft + 1; // offset from GameActivity's setupRound
+                }
+
                 int numDevices = buf.getInt();
                 for (int i = 0; i < numDevices; i++) {
                     byte[] address = new byte[ADDRESS_LENGTH];
@@ -360,20 +377,11 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                         // this has already been connected to!
                         Log.d(TAG, "Already connected to " + addr);
                     } else {
+                        mGameData.addDeviceToConnectTo(addr);
                         connectDevice(addr);
                     }
                 }
                 break;
-            case READ_GIVE_SUCCESSOR:
-                buf = ByteBuffer.wrap((byte[]) msg.obj);
-
-                successorAddressArr = new byte[Constants.ADDRESS_LENGTH];
-                buf.get(successorAddressArr);
-
-                successor = new String(successorAddressArr);
-
-                break;
-            // TODO: add case to handle READ_GIVE_SUCCESSOR for a new device that is joining a game
         }
     }
 
@@ -391,11 +399,18 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     mConnectedDevicesNamesAdapter.notifyDataSetChanged();
                     Snackbar.make(mView, "Connected to " + deviceName, Snackbar.LENGTH_LONG).show();
 
-                    if(GameData.connectionChangeListener != null) {
-                        GameData.connectionChangeListener.connection(deviceAddress);
+                    // Cross this off our list of devices to connect to
+                    mGameData.removeDeviceToConnectTo(deviceAddress);
+
+                    // This is the case where we are joining a game in progress
+                    if (mGameData.isDoneConnectingToGameDevices() && isGameActive) {
+                        Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
+                        intent.putExtra(Constants.JOIN_MID_GAME, true);
+                        startActivityForResult(intent, Constants.REQUEST_PLAY_GAME);
                     }
 
-                    if (mGameData.getConnectedDevices().size() >= MIN_PLAYERS - 1) {
+                    // Update the button's enabled-ness
+                    if (mGameData.getConnectedDevices().size() >= MIN_PLAYERS - 1 && !isGameActive) {
                         mStartGameButton.setEnabled(true);
                     } else {
                         mStartGameButton.setEnabled(false);
