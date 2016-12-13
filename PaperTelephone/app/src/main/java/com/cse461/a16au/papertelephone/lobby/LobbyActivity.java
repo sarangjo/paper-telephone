@@ -218,6 +218,8 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 return;
             }
 
+            mGameData.clearLobbiedDevices();
+
             mGameData.setStartDevice(Constants.WE_ARE_START);
 
             for (String currDevice : mGameData.getConnectedDevices()) {
