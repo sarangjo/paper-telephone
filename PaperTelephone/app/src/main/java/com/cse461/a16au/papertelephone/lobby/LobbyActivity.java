@@ -186,7 +186,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
      * After establishing a connection with another device, send the already-connected devices with it.
      */
     private void sendConnectedDevices(String deviceAddress) {
-        ByteBuffer buf = ByteBuffer.allocate(HEADER_LENGTH + 4 + ADDRESS_LENGTH * mGameData.getConnectedDevices().size());
+        ByteBuffer buf = ByteBuffer.allocate(HEADER_LENGTH + 4 + 4 + ADDRESS_LENGTH * mGameData.getConnectedDevices().size());
         buf.put(HEADER_DEVICES);
         // Tell the new device if we are in a game or not
         if (GameData.connectionChangeListener == null) {
