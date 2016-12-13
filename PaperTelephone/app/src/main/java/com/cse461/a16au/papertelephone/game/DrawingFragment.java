@@ -45,7 +45,11 @@ public class DrawingFragment extends GameFragment {
         mPaint.setStrokeWidth(12);
 
         Bundle args = getArguments();
-        mCreatorAddress = args.getString(Constants.CREATOR_ADDRESS);
+        if (args.getBoolean("start")) {
+            mCreatorAddress = GameData.localAddress;
+        } else {
+            mCreatorAddress = args.getString(Constants.CREATOR_ADDRESS);
+        }
     }
 
     @Nullable

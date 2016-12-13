@@ -294,17 +294,20 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
             }
         }
 
-        mGameData.setTurnDone(true);
-        if (GameData.turnTimer != null) {
-            GameData.turnTimer.cancel();
-        }
+        synchronized (this) {
+            mGameData.setTurnDone(true);
+            if (GameData.turnTimer != null) {
+                GameData.turnTimer.cancel();
+            }
 
-        mProgressDialog.show();
-        if (mGameData.isRoundOver()) {
-            updateMode();
-            startRound();
+            mProgressDialog.show();
+            if (mGameData.isRoundOver()) {
+                updateMode();
+                startRound();
+            }
         }
     }
+
 
     /**
      * Handles packets that the game receives from BluetoothConnectService
@@ -313,7 +316,6 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         @Override
         public void handleMessage(Message msg) {
             if (msg.what == MESSAGE_READ) {
-                String creatorAddress = msg.getData().getString(CREATOR_ADDRESS);
                 String address = msg.getData().getString(DEVICE_ADDRESS);
                 String name = msg.getData().getString(DEVICE_NAME);
 
@@ -321,6 +323,8 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                     case READ_IMAGE:
                     case READ_PROMPT:
                     case READ_DONE:
+                        String creatorAddress = msg.getData().getString(CREATOR_ADDRESS);
+
                         // Add the current image/prompt to the corresponding list in the map from addresses to summaries
                         byte[] data = (byte[]) msg.obj;
                         saveData(creatorAddress, data);
@@ -333,15 +337,15 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                             mNextPrompt = new String(data);
                             mNextCreatorAddress = creatorAddress;
                         }
+                        
+                        synchronized (GameActivity.this) {
+                            mGameData.deviceTurnFinished(address);
 
-                        // TODO: MAKE SURE EVERYTHING *HERE* IS THREAD-SAFE
-
-                        mGameData.deviceTurnFinished(address);
-
-                        // If we are done and all other devices are done we move on to the next round
-                        if (mGameData.isRoundOver()) {
-                            updateMode();
-                            startRound();
+                            // If we are done and all other devices are done we move on to the next round
+                            if (mGameData.isRoundOver()) {
+                                updateMode();
+                                startRound();
+                            }
                         }
                         break;
                     case READ_REQUEST_SUCCESSOR:
@@ -378,7 +382,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                             mSuccessorView.setText("Next: " + mGameData.getConnectedDeviceNames().get(mGameData.getConnectedDevices().indexOf(GameData.successor)));
 
                             // Send our current prompt/image to the new successor
-                            if(mDoneMsg != null) {
+                            if (mDoneMsg != null) {
                                 byte[] dataMsg = Arrays.copyOfRange(mDoneMsg, HEADER_LENGTH, mDoneMsg.length);
                                 mConnectService.write(dataMsg, GameData.successor);
                             }
