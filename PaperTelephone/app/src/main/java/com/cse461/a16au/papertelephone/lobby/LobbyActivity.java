@@ -209,16 +209,20 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     private void startGameClicked() {
         boolean allLobbied = true;
 
-//        for(String device: mGameData.getConnectedDevices()) {
-//            allLobbied = allLobbied && mGameData.getLobbiedDevices().contains(device);
-//        }
+        for(String device: mGameData.getConnectedDevices()) {
+            allLobbied = allLobbied && mGameData.getLobbiedDevices().contains(device);
+        }
+
+        if(allLobbied) {
+            mGameData.clearLobbiedDevices();
+        }
 
         if (mGameData.getConnectedDevices().size() >= Constants.MIN_PLAYERS - 1 && allLobbied) {
             if (mGameData.getStartDevice().length() == Constants.ADDRESS_LENGTH) {
                 return;
             }
 
-            //mGameData.clearLobbiedDevices();
+
 
             mGameData.setStartDevice(Constants.WE_ARE_START);
 
@@ -371,6 +375,10 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     chooseSuccessor();
                 }
                 break;
+            case READ_RTL:
+                Toast.makeText(LobbyActivity.this, deviceName + " has returned to lobby", Toast.LENGTH_SHORT).show();
+                mGameData.addLobbiedDevice(deviceAddress);
+                break;
             case READ_DEVICES:
                 // Establish connections with devices that are already in the game
                 buf = ByteBuffer.wrap((byte[]) msg.obj);
@@ -396,9 +404,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     }
                 }
                 break;
-            case READ_RTL:
-                Toast.makeText(LobbyActivity.this, deviceName + " has returned to lobby", Toast.LENGTH_SHORT);
-                mGameData.addLobbiedDevice(deviceAddress);
         }
     }
 
