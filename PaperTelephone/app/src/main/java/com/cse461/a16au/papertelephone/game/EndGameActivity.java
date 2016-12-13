@@ -32,7 +32,6 @@ public class EndGameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_end_game);
 
         Button returnToLobbyButton = (Button) findViewById(R.id.button_return_to_lobby);
-        Button restartButton = (Button) findViewById(R.id.button_restart);
 
         mConnectService = BluetoothConnectService.getInstance();
 
@@ -44,14 +43,6 @@ public class EndGameActivity extends AppCompatActivity {
                     mConnectService.write(Constants.HEADER_RETURN_TO_LOBBY, device);
                 }
                 setResult(RESULT_LOBBY);
-                finish();
-            }
-        });
-
-        restartButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setResult(RESULT_RESTART);
                 finish();
             }
         });
