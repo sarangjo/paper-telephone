@@ -111,6 +111,10 @@ public class GameData {
         unfinishedDeviceList.addAll(devices);
     }
 
+    public synchronized void addUnfinishedDevice(String address) {
+        unfinishedDeviceList.add(address);
+    }
+
     public synchronized boolean isRoundOver() {
         return isDone && unfinishedDeviceList.isEmpty();
     }

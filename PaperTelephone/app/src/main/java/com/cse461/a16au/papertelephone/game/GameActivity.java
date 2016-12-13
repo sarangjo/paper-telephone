@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.cse461.a16au.papertelephone.BluetoothConnectService;
+import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 
 import java.nio.ByteBuffer;
@@ -64,6 +65,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
     private byte[] mNextImage;
     private String mNextCreatorAddress;
     private List<String> successors;
+    private byte[] doneMsg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,10 +103,22 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
             @Override
             public void connection(String address) {
+                mGameData.addUnfinishedDevice(address);
+
                 // New connection made, let it be our successor
                 if (mGameData.getStartDevice().equals(WE_ARE_START)) {
-                    mConnectService.write(HEADER_GIVE_SUCCESSOR, address);
+                    ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH);
+                    buf.put(HEADER_GIVE_SUCCESSOR);
+                    buf.put(successor.getBytes());
+
+                    // Send our current prompt/image to the new device
+                    byte[] dataMsg = Arrays.copyOfRange(doneMsg, HEADER_LENGTH, doneMsg.length);
+                    mConnectService.write(dataMsg, address);
+
+                    mConnectService.write(buf.array(), address);
                     successor = address;
+                } else {
+                    mConnectService.write(doneMsg, address);
                 }
             }
         };
@@ -217,6 +231,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
      * Sets up our data structures for the start of a turn.
      */
     private void startRound() {
+        doneMsg = null;
         mGameData.setTurnDone(false);
         mGameData.setupUnfinishedDevices(mGameData.getConnectedDevices());
         mTimerTextView.setTextColor(getResources().getColor(R.color.colorTimer));
@@ -238,9 +253,11 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         buf.put(HEADER_DONE);
         buf.put(data);
 
+        doneMsg = buf.array();
+
         for (String device : mGameData.getConnectedDevices()) {
             if (!device.equals(successor)) {
-                mConnectService.write(buf.array(), device);
+                mConnectService.write(doneMsg, device);
             }
         }
 

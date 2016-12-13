@@ -38,6 +38,7 @@ import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECT_FAILED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_DISCONNECTED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_READ;
 import static com.cse461.a16au.papertelephone.Constants.MIN_PLAYERS;
+import static com.cse461.a16au.papertelephone.Constants.READ_GIVE_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_START_ACK;
 import static com.cse461.a16au.papertelephone.Constants.READ_DEVICES;
 import static com.cse461.a16au.papertelephone.Constants.READ_PING;
@@ -362,6 +363,15 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                         connectDevice(addr);
                     }
                 }
+                break;
+            case READ_GIVE_SUCCESSOR:
+                buf = ByteBuffer.wrap((byte[]) msg.obj);
+
+                successorAddressArr = new byte[Constants.ADDRESS_LENGTH];
+                buf.get(successorAddressArr);
+
+                successor = new String(successorAddressArr);
+
                 break;
             // TODO: add case to handle READ_GIVE_SUCCESSOR for a new device that is joining a game
         }
