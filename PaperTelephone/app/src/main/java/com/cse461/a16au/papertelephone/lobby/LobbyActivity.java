@@ -397,7 +397,8 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
                     mGameData.addConnectedDevice(deviceAddress, deviceName);
                     mConnectedDevicesNamesAdapter.notifyDataSetChanged();
-                    Snackbar.make(mView, "Connected to " + deviceName, Snackbar.LENGTH_LONG).show();
+//                    Snackbar.make(mView, "Connected to " + deviceName, Snackbar.LENGTH_LONG).show();
+                    Toast.makeText(LobbyActivity.this, "Connected to " + deviceName, Toast.LENGTH_SHORT).show();
 
                     // Cross this off our list of devices to connect to
                     mGameData.removeDeviceToConnectTo(deviceAddress);
@@ -419,7 +420,9 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 case MESSAGE_DISCONNECTED:
                     mGameData.removeConnectedDevice(deviceAddress, deviceName);
                     mConnectedDevicesNamesAdapter.notifyDataSetChanged();
-                    Snackbar.make(mView, "Disconnected from " + deviceName, Snackbar.LENGTH_LONG).show();
+//                    Snackbar.make(mView, "Disconnected from " + deviceName, Snackbar.LENGTH_LONG).show();
+                    Toast.makeText(LobbyActivity.this, "Disconnected from " + deviceName, Toast.LENGTH_SHORT).show();
+
 
                     if(GameData.connectionChangeListener != null) {
                         GameData.connectionChangeListener.disconnection(deviceAddress);
