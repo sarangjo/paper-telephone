@@ -403,6 +403,21 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                         connectDevice(addr);
                     }
                 }
+
+                // Cross this off our list of devices to connect to
+                mGameData.removeDeviceToConnectTo(deviceAddress);
+
+                // This is the case where we are joining a game in progress
+                if (mGameData.isDoneConnectingToGameDevices() && isGameActive) {
+                    try {
+                        Thread.sleep(250);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
+                    intent.putExtra(Constants.JOIN_MID_GAME, true);
+                    startActivityForResult(intent, Constants.REQUEST_PLAY_GAME);
+                }
                 break;
         }
     }
@@ -422,16 +437,6 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                     mConnectedDevicesNamesAdapter.notifyDataSetChanged();
 //                    Snackbar.make(mView, "Connected to " + deviceName, Snackbar.LENGTH_LONG).show();
                     Toast.makeText(LobbyActivity.this, "Connected to " + deviceName, Toast.LENGTH_SHORT).show();
-
-                    // Cross this off our list of devices to connect to
-                    mGameData.removeDeviceToConnectTo(deviceAddress);
-
-                    // This is the case where we are joining a game in progress
-                    if (mGameData.isDoneConnectingToGameDevices() && isGameActive) {
-                        Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
-                        intent.putExtra(Constants.JOIN_MID_GAME, true);
-                        startActivityForResult(intent, Constants.REQUEST_PLAY_GAME);
-                    }
 
                     // Update the button's enabled-ness
                     if (mGameData.getConnectedDevices().size() >= MIN_PLAYERS - 1 && !isGameActive) {
