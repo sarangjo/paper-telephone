@@ -74,6 +74,10 @@ public class GameData {
         return Collections.unmodifiableSet(lobbiedDevices);
     }
 
+    public void clearLobbiedDevices() {
+        this.lobbiedDevices.clear();
+    }
+
     public synchronized void removeConnectedDevice(String address, String name) {
         this.connectedDevices.remove(address);
         this.connectedDeviceNames.remove(name);
@@ -229,4 +233,6 @@ public class GameData {
         }
         addressToSummaries.put(creatorAddress, summary);
     }
+
+
 }
