@@ -398,7 +398,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                         mSuccessorView.setText("Next: " + mGameData.getConnectedDeviceNames().get(mGameData.getConnectedDevices().indexOf(GameData.successor)));
 
                         // Now we're ready to start playing!
-                        mIsPromptMode = buf.get() == (byte) 1;
+                        mIsPromptMode = buf.get() == (byte) 0;
                         mWaitingDialog.dismiss();
 
                         updateMode();
