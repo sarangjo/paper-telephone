@@ -34,7 +34,7 @@ public class SummaryAdapter extends ArrayAdapter<byte[]> {
         View view;
         byte[] obj = mValues.get(position);
         if (!GameData.doesEndOnPrompt) position--;
-        if (mValues.size() - position % 2 == 1) {
+        if ((mValues.size() - position) % 2 == 1) {
             TextView text = (TextView) inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
             text.setText(new String(obj));
             view = text;
