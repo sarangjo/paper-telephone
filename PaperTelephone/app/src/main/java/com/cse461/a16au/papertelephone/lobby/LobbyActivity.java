@@ -196,6 +196,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         } else {
             buf.putInt(turnsLeft);
         }
+        
         buf.putInt(mGameData.getConnectedDevices().size());
         for (String address : mGameData.getConnectedDevices()) {
             buf.put(address.getBytes());

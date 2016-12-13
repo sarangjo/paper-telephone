@@ -130,6 +130,8 @@ public class GameData {
      */
     private boolean isDone;
 
+    public static boolean doesEndOnPrompt;
+
     public void setTurnDone(boolean done) {
         isDone = done;
     }
