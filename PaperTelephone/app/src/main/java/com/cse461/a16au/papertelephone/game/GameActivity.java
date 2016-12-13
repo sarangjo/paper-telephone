@@ -49,6 +49,7 @@ import static com.cse461.a16au.papertelephone.Constants.READ_RESPONSE_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.WE_ARE_START;
 import static com.cse461.a16au.papertelephone.game.GameData.addressToSummaries;
 import static com.cse461.a16au.papertelephone.game.GameData.devicesAtStartGame;
+import static com.cse461.a16au.papertelephone.game.GameData.doesEndOnPrompt;
 import static com.cse461.a16au.papertelephone.game.GameData.namesAtStartGame;
 import static com.cse461.a16au.papertelephone.game.GameData.saveData;
 import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
@@ -117,10 +118,11 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
                 // New connection made, let it be our successor
                 if (mGameData.getStartDevice().equals(WE_ARE_START)) {
-                    ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + 1);
+                    ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + 1 + 1);
                     buf.put(HEADER_GIVE_SUCCESSOR);
                     buf.put(GameData.successor.getBytes());
-                    buf.put(mIsPromptMode ? (byte) 1 : (byte) 0);
+                    buf.put((byte) (mIsPromptMode ? 1 : 0));
+                    buf.put((byte) (GameData.doesEndOnPrompt ? 1 : 0));
 
                     mConnectService.write(buf.array(), address);
 
@@ -174,6 +176,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
             startRound();
         } else {
             // starting new game
+            doesEndOnPrompt = mGameData.getConnectedDevices().size() % 2 == 1;
             turnsLeft = mGameData.getConnectedDevices().size() + 1;
             mIsPromptMode = true;
 
@@ -408,6 +411,8 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                         // Now we're ready to start playing!
                         mIsPromptMode = buf.get() == (byte) 0;
                         mWaitingDialog.dismiss();
+
+                        GameData.doesEndOnPrompt = buf.get() == (byte) 1;
 
                         updateMode();
                         break;
