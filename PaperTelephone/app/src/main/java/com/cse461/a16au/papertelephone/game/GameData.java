@@ -78,6 +78,10 @@ public class GameData {
         this.lobbiedDevices.clear();
     }
 
+    public synchronized void removeLobbiedDevice(String address) {
+        this.lobbiedDevices.remove(address);
+    }
+
     public synchronized void removeConnectedDevice(String address, String name) {
         this.connectedDevices.remove(address);
         this.connectedDeviceNames.remove(name);
