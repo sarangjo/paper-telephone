@@ -133,7 +133,7 @@ public class BluetoothConnectService {
 
     // CLIENT FUNCTIONS: connect()
 
-    private CountDownTimer mConnectTimer;
+//    private CountDownTimer mConnectTimer;
 
     /**
      * Connects to the given BluetoothDevice.
@@ -154,30 +154,30 @@ public class BluetoothConnectService {
         connectThread.start();
 
         // Set timeout for connect thread
-        mConnectTimer = new CountDownTimer(Constants.TIMEOUT_MILLIS, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-            }
-
-            @Override
-            public void onFinish() {
-                BluetoothThread thread;
-                synchronized (BluetoothConnectService.this) {
-                    thread = mConnectThreads.get(device.getAddress());
-                }
-                if (thread != null) {
-                    thread.cancel();
-                }
-
-                // Send error message back to UI
-                Message msg = mMainHandler.obtainMessage(Constants.MESSAGE_CONNECT_FAILED);
-                Bundle bundle = new Bundle();
-                bundle.putString(Constants.DEVICE_ADDRESS, device.getAddress());
-                bundle.putString(Constants.DEVICE_NAME, device.getName());
-                msg.setData(bundle);
-                mMainHandler.sendMessage(msg);
-            }
-        }.start();
+//        mConnectTimer = new CountDownTimer(Constants.TIMEOUT_MILLIS, 1000) {
+//            @Override
+//            public void onTick(long millisUntilFinished) {
+//            }
+//
+//            @Override
+//            public void onFinish() {
+//                BluetoothThread thread;
+//                synchronized (BluetoothConnectService.this) {
+//                    thread = mConnectThreads.get(device.getAddress());
+//                }
+//                if (thread != null) {
+//                    thread.cancel();
+//                }
+//
+//                // Send error message back to UI
+//                Message msg = mMainHandler.obtainMessage(Constants.MESSAGE_CONNECT_FAILED);
+//                Bundle bundle = new Bundle();
+//                bundle.putString(Constants.DEVICE_ADDRESS, device.getAddress());
+//                bundle.putString(Constants.DEVICE_NAME, device.getName());
+//                msg.setData(bundle);
+//                mMainHandler.sendMessage(msg);
+//            }
+//        }.start();
     }
 
     // UNIVERSAL FUNCTIONS: connected(), connectionLost(), write()
@@ -347,7 +347,7 @@ public class BluetoothConnectService {
             }
 
             synchronized (this) {
-                mConnectTimer.cancel();
+//                mConnectTimer.cancel();
                 mConnectThreads.remove(mmDevice.getAddress());
             }
 
