@@ -13,6 +13,9 @@ import android.widget.TextView;
 
 import com.cse461.a16au.papertelephone.R;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
 import static com.cse461.a16au.papertelephone.game.GameData.devicesAtStartGame;
 import static com.cse461.a16au.papertelephone.game.GameData.namesAtStartGame;
@@ -52,8 +55,15 @@ public class SummaryFragment extends Fragment {
             creatorView.setText(namesAtStartGame.get(positionIndex));
         }
 
+        // Tying together the list with the view
         ListView mSummariesListView = (ListView) v.findViewById(R.id.list_paper_summary);
-        ArrayAdapter<byte[]> adapter = new SummaryAdapter(getActivity(), GameData.addressToSummaries.get(mAddress));
+        List<byte[]> display;
+        if (GameData.addressToSummaries.containsKey(mAddress)) {
+            display = GameData.addressToSummaries.get(mAddress);
+        } else {
+            display = new ArrayList<>();
+        }
+        ArrayAdapter<byte[]> adapter = new SummaryAdapter(getActivity(), display);
         mSummariesListView.setAdapter(adapter);
 
         return v;
