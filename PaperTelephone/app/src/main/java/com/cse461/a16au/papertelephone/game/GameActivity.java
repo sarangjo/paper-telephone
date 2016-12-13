@@ -50,7 +50,6 @@ import static com.cse461.a16au.papertelephone.game.GameData.addressToSummaries;
 import static com.cse461.a16au.papertelephone.game.GameData.devicesAtStartGame;
 import static com.cse461.a16au.papertelephone.game.GameData.namesAtStartGame;
 import static com.cse461.a16au.papertelephone.game.GameData.saveData;
-import static com.cse461.a16au.papertelephone.game.GameData.successor;
 import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
 
 /**
@@ -101,7 +100,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                 mGameData.deviceTurnFinished(address);
 
                 // In the case that the dropped address was our successor, we have to get a new successor
-                if (successor.equals(address)) {
+                if (GameData.successor.equals(address)) {
                     successors = new CopyOnWriteArrayList<>();
 
                     // Ask other devices for their successors
@@ -119,7 +118,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                 if (mGameData.getStartDevice().equals(WE_ARE_START)) {
                     ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + 4);
                     buf.put(HEADER_GIVE_SUCCESSOR);
-                    buf.put(successor.getBytes());
+                    buf.put(GameData.successor.getBytes());
                     buf.put(mIsPromptMode ? (byte) 1 : (byte) 0);
 
                     mConnectService.write(buf.array(), address);
@@ -130,7 +129,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                         mConnectService.write(dataMsg, address);
                     }
 
-                    successor = address;
+                    GameData.successor = address;
                     mSuccessorView.setText("Next: " + mGameData.getConnectedDeviceNames().get(mGameData.getConnectedDevices().indexOf(mGameData.successor)));
                 } else {
                     if (mDoneMsg != null)
@@ -148,11 +147,11 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         mConnectService.registerGameHandler(mGameHandler);
 
         mTimerTextView = (TextView) findViewById(R.id.timer);
-        TextView mSuccessor = (TextView) findViewById(R.id.successor_text);
-        if (successor != null) {
+        mSuccessorView = (TextView) findViewById(R.id.successor_text);
+        if (GameData.successor != null) {
             mSuccessorView.setText("Next: " + mGameData.getConnectedDeviceNames().get(mGameData.getConnectedDevices().indexOf(mGameData.successor)));
         } else {
-            mSuccessor.setText("Invalid successor");
+            mSuccessorView.setText("Invalid successor");
         }
 
         mNextCreatorAddress = null;
@@ -281,7 +280,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
     @Override
     public void sendTurnData(byte[] data) {
         // Write this turn's data to our next device
-        mConnectService.write(Arrays.copyOf(data, data.length), successor);
+        mConnectService.write(Arrays.copyOf(data, data.length), GameData.successor);
 
         // Write done message to all devices
         ByteBuffer buf = ByteBuffer.allocate(HEADER_LENGTH + data.length);
@@ -291,7 +290,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         mDoneMsg = buf.array();
 
         for (String device : mGameData.getConnectedDevices()) {
-            if (!device.equals(successor)) {
+            if (!device.equals(GameData.successor)) {
                 mConnectService.write(mDoneMsg, device);
             }
         }
@@ -350,7 +349,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                         // A device is requesting our successor, so just send it
                         ByteBuffer buf = ByteBuffer.allocate(HEADER_LENGTH + ADDRESS_LENGTH);
                         buf.put(HEADER_RESPONSE_SUCCESSOR);
-                        buf.put(successor.getBytes());
+                        buf.put(GameData.successor.getBytes());
 
                         mConnectService.write(buf.array(), address);
                         break;

@@ -459,7 +459,7 @@ public class BluetoothConnectService {
                     dataBuffer.get(creatorAddressArr);
                     bundle.putString(Constants.CREATOR_ADDRESS, new String(creatorAddressArr));
 
-                    log("Done Header:" + new String(header));
+                    log("\tDone Header:" + new String(header));
 
                     // Determine which type of DONE message we received
                     byte[] doneData;
