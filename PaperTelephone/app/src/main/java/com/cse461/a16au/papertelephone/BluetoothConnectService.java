@@ -540,8 +540,6 @@ public class BluetoothConnectService {
                     bytesRead = mmInStream.read(data);
                     imgBuffer.put(Arrays.copyOfRange(data, 0, bytesRead));
                     remainingImageSize -= bytesRead;
-
-                    log(remainingImageSize + " bytes left to store image");
                 } catch (IOException e) {
                     Log.e(TAG, "Connection disconnected", e);
                     connectionLost(mmDevice);
@@ -549,6 +547,7 @@ public class BluetoothConnectService {
                     break;
                 }
             }
+            log(remainingImageSize + " bytes left to store image");
 
             return imgBuffer.array();
         }
@@ -583,5 +582,4 @@ public class BluetoothConnectService {
             Log.d(TAG, "[CONNECTED THREAD " + mmDevice.getName() + "] " + str);
         }
     }
-
 }

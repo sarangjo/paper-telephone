@@ -20,12 +20,12 @@ import java.util.List;
 import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
 import static com.cse461.a16au.papertelephone.Constants.RESULT_LOBBY;
 import static com.cse461.a16au.papertelephone.Constants.RESULT_RESTART;
+import static com.cse461.a16au.papertelephone.game.GameData.devicesAtStartGame;
+import static com.cse461.a16au.papertelephone.game.GameData.namesAtStartGame;
 
 public class EndGameActivity extends AppCompatActivity {
-
     private List<String> mAddresses;
     private BluetoothConnectService mConnectService;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,7 +57,20 @@ public class EndGameActivity extends AppCompatActivity {
 
         // ViewPager
         PagerAdapter pagerAdapter = new SummaryPagerAdapter(getSupportFragmentManager());
-        mAddresses = new ArrayList<>(GameData.getInstance().getConnectedDevices());
+
+        // Merge the start game lists and current lists
+
+        GameData mGameData = GameData.getInstance();
+        List<String> endGameDevices = mGameData.getConnectedDevices();
+        List<String> endGameNames = mGameData.getConnectedDeviceNames();
+
+        for (int i = 0; i < endGameDevices.size(); i++) {
+            if (!devicesAtStartGame.contains(endGameDevices.get(i))) {
+                devicesAtStartGame.add(endGameDevices.get(i));
+                namesAtStartGame.add(endGameNames.get(i));
+            }
+        }
+
         ViewPager pager = (ViewPager) findViewById(R.id.pager_summary);
 
         if(pager.getAdapter() != null) {
@@ -80,14 +93,14 @@ public class EndGameActivity extends AppCompatActivity {
             if (position == 0) {
                 args.putString(DEVICE_ADDRESS, GameData.localAddress);
             } else {
-                args.putString(DEVICE_ADDRESS, mAddresses.get(position - 1));
+                args.putString(DEVICE_ADDRESS, devicesAtStartGame.get(position - 1));
             }
             frag.setArguments(args);
             return frag;
         }
 
         public int getCount() {
-            return mAddresses.size() + 1;
+            return devicesAtStartGame.size() + 1;
         }
     }
 }

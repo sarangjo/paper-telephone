@@ -15,6 +15,7 @@ import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -46,7 +47,8 @@ import static com.cse461.a16au.papertelephone.Constants.READ_RESPONSE_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_RTL;
 import static com.cse461.a16au.papertelephone.Constants.WE_ARE_START;
 import static com.cse461.a16au.papertelephone.game.GameData.addressToSummaries;
-import static com.cse461.a16au.papertelephone.game.GameData.lobbiedDevices;
+import static com.cse461.a16au.papertelephone.game.GameData.devicesAtStartGame;
+import static com.cse461.a16au.papertelephone.game.GameData.namesAtStartGame;
 import static com.cse461.a16au.papertelephone.game.GameData.saveData;
 import static com.cse461.a16au.papertelephone.game.GameData.successor;
 import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
@@ -137,6 +139,8 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
         // Set up game data
         addressToSummaries = new ConcurrentHashMap<>();
+        devicesAtStartGame = new ArrayList<>(mGameData.getConnectedDevices());
+        namesAtStartGame = new ArrayList<>(mGameData.getConnectedDeviceNames());
 
         mConnectService = BluetoothConnectService.getInstance();
         mConnectService.registerGameHandler(mGameHandler);

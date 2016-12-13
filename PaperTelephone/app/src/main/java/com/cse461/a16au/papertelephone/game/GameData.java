@@ -6,6 +6,7 @@ import android.os.CountDownTimer;
 import com.cse461.a16au.papertelephone.Constants;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -16,7 +17,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 /**
  * TODO: class documentation
  */
-
 public class GameData {
 
     private static final GameData ourInstance = new GameData();
@@ -206,6 +206,10 @@ public class GameData {
     public static ConnectionChangeListener connectionChangeListener;
 
     // END-GAME
+
+    public static List<String> devicesAtStartGame;
+    public static List<String> namesAtStartGame;
+
     /**
      * Map from device addresses to their "Summaries" which store the original
      * prompt, along with the drawings and prompts that followed it
@@ -217,9 +221,12 @@ public class GameData {
         if (addressToSummaries.containsKey(creatorAddress)) {
             summary = addressToSummaries.get(creatorAddress);
         } else {
-            summary = new ArrayList<byte[]>();
+            summary = new ArrayList<>();
         }
-        summary.add(data);
+        // Checking if we are double-receiving the same data
+        if (summary.size() == 0 || !Arrays.equals(summary.get(summary.size() - 1), data)) {
+            summary.add(data);
+        }
         addressToSummaries.put(creatorAddress, summary);
     }
 }
