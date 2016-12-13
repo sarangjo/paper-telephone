@@ -55,7 +55,7 @@ public class Constants {
     public static final int READ_START_ACK = 7;
     public static final byte[] HEADER_REQUEST_SUCCESSOR = getHeader("REQSUCC");
     public static final int READ_REQUEST_SUCCESSOR = 8;
-    public static final byte[] HEADER_RESPONSE_SUCCESSOR = getHeader("REQSUCCR");
+    public static final byte[] HEADER_RESPONSE_SUCCESSOR = getHeader("RESSUCC");
     public static final int READ_RESPONSE_SUCCESSOR = 9;
     public static final byte[] HEADER_NEW_START = getHeader("NEWSTART");
     public static final int READ_NEW_START = 10;

@@ -17,7 +17,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 /**
  * TODO: class documentation
  */
-
 public class GameData {
 
     private static final GameData ourInstance = new GameData();
@@ -192,6 +191,10 @@ public class GameData {
     public static ConnectionChangeListener connectionChangeListener;
 
     // END-GAME
+
+    public static List<String> devicesAtStartGame;
+    public static List<String> namesAtStartGame;
+
     /**
      * Map from device addresses to their "Summaries" which store the original
      * prompt, along with the drawings and prompts that followed it

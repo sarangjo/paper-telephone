@@ -14,6 +14,8 @@ import android.widget.TextView;
 import com.cse461.a16au.papertelephone.R;
 
 import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
+import static com.cse461.a16au.papertelephone.game.GameData.devicesAtStartGame;
+import static com.cse461.a16au.papertelephone.game.GameData.namesAtStartGame;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -39,16 +41,15 @@ public class SummaryFragment extends Fragment {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_summary, container, false);
 
-        GameData gameData = GameData.getInstance();
         TextView creatorView = (TextView) v.findViewById(R.id.view_creator);
 
         // Find the index of our name
-        int positionIndex = gameData.getConnectedDevices().indexOf(mAddress);
+        int positionIndex = devicesAtStartGame.indexOf(mAddress);
         if (positionIndex == -1) {
             // TODO: assume this is us?
             creatorView.setText(GameData.localName);
         } else {
-            creatorView.setText(gameData.getConnectedDeviceNames().get(positionIndex));
+            creatorView.setText(namesAtStartGame.get(positionIndex));
         }
 
         ListView mSummariesListView = (ListView) v.findViewById(R.id.list_paper_summary);
