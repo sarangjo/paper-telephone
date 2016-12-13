@@ -1,6 +1,7 @@
 package com.cse461.a16au.papertelephone.game;
 
 import android.bluetooth.BluetoothAdapter;
+import android.graphics.Bitmap;
 import android.os.CountDownTimer;
 
 import com.cse461.a16au.papertelephone.Constants;
@@ -222,17 +223,18 @@ public class GameData {
      * Map from device addresses to their "Summaries" which store the original
      * prompt, along with the drawings and prompts that followed it
      */
-    public static ConcurrentMap<String, List<byte[]>> addressToSummaries;
+    public static ConcurrentMap<String, List<Object>> addressToSummaries;
 
-    public static void saveData(String creatorAddress, byte[] data) {
-        List<byte[]> summary;
+    public static void saveData(String creatorAddress, Object data) {
+        List<Object> summary;
         if (addressToSummaries.containsKey(creatorAddress)) {
             summary = addressToSummaries.get(creatorAddress);
         } else {
             summary = new ArrayList<>();
         }
         // Checking if we are double-receiving the same data
-        if (summary.size() == 0 || !Arrays.equals(summary.get(summary.size() - 1), data)) {
+        Object latest = summary.get(summary.size() - 1);
+        if (summary.size() == 0 || (latest instanceof String && data instanceof String) || (latest instanceof Bitmap && data instanceof Bitmap)) {
             summary.add(data);
         }
         addressToSummaries.put(creatorAddress, summary);

@@ -15,6 +15,7 @@ import com.cse461.a16au.papertelephone.R;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
 import static com.cse461.a16au.papertelephone.game.GameData.devicesAtStartGame;
@@ -57,13 +58,13 @@ public class SummaryFragment extends Fragment {
 
         // Tying together the list with the view
         ListView mSummariesListView = (ListView) v.findViewById(R.id.list_paper_summary);
-        List<byte[]> display;
+        List<Object> display;
         if (GameData.addressToSummaries.containsKey(mAddress)) {
             display = GameData.addressToSummaries.get(mAddress);
         } else {
             display = new ArrayList<>();
         }
-        ArrayAdapter<byte[]> adapter = new SummaryAdapter(getActivity(), display);
+        ArrayAdapter<Object> adapter = new SummaryAdapter(getActivity(), display);
         mSummariesListView.setAdapter(adapter);
 
         return v;
