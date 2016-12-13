@@ -19,10 +19,10 @@ import java.util.List;
  * TODO: class documentation
  */
 
-public class SummaryAdapter extends ArrayAdapter<Object> {
-    private final List<Object> mValues;
+public class SummaryAdapter extends ArrayAdapter<byte[]> {
+    private final List<byte[]> mValues;
 
-    public SummaryAdapter(Context context, List<Object> values) {
+    public SummaryAdapter(Context context, List<byte[]> values) {
         super(context, -1, values);
         mValues = values;
     }
@@ -32,14 +32,15 @@ public class SummaryAdapter extends ArrayAdapter<Object> {
     public View getView(int position, View convertView, @NonNull ViewGroup parent) {
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view;
-        Object obj = mValues.get(position);
-        if (obj != null && obj instanceof String) {
+        byte[] obj = mValues.get(position);
+        if (position % 2 == 0) {
             TextView text = (TextView) inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
-            text.setText((String) obj);
+            text.setText(new String(obj));
             view = text;
         } else {
             ImageView image = (ImageView) inflater.inflate(R.layout.simple_image, parent, false);
-            image.setImageBitmap((Bitmap) obj);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(obj, 0, obj.length);
+            image.setImageBitmap(bitmap);
             view = image;
         }
         return view;

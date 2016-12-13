@@ -58,13 +58,13 @@ public class SummaryFragment extends Fragment {
 
         // Tying together the list with the view
         ListView mSummariesListView = (ListView) v.findViewById(R.id.list_paper_summary);
-        List<Object> display;
+        List<byte[]> display;
         if (GameData.addressToSummaries.containsKey(mAddress)) {
             display = GameData.addressToSummaries.get(mAddress);
         } else {
             display = new ArrayList<>();
         }
-        ArrayAdapter<Object> adapter = new SummaryAdapter(getActivity(), display);
+        ArrayAdapter<byte[]> adapter = new SummaryAdapter(getActivity(), display);
         mSummariesListView.setAdapter(adapter);
 
         return v;

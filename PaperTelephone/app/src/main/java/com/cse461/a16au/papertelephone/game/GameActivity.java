@@ -329,17 +329,15 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
                         // Add the current image/prompt to the corresponding list in the map from addresses to summaries
                         byte[] data = (byte[]) msg.obj;
+                        saveData(creatorAddress, data);
                         Toast.makeText(GameActivity.this, name + " is done with their turn!", Toast.LENGTH_SHORT).show();
 
                         if (msg.arg2 == READ_IMAGE) {
                             mNextImage = data;
                             mNextCreatorAddress = creatorAddress;
-                            Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                            saveData(creatorAddress, bitmap);
                         } else if (msg.arg2 == READ_PROMPT) {
                             mNextPrompt = new String(data);
                             mNextCreatorAddress = creatorAddress;
-                            saveData(creatorAddress, new String(data));
                         }
 
                         synchronized (GameActivity.this) {

@@ -220,7 +220,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
             if (mGameData.getStartDevice().length() == Constants.ADDRESS_LENGTH) {
                 return;
             }
-            
+
             mGameData.setStartDevice(Constants.WE_ARE_START);
 
             for (String currDevice : mGameData.getConnectedDevices()) {

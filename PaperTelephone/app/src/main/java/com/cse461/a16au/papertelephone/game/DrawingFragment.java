@@ -87,12 +87,12 @@ public class DrawingFragment extends GameFragment {
         Bitmap cache = paintingView.getDrawingCache();
         Bitmap b = cache.copy(cache.getConfig(), true);
 
-        // Save this to our paper store
-        GameData.saveData(mCreatorAddress, b);
-
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         b.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] image = stream.toByteArray();
+
+        // Save this to our summary store
+        GameData.saveData(mCreatorAddress, image);
 
         // Create data packet to send
         ByteBuffer buf = ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + image.length + 4);
