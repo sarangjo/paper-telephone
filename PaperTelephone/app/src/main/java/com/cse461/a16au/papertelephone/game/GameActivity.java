@@ -44,7 +44,6 @@ import static com.cse461.a16au.papertelephone.Constants.READ_NEW_START;
 import static com.cse461.a16au.papertelephone.Constants.READ_PROMPT;
 import static com.cse461.a16au.papertelephone.Constants.READ_REQUEST_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_RESPONSE_SUCCESSOR;
-import static com.cse461.a16au.papertelephone.Constants.READ_RTL;
 import static com.cse461.a16au.papertelephone.Constants.WE_ARE_START;
 import static com.cse461.a16au.papertelephone.game.GameData.addressToSummaries;
 import static com.cse461.a16au.papertelephone.game.GameData.devicesAtStartGame;
@@ -130,7 +129,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                     }
 
                     GameData.successor = address;
-                    mSuccessorView.setText("Next: " + mGameData.getConnectedDeviceNames().get(mGameData.getConnectedDevices().indexOf(mGameData.successor)));
+                    mSuccessorView.setText("Next: " + mGameData.getConnectedDeviceNames().get(mGameData.getConnectedDevices().indexOf(GameData.successor)));
                 } else {
                     if (mDoneMsg != null)
                         mConnectService.write(mDoneMsg, address);
@@ -149,7 +148,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         mTimerTextView = (TextView) findViewById(R.id.timer);
         mSuccessorView = (TextView) findViewById(R.id.successor_text);
         if (GameData.successor != null) {
-            mSuccessorView.setText("Next: " + mGameData.getConnectedDeviceNames().get(mGameData.getConnectedDevices().indexOf(mGameData.successor)));
+            mSuccessorView.setText("Next: " + mGameData.getConnectedDeviceNames().get(mGameData.getConnectedDevices().indexOf(GameData.successor)));
         } else {
             mSuccessorView.setText("Invalid successor");
         }
