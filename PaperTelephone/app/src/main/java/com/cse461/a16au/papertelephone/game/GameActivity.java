@@ -176,7 +176,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
             startRound();
         } else {
             // starting new game
-            doesEndOnPrompt = mGameData.getConnectedDevices().size() % 2 == 1;
+            doesEndOnPrompt = mGameData.getConnectedDevices().size() % 2 == 0;
             turnsLeft = mGameData.getConnectedDevices().size() + 1;
             mIsPromptMode = true;
 
