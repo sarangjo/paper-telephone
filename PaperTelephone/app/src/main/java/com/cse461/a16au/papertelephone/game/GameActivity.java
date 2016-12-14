@@ -220,22 +220,22 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
          //TODO: Uncomment and test when we are confident that the rest of the game works as intended
          //Start the timer at 30 seconds for the next phase of the game
-        GameData.turnTimer = new CountDownTimer(TURN_MILLIS, 1000) {
-            public void onTick(long millisUntilFinished) {
-                mTimerTextView.setTextColor(Color.CYAN);
-                mTimerTextView.setText(String.format("%2ds", millisUntilFinished / 1000));
-            }
-
-            public void onFinish() {
-                // End the turn, sending the drawing or prompt if it hasn't already been sent
-                if (!mGameData.getTurnDone()) {
-                    mFragment.endTurn();
-                    mGameData.setTurnDone(true);
-                }
-                mTimerTextView.setText("00s");
-                mTimerTextView.setTextColor(Color.RED);
-            }
-        }.start();
+//        GameData.turnTimer = new CountDownTimer(TURN_MILLIS, 1000) {
+//            public void onTick(long millisUntilFinished) {
+//                mTimerTextView.setTextColor(Color.CYAN);
+//                mTimerTextView.setText(String.format("%2ds", millisUntilFinished / 1000));
+//            }
+//
+//            public void onFinish() {
+//                // End the turn, sending the drawing or prompt if it hasn't already been sent
+//                if (!mGameData.getTurnDone()) {
+//                    mFragment.endTurn();
+//                    mGameData.setTurnDone(true);
+//                }
+//                mTimerTextView.setText("00s");
+//                mTimerTextView.setTextColor(Color.RED);
+//            }
+//        }.start();
 
         // Switch out the fragments to update the current mode
         FragmentTransaction ft = getFragmentManager().beginTransaction();
