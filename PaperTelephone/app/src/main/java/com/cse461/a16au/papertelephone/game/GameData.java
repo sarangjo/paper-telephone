@@ -136,6 +136,8 @@ public class GameData {
         isDone = done;
     }
 
+    public boolean getTurnDone() { return isDone;}
+
     // Devices who are not finished with their turns
 
     /**

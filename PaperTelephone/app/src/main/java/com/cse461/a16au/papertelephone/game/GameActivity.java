@@ -4,7 +4,9 @@ import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
@@ -46,6 +48,7 @@ import static com.cse461.a16au.papertelephone.Constants.READ_NEW_START;
 import static com.cse461.a16au.papertelephone.Constants.READ_PROMPT;
 import static com.cse461.a16au.papertelephone.Constants.READ_REQUEST_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_RESPONSE_SUCCESSOR;
+import static com.cse461.a16au.papertelephone.Constants.TURN_MILLIS;
 import static com.cse461.a16au.papertelephone.Constants.WE_ARE_START;
 import static com.cse461.a16au.papertelephone.game.GameData.addressToSummaries;
 import static com.cse461.a16au.papertelephone.game.GameData.devicesAtStartGame;
@@ -215,23 +218,24 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
             return;
         }
 
-        // TODO: Uncomment and test when we are confident that the rest of the game works as intended
-        // Start the timer at 30 seconds for the next phase of the game
-//        GameData.turnTimer = new CountDownTimer(TURN_MILLIS, 1000) {
-//            public void onTick(long millisUntilFinished) {
-//                mTimerTextView.setText(String.format("%2ds", millisUntilFinished / 1000));
-//            }
-//
-//            public void onFinish() {
-//                // End the turn, sending the drawing or prompt if it hasn't already been sent
-//                if (!isDone) {
-//                    mFragment.endTurn();
-//                    isDone = true;
-//                }
-//                mTimerTextView.setText("00s");
-//                mTimerTextView.setTextColor(Color.RED);
-//            }
-//        }.start();
+         //TODO: Uncomment and test when we are confident that the rest of the game works as intended
+         //Start the timer at 30 seconds for the next phase of the game
+        GameData.turnTimer = new CountDownTimer(TURN_MILLIS, 1000) {
+            public void onTick(long millisUntilFinished) {
+                mTimerTextView.setTextColor(Color.CYAN);
+                mTimerTextView.setText(String.format("%2ds", millisUntilFinished / 1000));
+            }
+
+            public void onFinish() {
+                // End the turn, sending the drawing or prompt if it hasn't already been sent
+                if (!mGameData.getTurnDone()) {
+                    mFragment.endTurn();
+                    mGameData.setTurnDone(true);
+                }
+                mTimerTextView.setText("00s");
+                mTimerTextView.setTextColor(Color.RED);
+            }
+        }.start();
 
         // Switch out the fragments to update the current mode
         FragmentTransaction ft = getFragmentManager().beginTransaction();
