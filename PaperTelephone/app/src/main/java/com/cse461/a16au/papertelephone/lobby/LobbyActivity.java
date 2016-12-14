@@ -211,14 +211,15 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     private void startGameClicked() {
         boolean allLobbied = true;
 
-        for(String device: mGameData.getConnectedDevices()) {
-            allLobbied = allLobbied && mGameData.getLobbiedDevices().contains(device);
-        }
+//        for(String device: mGameData.getConnectedDevices()) {
+//            allLobbied = allLobbied && mGameData.getLobbiedDevices().contains(device);
+//        }
 
         if (mGameData.getConnectedDevices().size() >= Constants.MIN_PLAYERS - 1 && allLobbied) {
             mGameData.clearLobbiedDevices();
 
             if (mGameData.getStartDevice().length() == Constants.ADDRESS_LENGTH) {
+                Toast.makeText(this, "Someone else hit start", Toast.LENGTH_LONG).show();
                 return;
             }
 
