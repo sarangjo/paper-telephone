@@ -1,19 +1,19 @@
-package com.cse461.a16au.papertelephone;
+package com.cse461.a16au.papertelephone.services;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.cse461.a16au.papertelephone.Constants;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -28,25 +28,17 @@ import java.util.concurrent.ConcurrentHashMap;
  * <br/>
  * As of now, this only allows for secure connections.
  */
-public class BluetoothConnectService {
+public class BluetoothConnectService extends ConnectService {
     private static final String TAG = "BluetoothConnectService";
 
     private final BluetoothAdapter mAdapter;
-
-    private Handler mMainHandler;
-    private Handler mGameHandler;
-    private int mState;
 
     // Threads
     private BluetoothThread mAcceptThread;
     private final Map<String, BluetoothThread> mConnectThreads;
     private final Map<String, BluetoothThread> mConnectedThreads;
 
-    // States
-    public static final int STATE_STOPPED = 0;
-    public static final int STATE_STARTED = 1;
-
-    private static BluetoothConnectService ourInstance = new BluetoothConnectService();
+    private static ConnectService ourInstance = new BluetoothConnectService();
 
     private BluetoothConnectService() {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -55,20 +47,8 @@ public class BluetoothConnectService {
         mConnectedThreads = new ConcurrentHashMap<>();
     }
 
-    public static BluetoothConnectService getInstance() {
+    static ConnectService getInstance() {
         return ourInstance;
-    }
-
-    public void registerGameHandler(Handler handler) {
-        mGameHandler = handler;
-    }
-
-    public void unregisterGameHandler(Handler gameHandler) {
-        mGameHandler = (mGameHandler.equals(gameHandler) ? null : mGameHandler);
-    }
-
-    public void registerMainHandler(Handler handler) {
-        mMainHandler = handler;
     }
 
     // SERVER FUNCTIONS: start() and stop()
@@ -107,14 +87,6 @@ public class BluetoothConnectService {
         }
 
         setState(STATE_STOPPED);
-    }
-
-    public synchronized int getState() {
-        return mState;
-    }
-
-    public synchronized void setState(int state) {
-        this.mState = state;
     }
 
     /**
@@ -253,7 +225,7 @@ public class BluetoothConnectService {
 
         public void run() {
             Log.d(TAG, "[ACCEPT THREAD] Begin listening...");
-            BluetoothSocket socket = null;
+            BluetoothSocket socket;
 
             while (mState != STATE_STOPPED) {
                 try {
@@ -304,7 +276,7 @@ public class BluetoothConnectService {
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
 
-        public ConnectThread(BluetoothDevice device) {
+        ConnectThread(BluetoothDevice device) {
             mmDevice = device;
 
             BluetoothSocket tmp = null;
@@ -488,11 +460,10 @@ public class BluetoothConnectService {
                 } else if (Arrays.equals(header, Constants.HEADER_GIVE_SUCCESSOR)) {
                     msg = mGameHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_GIVE_SUCCESSOR, dataBuffer.array());
                     currHandler = mGameHandler;
-                // Main Handler
-                } else if(Arrays.equals(header, Constants.HEADER_RETURN_TO_LOBBY)) {
+                    // Main Handler
+                } else if (Arrays.equals(header, Constants.HEADER_RETURN_TO_LOBBY)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_RTL, dataBuffer.array());
-                }
-                else if (Arrays.equals(header, Constants.HEADER_START)) {
+                } else if (Arrays.equals(header, Constants.HEADER_START)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START, dataBuffer.array());
                 } else if (Arrays.equals(header, Constants.HEADER_START_ACK)) {
                     msg = mMainHandler.obtainMessage(Constants.MESSAGE_READ, bytes, Constants.READ_START_ACK, dataBuffer.array());
@@ -517,10 +488,9 @@ public class BluetoothConnectService {
             }
         }
 
-        public byte[] processImage(ByteBuffer input, int imgBytes, byte[] data) {
+        byte[] processImage(ByteBuffer input, int imgBytes, byte[] data) {
             // Hold onto the full image size for later
-            int totalImageSize = input.getInt();
-            int remainingImageSize = totalImageSize;
+            int remainingImageSize = input.getInt();
 
             log("Receiving image of size " + remainingImageSize);
 
@@ -533,7 +503,7 @@ public class BluetoothConnectService {
             imgBuffer.put(imagePacket);
             remainingImageSize -= imagePacket.length;
 
-            int bytesRead = 0;
+            int bytesRead;
 
             while (remainingImageSize > 0) {
                 try {
@@ -552,7 +522,7 @@ public class BluetoothConnectService {
             return imgBuffer.array();
         }
 
-        public boolean write(byte[] buffer) {
+        boolean write(byte[] buffer) {
             try {
                 if (buffer.length >= Constants.HEADER_LENGTH)
                     log("Send: " + new String(Arrays.copyOfRange(buffer, 0, Constants.HEADER_LENGTH)));

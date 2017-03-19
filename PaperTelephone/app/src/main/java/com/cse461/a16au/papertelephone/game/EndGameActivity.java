@@ -10,22 +10,22 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
-import com.cse461.a16au.papertelephone.BluetoothConnectService;
 import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
+import com.cse461.a16au.papertelephone.services.BluetoothConnectService;
+import com.cse461.a16au.papertelephone.services.ConnectService;
+import com.cse461.a16au.papertelephone.services.ConnectServiceFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
 import static com.cse461.a16au.papertelephone.Constants.RESULT_LOBBY;
-import static com.cse461.a16au.papertelephone.Constants.RESULT_RESTART;
 import static com.cse461.a16au.papertelephone.game.GameData.devicesAtStartGame;
 import static com.cse461.a16au.papertelephone.game.GameData.namesAtStartGame;
 
 public class EndGameActivity extends AppCompatActivity {
-    private List<String> mAddresses;
-    private BluetoothConnectService mConnectService;
+    private ConnectService mConnectService;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,13 +33,13 @@ public class EndGameActivity extends AppCompatActivity {
 
         Button returnToLobbyButton = (Button) findViewById(R.id.button_return_to_lobby);
 
-        mConnectService = BluetoothConnectService.getInstance();
+        mConnectService = ConnectServiceFactory.getService();
 
         returnToLobbyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 GameData.getInstance().clearLobbiedDevices();
-                for(String device : GameData.getInstance().getConnectedDevices()) {
+                for (String device : GameData.getInstance().getConnectedDevices()) {
                     mConnectService.write(Constants.HEADER_RETURN_TO_LOBBY, device);
                 }
                 setResult(RESULT_LOBBY);
@@ -65,7 +65,7 @@ public class EndGameActivity extends AppCompatActivity {
 
         ViewPager pager = (ViewPager) findViewById(R.id.pager_summary);
 
-        if(pager.getAdapter() != null) {
+        if (pager.getAdapter() != null) {
             pager.setAdapter(null);
         }
         pager.setAdapter(pagerAdapter);

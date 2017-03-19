@@ -2,11 +2,7 @@ package com.cse461.a16au.papertelephone.game;
 
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
@@ -14,9 +10,10 @@ import android.support.v7.widget.Toolbar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.cse461.a16au.papertelephone.BluetoothConnectService;
 import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
+import com.cse461.a16au.papertelephone.services.ConnectService;
+import com.cse461.a16au.papertelephone.services.ConnectServiceFactory;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -48,7 +45,6 @@ import static com.cse461.a16au.papertelephone.Constants.READ_NEW_START;
 import static com.cse461.a16au.papertelephone.Constants.READ_PROMPT;
 import static com.cse461.a16au.papertelephone.Constants.READ_REQUEST_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_RESPONSE_SUCCESSOR;
-import static com.cse461.a16au.papertelephone.Constants.TURN_MILLIS;
 import static com.cse461.a16au.papertelephone.Constants.WE_ARE_START;
 import static com.cse461.a16au.papertelephone.game.GameData.addressToSummaries;
 import static com.cse461.a16au.papertelephone.game.GameData.devicesAtStartGame;
@@ -64,7 +60,7 @@ import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
 public class GameActivity extends AppCompatActivity implements GameFragment.DataSendListener {
     private final String TAG = "GAME_ACTIVITY";
 
-    private BluetoothConnectService mConnectService;
+    private ConnectService mConnectService;
     private GameData mGameData;
     private boolean mIsPromptMode;
 
@@ -149,7 +145,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
         devicesAtStartGame = new ArrayList<>(mGameData.getConnectedDevices());
         namesAtStartGame = new ArrayList<>(mGameData.getConnectedDeviceNames());
 
-        mConnectService = BluetoothConnectService.getInstance();
+        mConnectService = ConnectServiceFactory.getService();
         mConnectService.registerGameHandler(mGameHandler);
 
         mTimerTextView = (TextView) findViewById(R.id.timer);

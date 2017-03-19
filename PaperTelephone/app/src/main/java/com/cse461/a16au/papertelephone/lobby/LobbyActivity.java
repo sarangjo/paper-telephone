@@ -15,17 +15,16 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.cse461.a16au.papertelephone.BluetoothConnectService;
 import com.cse461.a16au.papertelephone.Constants;
 import com.cse461.a16au.papertelephone.R;
 import com.cse461.a16au.papertelephone.game.EndGameActivity;
 import com.cse461.a16au.papertelephone.game.GameActivity;
 import com.cse461.a16au.papertelephone.game.GameData;
+import com.cse461.a16au.papertelephone.services.ConnectService;
+import com.cse461.a16au.papertelephone.services.ConnectServiceFactory;
 
 import java.nio.ByteBuffer;
-import java.util.BitSet;
 import java.util.Iterator;
-import java.util.Set;
 
 import static com.cse461.a16au.papertelephone.Constants.ADDRESS_LENGTH;
 import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
@@ -40,15 +39,14 @@ import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECT_FAILED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_DISCONNECTED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_READ;
 import static com.cse461.a16au.papertelephone.Constants.MIN_PLAYERS;
-import static com.cse461.a16au.papertelephone.Constants.READ_GIVE_SUCCESSOR;
-import static com.cse461.a16au.papertelephone.Constants.READ_RTL;
-import static com.cse461.a16au.papertelephone.Constants.READ_START_ACK;
+import static com.cse461.a16au.papertelephone.Constants.NO_START;
 import static com.cse461.a16au.papertelephone.Constants.READ_DEVICES;
 import static com.cse461.a16au.papertelephone.Constants.READ_PING;
+import static com.cse461.a16au.papertelephone.Constants.READ_RTL;
 import static com.cse461.a16au.papertelephone.Constants.READ_START;
+import static com.cse461.a16au.papertelephone.Constants.READ_START_ACK;
 import static com.cse461.a16au.papertelephone.Constants.READ_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_UNKNOWN;
-import static com.cse461.a16au.papertelephone.Constants.NO_START;
 import static com.cse461.a16au.papertelephone.Constants.WE_ARE_START;
 import static com.cse461.a16au.papertelephone.game.GameData.lastSuccessorNumber;
 import static com.cse461.a16au.papertelephone.game.GameData.localAddress;
@@ -70,7 +68,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
     /**
      * Our bluetooth service to handle all bluetooth connections
      */
-    private BluetoothConnectService mConnectService = null;
+    private ConnectService mConnectService = null;
 
     private GameData mGameData = null;
 
@@ -90,7 +88,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         setSupportActionBar(toolbar);
 
         // Setting up bluetooth
-        mConnectService = BluetoothConnectService.getInstance();
+        mConnectService = ConnectServiceFactory.getService();
         mConnectService.registerMainHandler(mMainHandler);
 
         // Get out own local MAC address
@@ -135,7 +133,7 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
         // In the case that Bluetooth was disabled to start, onResume() will
         // be called when the ACTION_REQUEST_ENABLE activity has returned
         if (mConnectService != null) {
-            if (mConnectService.getState() == BluetoothConnectService.STATE_STOPPED) {
+            if (mConnectService.getState() == ConnectService.STATE_STOPPED) {
                 // Start our BluetoothConnectionService
                 mConnectService.start();
             }
