@@ -1,7 +1,9 @@
 package com.cse461.a16au.papertelephone.lobby;
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
 import android.content.Intent;
+import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
 import android.os.Handler;
@@ -106,14 +108,50 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 break;
             case ConnectServiceFactory.WI_FI:
                 // Set up nearby service discovery
+                // Useful guide for NSD, https://developer.android.com/training/connect-devices-wirelessly/nsd.html
 
                 NsdServiceInfo serviceInfo = new NsdServiceInfo();
                 serviceInfo.setServiceName("PaperTelephone");
-                // TODO: figure out service type
-                // This is where I left off when working on the NSD stuff
-                // https://developer.android.com/training/connect-devices-wirelessly/nsd.html#register
-                //serviceInfo.setServiceType();
+                serviceInfo.setServiceType("_papertelephone._tcp");
                 serviceInfo.setPort(((WiFiConnectService) mConnectService).getPort());
+
+                NsdManager.RegistrationListener mRegistrationListener
+                        = new NsdManager.RegistrationListener() {
+                    public String mServiceName;
+
+                    @Override
+                    public void onServiceRegistered(NsdServiceInfo serviceInfo) {
+                        // Save the service name.  Android may have changed it in order to
+                        // resolve a conflict, so update the name you initially requested
+                        // with the name Android actually used.
+                        mServiceName = serviceInfo.getServiceName();
+
+                        //
+                    }
+
+                    @Override
+                    public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                        // Registration failed
+                        // TODO: Put debugging code here to determine why.
+                    }
+
+                    @Override
+                    public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
+                        // Service has been unregistered.  This only happens when you call
+                        // NsdManager.unregisterService() and pass in this listener.
+                    }
+
+                    @Override
+                    public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                        // Unregistration failed
+                        // TODO: Put debugging code here to determine why.
+                    }
+                };
+
+                // Not sure if this line is correct, the guide is not really helpful here
+                NsdManager mNsdManager = (NsdManager) this.getSystemService(Context.NSD_SERVICE);
+
+                mNsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
                 break;
             default:
                 // Unknown Connection Type, exit
