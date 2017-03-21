@@ -1,7 +1,6 @@
 package com.cse461.a16au.papertelephone;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -31,15 +30,6 @@ public class MainActivity extends FragmentActivity {
                 startActivity(new Intent(MainActivity.this, LobbyActivity.class));
             }
         });
-
-        // Request that bluetooth be enabled if it is disabled, otherwise connect to other devices
-        if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
-            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableIntent, Constants.REQUEST_ENABLE_BT);
-            buttonStartGame.setEnabled(false);
-        } else {
-            buttonStartGame.setEnabled(true);
-        }
     }
 
     @Override

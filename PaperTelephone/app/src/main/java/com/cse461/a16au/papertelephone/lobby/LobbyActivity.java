@@ -1,6 +1,8 @@
 package com.cse461.a16au.papertelephone.lobby;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -22,6 +24,7 @@ import com.cse461.a16au.papertelephone.game.GameActivity;
 import com.cse461.a16au.papertelephone.game.GameData;
 import com.cse461.a16au.papertelephone.services.ConnectService;
 import com.cse461.a16au.papertelephone.services.ConnectServiceFactory;
+import com.cse461.a16au.papertelephone.services.WiFiConnectService;
 
 import java.nio.ByteBuffer;
 import java.util.Iterator;
@@ -89,6 +92,34 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
         // Setting up bluetooth
         mConnectService = ConnectServiceFactory.getService();
+
+        switch (ConnectServiceFactory.TYPE) {
+            case ConnectServiceFactory.BLUETOOTH:
+                // Request that bluetooth be enabled if it is disabled
+                if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+                    Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivityForResult(enableIntent, Constants.REQUEST_ENABLE_BT);
+                }
+                break;
+            case ConnectServiceFactory.INTERNET:
+
+                break;
+            case ConnectServiceFactory.WI_FI:
+                // Set up nearby service discovery
+
+                NsdServiceInfo serviceInfo = new NsdServiceInfo();
+                serviceInfo.setServiceName("PaperTelephone");
+                // TODO: figure out service type
+                // This is where I left off when working on the NSD stuff
+                // https://developer.android.com/training/connect-devices-wirelessly/nsd.html#register
+                //serviceInfo.setServiceType();
+                serviceInfo.setPort(((WiFiConnectService) mConnectService).getPort());
+                break;
+            default:
+                // Unknown Connection Type, exit
+                // TODO: Add failure method that gives feedback for use in debugging
+        }
+
         mConnectService.registerMainHandler(mMainHandler);
 
         // Get out own local MAC address
