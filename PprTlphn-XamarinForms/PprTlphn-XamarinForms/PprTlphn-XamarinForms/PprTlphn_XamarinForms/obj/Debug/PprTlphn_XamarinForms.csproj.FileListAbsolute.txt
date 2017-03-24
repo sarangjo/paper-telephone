@@ -1,0 +1,15 @@
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\bin\Debug\PprTlphn_XamarinForms.dll
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\bin\Debug\PprTlphn_XamarinForms.pdb
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\bin\Debug\Xamarin.Forms.Core.dll
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\bin\Debug\Xamarin.Forms.Platform.dll
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\bin\Debug\Xamarin.Forms.Xaml.dll
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\bin\Debug\Xamarin.Forms.Core.pdb
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\bin\Debug\Xamarin.Forms.Core.xml
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\bin\Debug\Xamarin.Forms.Platform.pdb
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\bin\Debug\Xamarin.Forms.Xaml.pdb
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\bin\Debug\Xamarin.Forms.Xaml.xml
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\obj\Debug\PprTlphn_XamarinForms.csprojResolveAssemblyReference.cache
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\obj\Debug\PprTlphn_XamarinForms.MainPage.xaml.g.cs
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\obj\Debug\PprTlphn_XamarinForms.App.xaml.g.cs
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\obj\Debug\PprTlphn_XamarinForms.dll
+C:\Users\saran\git\cse461-papertelephone\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn-XamarinForms\PprTlphn_XamarinForms\obj\Debug\PprTlphn_XamarinForms.pdb
