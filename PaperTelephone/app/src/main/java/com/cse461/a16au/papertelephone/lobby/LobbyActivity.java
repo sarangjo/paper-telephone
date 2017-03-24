@@ -1,7 +1,9 @@
 package com.cse461.a16au.papertelephone.lobby;
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
 import android.content.Intent;
+import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
 import android.os.Handler;
@@ -106,14 +108,110 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 break;
             case ConnectServiceFactory.WI_FI:
                 // Set up nearby service discovery
+                // Useful guide for NSD, https://developer.android.com/training/connect-devices-wirelessly/nsd.html
+
+                final String serviceName = "PaperTelephone";
+                final String serviceType = "_papertelephone._tcp";
 
                 NsdServiceInfo serviceInfo = new NsdServiceInfo();
-                serviceInfo.setServiceName("PaperTelephone");
-                // TODO: figure out service type
-                // This is where I left off when working on the NSD stuff
-                // https://developer.android.com/training/connect-devices-wirelessly/nsd.html#register
-                //serviceInfo.setServiceType();
+                serviceInfo.setServiceName(serviceName);
+                serviceInfo.setServiceType(serviceType);
                 serviceInfo.setPort(((WiFiConnectService) mConnectService).getPort());
+
+                NsdManager.RegistrationListener mRegistrationListener
+                        = new NsdManager.RegistrationListener() {
+                    String mServiceName;
+
+                    @Override
+                    public void onServiceRegistered(NsdServiceInfo serviceInfo) {
+                        // Save the service name.  Android may have changed it in order to
+                        // resolve a conflict, so update the name you initially requested
+                        // with the name Android actually used.
+                        mServiceName = serviceInfo.getServiceName();
+
+                        //
+                    }
+
+                    @Override
+                    public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                        // Registration failed
+                        // TODO: Put debugging code here to determine why.
+                    }
+
+                    @Override
+                    public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
+                        // Service has been unregistered.  This only happens when you call
+                        // NsdManager.unregisterService() and pass in this listener.
+                    }
+
+                    @Override
+                    public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                        // Unregistration failed
+                        // TODO: Put debugging code here to determine why.
+                    }
+                };
+
+                // Not sure if this line is correct, the guide is not really helpful here
+                final NsdManager mNsdManager = (NsdManager) this.getSystemService(Context.NSD_SERVICE);
+
+                // Register service
+                mNsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
+
+
+                // TODO: initialize a resolveListner
+                // btw the Android guide for this is total shit, they're having me
+                // add things in the wrong order and really confusing
+
+
+                // Create discovery listener to listen for other devices running our service
+                NsdManager.DiscoveryListener mDiscoveryListener = new NsdManager.DiscoveryListener() {
+
+                    @Override
+                    public void onDiscoveryStarted(String serviceType) {
+                        Log.d(TAG, "Service Discovery Started");
+                    }
+
+                    @Override
+                    public void onServiceFound(NsdServiceInfo serviceInfo) {
+                        // Service was found
+                        Log.d(TAG, "Service discovery success" + serviceInfo);
+                        if(!serviceInfo.getServiceType().equals(serviceType)) {
+                            // Not our service, some other device, disregard
+                            Log.d(TAG, "Unknown Service Type: " + serviceInfo.getServiceType());
+                        } else if (serviceInfo.getServiceName().equals(serviceName)) {
+                            // The discovered service was our own
+                            Log.d(TAG, "Own service found");
+                        } else if (serviceInfo.getServiceName().contains(serviceName)) {
+
+                            mNsdManager.resolveService(serviceInfo, mResolveListener);
+                        }
+                    }
+
+                    @Override
+                    public void onServiceLost(NsdServiceInfo serviceInfo) {
+                        // Service is no longer available
+                        Log.e(TAG, "Service lost: " + serviceInfo);
+                    }
+
+                    @Override
+                    public void onDiscoveryStopped(String serviceType) {
+                        Log.i(TAG, "Discover stopped: " + serviceType)
+                    }
+
+                    @Override
+                    public void onStartDiscoveryFailed(String serviceType, int errorCode) {
+                        Log.e(TAG, "Discovery failed: Error code: " + errorCode);
+                        mNsdManager.stopServiceDiscovery(this);
+                    }
+
+                    @Override
+                    public void onStopDiscoveryFailed(String serviceType, int errorCode) {
+                        Log.e(TAG, "Discover failed: Error code: " + errorCode);
+                        mNsdManager.stopServiceDiscovery(this);
+                    }
+                };
+
+                mNsdManager.discoverServices(serviceType, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
                 break;
             default:
                 // Unknown Connection Type, exit
