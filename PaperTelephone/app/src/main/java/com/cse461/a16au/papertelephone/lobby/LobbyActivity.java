@@ -28,6 +28,7 @@ import com.cse461.a16au.papertelephone.services.ConnectService;
 import com.cse461.a16au.papertelephone.services.ConnectServiceFactory;
 import com.cse461.a16au.papertelephone.services.WiFiConnectService;
 
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
@@ -157,11 +158,32 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
                 // Register service
                 mNsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
 
+                // Implement a resolve listener
+                final NsdManager.ResolveListener mResolveListener = new NsdManager.ResolveListener() {
 
-                // TODO: initialize a resolveListner
-                // btw the Android guide for this is total shit, they're having me
-                // add things in the wrong order and really confusing
+                    @Override
+                    public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                        // Called when the resolve fails.
+                        Log.e(TAG, "Resolve failed, error code: " + errorCode);
+                    }
 
+                    @Override
+                    public void onServiceResolved(NsdServiceInfo serviceInfo) {
+                        Log.e(TAG, "Resolve Succeeded. " + serviceInfo);
+
+                        if(serviceInfo.getServiceName().equals(serviceName)) {
+                            Log.d(TAG, "Same IP.");
+                            return;
+                        }
+
+                        // TODO: Figure out what to do here
+                        // I believe that the serviceInfo object here has the info we need to make a network
+                        // connection, but it's kind of unclear what we're supposed to do with it
+                        // For reference https://developer.android.com/training/connect-devices-wirelessly/nsd.html#connect
+                        int port = serviceInfo.getPort();
+                        InetAddress host = serviceInfo.getHost();
+                    }
+                };
 
                 // Create discovery listener to listen for other devices running our service
                 NsdManager.DiscoveryListener mDiscoveryListener = new NsdManager.DiscoveryListener() {
@@ -195,18 +217,18 @@ public class LobbyActivity extends AppCompatActivity implements DevicesFragment.
 
                     @Override
                     public void onDiscoveryStopped(String serviceType) {
-                        Log.i(TAG, "Discover stopped: " + serviceType)
+                        Log.i(TAG, "Discover stopped: " + serviceType);
                     }
 
                     @Override
                     public void onStartDiscoveryFailed(String serviceType, int errorCode) {
-                        Log.e(TAG, "Discovery failed: Error code: " + errorCode);
+                        Log.e(TAG, "Discovery failed, error code: " + errorCode);
                         mNsdManager.stopServiceDiscovery(this);
                     }
 
                     @Override
                     public void onStopDiscoveryFailed(String serviceType, int errorCode) {
-                        Log.e(TAG, "Discover failed: Error code: " + errorCode);
+                        Log.e(TAG, "Discover failed, error code: " + errorCode);
                         mNsdManager.stopServiceDiscovery(this);
                     }
                 };
