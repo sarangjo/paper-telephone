@@ -93,8 +93,6 @@ public class LobbyActivity extends AppCompatActivity
               mGameData.addConnectedDevice(deviceAddress, deviceName);
               mGameData.addLobbiedDevice(deviceAddress);
               mConnectedDevicesNamesAdapter.notifyDataSetChanged();
-              //                    Snackbar.make(mView, "Connected to " + deviceName,
-              // Snackbar.LENGTH_LONG).show();
               Toast.makeText(LobbyActivity.this, "Connected to " + deviceName, Toast.LENGTH_SHORT)
                   .show();
 
@@ -429,6 +427,7 @@ public class LobbyActivity extends AppCompatActivity
     if (mGameData.getConnectedDevices().size() >= Constants.MIN_PLAYERS - 1 && allLobbied) {
       mGameData.clearLobbiedDevices();
 
+      // TODO: this doesn't seem like the right way to check if someone else hit start...
       if (mGameData.getStartDevice().length() == Constants.ADDRESS_LENGTH) {
         Toast.makeText(this, "Someone else hit start", Toast.LENGTH_LONG).show();
         return;
@@ -547,6 +546,8 @@ public class LobbyActivity extends AppCompatActivity
         }
         break;
       case READ_START_ACK:
+        // TODO: do we always just blindly accept START ACK's? I think we do, I just don't remmeber
+        // TODO: the logic behind that I guess
         mGameData.removeUnackedDevice(deviceAddress);
         if (mGameData.isDoneAcking()) {
           // Setup unplaced devices, i.e. all devices except for us
