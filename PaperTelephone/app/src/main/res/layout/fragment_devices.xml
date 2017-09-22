@@ -24,9 +24,9 @@
     </LinearLayout>
 
     <!--<ListView-->
-        <!--android:id="@+id/list_new_devices"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content" />-->
+    <!--android:id="@+id/list_new_devices"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content" />-->
 
     <ExpandableListView
         android:id="@+id/list_potential_devices"

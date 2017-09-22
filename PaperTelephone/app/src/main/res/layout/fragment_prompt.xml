@@ -9,8 +9,8 @@
         android:id="@+id/prompt_help"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:text="@string/prompt_title" />
+        android:text="@string/prompt_title"
+        android:textSize="18sp" />
 
     <!-- TODO: make this constant -->
 

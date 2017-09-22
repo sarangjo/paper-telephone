@@ -15,35 +15,34 @@ import com.cse461.a16au.papertelephone.R;
 
 import java.util.List;
 
-/**
- * TODO: class documentation
- */
-
+/** TODO: class documentation */
 public class SummaryAdapter extends ArrayAdapter<byte[]> {
-    private final List<byte[]> mValues;
+  private final List<byte[]> mValues;
 
-    public SummaryAdapter(Context context, List<byte[]> values) {
-        super(context, -1, values);
-        mValues = values;
-    }
+  public SummaryAdapter(Context context, List<byte[]> values) {
+    super(context, -1, values);
+    mValues = values;
+  }
 
-    @NonNull
-    @Override
-    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
-        LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View view;
-        byte[] obj = mValues.get(position);
-        if (!GameData.doesEndOnPrompt) position--;
-        if ((mValues.size() - position) % 2 == 1) {
-            TextView text = (TextView) inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
-            text.setText(new String(obj));
-            view = text;
-        } else {
-            ImageView image = (ImageView) inflater.inflate(R.layout.simple_image, parent, false);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(obj, 0, obj.length);
-            image.setImageBitmap(bitmap);
-            view = image;
-        }
-        return view;
+  @NonNull
+  @Override
+  public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+    LayoutInflater inflater =
+        (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    View view;
+    byte[] obj = mValues.get(position);
+    if (!GameData.doesEndOnPrompt) position--;
+    if ((mValues.size() - position) % 2 == 1) {
+      TextView text =
+          (TextView) inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+      text.setText(new String(obj));
+      view = text;
+    } else {
+      ImageView image = (ImageView) inflater.inflate(R.layout.simple_image, parent, false);
+      Bitmap bitmap = BitmapFactory.decodeByteArray(obj, 0, obj.length);
+      image.setImageBitmap(bitmap);
+      view = image;
     }
+    return view;
+  }
 }

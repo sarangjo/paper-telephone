@@ -35,11 +35,11 @@
 
     <TextView
         android:id="@+id/loading_message"
-        android:visibility="invisible"
-        android:text="Waiting For Other Players To Complete Their Turn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="14sp" />
+        android:text="Waiting For Other Players To Complete Their Turn"
+        android:textSize="14sp"
+        android:visibility="invisible" />
 
 </LinearLayout>
