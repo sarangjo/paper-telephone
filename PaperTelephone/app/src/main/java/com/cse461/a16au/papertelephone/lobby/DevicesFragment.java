@@ -180,7 +180,7 @@ public class DevicesFragment extends Fragment {
     mBluetoothAdapter.startDiscovery();
   }
 
-  public interface ConnectDeviceListener {
+  interface ConnectDeviceListener {
     void connectDevice(String address);
   }
 }

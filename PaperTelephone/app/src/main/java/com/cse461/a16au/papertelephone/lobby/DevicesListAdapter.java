@@ -16,7 +16,7 @@ class DevicesListAdapter extends BaseExpandableListAdapter {
   private List<String> newDevices;
   private LayoutInflater inflater;
 
-  public DevicesListAdapter(Activity act) {
+  DevicesListAdapter(Activity act) {
     pairedDevices = new ArrayList<>();
     newDevices = new ArrayList<>();
     inflater = act.getLayoutInflater();
@@ -29,11 +29,11 @@ class DevicesListAdapter extends BaseExpandableListAdapter {
 
   @Override
   public int getChildrenCount(int groupPosition) {
-    return ((List<String>) getGroup(groupPosition)).size();
+    return (getGroup(groupPosition)).size();
   }
 
   @Override
-  public Object getGroup(int groupPosition) {
+  public List<String> getGroup(int groupPosition) {
     switch (groupPosition) {
       case 0:
         return pairedDevices;
@@ -46,7 +46,7 @@ class DevicesListAdapter extends BaseExpandableListAdapter {
 
   @Override
   public Object getChild(int groupPosition, int childPosition) {
-    return ((List<String>) getGroup(groupPosition)).get(childPosition);
+    return (getGroup(groupPosition)).get(childPosition);
   }
 
   @Override
@@ -69,7 +69,7 @@ class DevicesListAdapter extends BaseExpandableListAdapter {
       int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
     View v = inflater.inflate(android.R.layout.simple_expandable_list_item_1, null);
     ((TextView) v.findViewById(android.R.id.text1))
-        .setText((groupPosition == 0 ? "Paired" : "New") + " Devices");
+        .setText(String.format("%s", (groupPosition == 0 ? "Paired" : "New") + " Devices"));
     return v;
   }
 
@@ -82,7 +82,7 @@ class DevicesListAdapter extends BaseExpandableListAdapter {
       ViewGroup parent) {
     View v = inflater.inflate(android.R.layout.simple_expandable_list_item_1, null);
     ((TextView) v.findViewById(android.R.id.text1))
-        .setText(((List<String>) getGroup(groupPosition)).get(childPosition));
+        .setText((getGroup(groupPosition)).get(childPosition));
     return v;
   }
 
@@ -91,17 +91,17 @@ class DevicesListAdapter extends BaseExpandableListAdapter {
     return true;
   }
 
-  public void addPairedDevice(String s) {
+  void addPairedDevice(String s) {
     this.pairedDevices.add(s);
     this.notifyDataSetChanged();
   }
 
-  public void addNewDevice(String s) {
+  void addNewDevice(String s) {
     this.newDevices.add(s);
     this.notifyDataSetChanged();
   }
 
-  public void clearNew() {
+  void clearNew() {
     this.newDevices.clear();
     this.notifyDataSetChanged();
   }

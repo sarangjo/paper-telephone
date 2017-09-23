@@ -79,7 +79,7 @@ public class LobbyActivity extends AppCompatActivity
   private Button mStartGameButton;
 
   private boolean isGameActive = false;
-  private final Handler mMainHandler =
+  public final Handler mMainHandler =
       new Handler() {
         @Override
         public void handleMessage(Message msg) {

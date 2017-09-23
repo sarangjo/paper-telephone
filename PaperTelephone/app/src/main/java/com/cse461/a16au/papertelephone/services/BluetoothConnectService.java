@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * initializing and making sure that phones have bluetooth available and that it is turned on <br>
  * As of now, this only allows for secure connections.
  */
-public class BluetoothConnectService extends ConnectService {
+class BluetoothConnectService extends ConnectService {
   private static final String TAG = "BluetoothConnectService";
   private static ConnectService ourInstance = new BluetoothConnectService();
   private final BluetoothAdapter mAdapter;

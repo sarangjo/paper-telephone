@@ -16,9 +16,11 @@ import java.util.concurrent.ConcurrentMap;
 /** TODO: class documentation */
 public class GameData {
 
+  // TODO: Look into these fields, some of the comments describing them seem like they correspond
+  // to the wrong field, also this is a ridiculous number of fields, we should see if any of them
+  // are redundant
   private static final GameData ourInstance = new GameData();
 
-  // The start device
   public static boolean doesEndOnPrompt;
   /** Index of this device's successor in the list of connectedDevices */
   public static String successor = null;
@@ -28,39 +30,49 @@ public class GameData {
   // Devices we are currently connected to
   /** Set of devices that have not been chosen as a successor in the start game process */
   public static Set<String> unplacedDevices = new HashSet<>();
+
   /** Keeps track of how many turns remain until the end of the game */
   public static int turnsLeft = 0;
+
   /** This device's mac address */
   public static String localAddress = null;
+
   /** Our name. */
   public static String localName = BluetoothAdapter.getDefaultAdapter().getName();
+
   /** The timer for each turn. */
   public static CountDownTimer turnTimer = null;
   public static ConnectionChangeListener connectionChangeListener;
-  public static List<String> devicesAtStartGame;
-  public static List<String> namesAtStartGame;
+
+  static List<String> devicesAtStartGame;
+  static List<String> namesAtStartGame;
+
   /**
    * Map from device addresses to their "Summaries" which store the original prompt, along with the
    * drawings and prompts that followed it
    */
-  public static ConcurrentMap<String, List<byte[]>> addressToSummaries;
-  /** Index of the device that started the game, -1 if it is this device */
+  static ConcurrentMap<String, List<byte[]>> addressToSummaries;
+
+  /** The String identifier of the start device */
   private String startDevice;
   /** List of all connected device address */
   private List<String> connectedDevices;
 
-  // Devices we need to connect to in order to be part of the group
-  /** List of all lobbied devices */
+  /** Set of all lobbied devices */
   private Set<String> lobbiedDevices;
+
   /** List of all connected device names */
   private List<String> connectedDeviceNames;
+
+  /** Set of all devices names that still need to be connected to */
   private Set<String> devicesToConnectTo;
+
   /** Devices that have not acked our start yet. */
   private Set<String> unackedDevices;
 
-  // Devices who haven't ack'ed our START packet yet
   /** Stores whether or not this device has completed the current turn */
   private boolean isDone;
+
   /** A list of the devices that have not finished the current turn. */
   private Set<String> unfinishedDeviceList;
 
@@ -81,7 +93,7 @@ public class GameData {
 
   // Turn-based bookkeeping
 
-  public static void saveData(String creatorAddress, byte[] data) {
+  static void saveData(String creatorAddress, byte[] data) {
     List<byte[]> summary;
     if (addressToSummaries.containsKey(creatorAddress)) {
       summary = addressToSummaries.get(creatorAddress);
@@ -167,29 +179,29 @@ public class GameData {
 
   // IN-GAME
 
-  public boolean getTurnDone() {
+  boolean getTurnDone() {
     return isDone;
   }
 
-  public void setTurnDone(boolean done) {
+  void setTurnDone(boolean done) {
     isDone = done;
   }
 
   // END-GAME
 
-  public synchronized void deviceTurnFinished(String address) {
+  synchronized void deviceTurnFinished(String address) {
     unfinishedDeviceList.remove(address);
   }
 
-  public synchronized void setupUnfinishedDevices(List<String> devices) {
+  synchronized void setupUnfinishedDevices(List<String> devices) {
     unfinishedDeviceList.addAll(devices);
   }
 
-  public synchronized void addUnfinishedDevice(String address) {
+  synchronized void addUnfinishedDevice(String address) {
     unfinishedDeviceList.add(address);
   }
 
-  public synchronized boolean isRoundOver() {
+  synchronized boolean isRoundOver() {
     return isDone && unfinishedDeviceList.isEmpty();
   }
 }

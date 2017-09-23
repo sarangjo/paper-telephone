@@ -19,7 +19,7 @@
         android:layout_width="360dp"
         android:layout_height="300dp"
         android:layout_gravity="center"
-        android:contentDescription="Received image" />
+        android:contentDescription="@string/received_image" />
 
     <EditText
         android:id="@+id/user_prompt"

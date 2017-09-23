@@ -20,5 +20,5 @@
         android:id="@+id/button_open_lobby"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Open Lobby" />
+        android:text="@string/open_lobby" />
 </LinearLayout>

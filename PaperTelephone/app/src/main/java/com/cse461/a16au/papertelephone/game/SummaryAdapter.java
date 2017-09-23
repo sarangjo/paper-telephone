@@ -16,10 +16,10 @@ import com.cse461.a16au.papertelephone.R;
 import java.util.List;
 
 /** TODO: class documentation */
-public class SummaryAdapter extends ArrayAdapter<byte[]> {
+class SummaryAdapter extends ArrayAdapter<byte[]> {
   private final List<byte[]> mValues;
 
-  public SummaryAdapter(Context context, List<byte[]> values) {
+  SummaryAdapter(Context context, List<byte[]> values) {
     super(context, -1, values);
     mValues = values;
   }

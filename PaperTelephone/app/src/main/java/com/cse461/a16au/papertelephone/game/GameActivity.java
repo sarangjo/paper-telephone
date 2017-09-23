@@ -149,10 +149,15 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
                   GameData.successor = unplacedSuccessors.iterator().next();
                   mSuccessorView.setText(
-                      "Next: "
-                          + mGameData
-                              .getConnectedDeviceNames()
-                              .get(mGameData.getConnectedDevices().indexOf(GameData.successor)));
+                      String.format(
+                          "%s",
+                          "Next: "
+                              + mGameData
+                                  .getConnectedDeviceNames()
+                                  .get(
+                                      mGameData
+                                          .getConnectedDevices()
+                                          .indexOf(GameData.successor))));
 
                   // Send our current prompt/image to the new successor
                   if (mDoneMsg != null) {
@@ -173,10 +178,12 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                 buf.get(successorAddressArr);
                 GameData.successor = new String(successorAddressArr);
                 mSuccessorView.setText(
-                    "Next: "
-                        + mGameData
-                            .getConnectedDeviceNames()
-                            .get(mGameData.getConnectedDevices().indexOf(GameData.successor)));
+                    String.format(
+                        "%s",
+                        "Next: "
+                            + mGameData
+                                .getConnectedDeviceNames()
+                                .get(mGameData.getConnectedDevices().indexOf(GameData.successor))));
 
                 // Now we're ready to start playing!
                 mIsPromptMode = buf.get() == (byte) 0;
@@ -257,10 +264,12 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
               GameData.successor = address;
               mSuccessorView.setText(
-                  "Next: "
-                      + mGameData
-                          .getConnectedDeviceNames()
-                          .get(mGameData.getConnectedDevices().indexOf(GameData.successor)));
+                  String.format(
+                      "%s",
+                      "Next: "
+                          + mGameData
+                              .getConnectedDeviceNames()
+                              .get(mGameData.getConnectedDevices().indexOf(GameData.successor))));
             } else {
               if (mDoneMsg != null) mConnectService.write(mDoneMsg, address);
             }
@@ -279,12 +288,14 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
     mSuccessorView = (TextView) findViewById(R.id.successor_text);
     if (GameData.successor != null) {
       mSuccessorView.setText(
-          "Next: "
-              + mGameData
-                  .getConnectedDeviceNames()
-                  .get(mGameData.getConnectedDevices().indexOf(GameData.successor)));
+          String.format(
+              "%s",
+              "Next: "
+                  + mGameData
+                      .getConnectedDeviceNames()
+                      .get(mGameData.getConnectedDevices().indexOf(GameData.successor))));
     } else {
-      mSuccessorView.setText("Invalid successor");
+      mSuccessorView.setText(R.string.invalid_successor);
     }
 
     mNextCreatorAddress = null;

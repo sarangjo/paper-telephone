@@ -10,6 +10,8 @@ public class ConnectServiceFactory {
 
   public static int TYPE = BLUETOOTH;
 
+  // TODO: See if there is something other than null that we can return for default:, otherwise
+  // we should remove the @NonNull annotation
   @NonNull
   public static ConnectService getService() {
     switch (TYPE) {

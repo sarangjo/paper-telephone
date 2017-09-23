@@ -41,12 +41,12 @@ public class PromptFragment extends GameFragment {
     if (args.getBoolean("start")) {
       // Different help text for start-of-game
       TextView prompt = (TextView) view.findViewById(R.id.prompt_help);
-      prompt.setText("Enter something for someone to draw");
+      prompt.setText(R.string.enter_prompt_below);
 
       mPromptText = (EditText) view.findViewById(R.id.user_prompt);
-      mPromptText.setHint("Enter prompt here");
+      mPromptText.setHint(R.string.enter_prompt_here);
 
-      sendPromptButton.setText("Send prompt");
+      sendPromptButton.setText(R.string.send_prompt);
       mCreatorAddress = localAddress;
     } else {
       // Grab image view and display the received image

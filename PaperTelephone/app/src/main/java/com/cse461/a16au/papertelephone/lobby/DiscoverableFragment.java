@@ -34,13 +34,13 @@ public class DiscoverableFragment extends Fragment {
             int scanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, -1);
             switch (scanMode) {
               case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE:
-                discoverableView.setText("SCAN MODE DISCOVERABLE");
+                discoverableView.setText(R.string.scan_mode_discoverable);
                 break;
               case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
-                discoverableView.setText("SCAN MODE CONNECTABLE ONLY");
+                discoverableView.setText(R.string.scan_mode_connectable_only);
                 break;
               case BluetoothAdapter.SCAN_MODE_NONE:
-                discoverableView.setText("SCAN MODE NONE");
+                discoverableView.setText(R.string.scan_mode_none);
                 break;
             }
           }

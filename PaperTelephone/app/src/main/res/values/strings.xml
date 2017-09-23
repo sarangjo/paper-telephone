@@ -16,4 +16,15 @@
     <string name="send_drawing">Send Drawing!</string>
     <string name="scan">Scan</string>
     <string name="prompt_title">What do you think this drawing is?</string>
+    <string name="draw_prompt">Draw the prompt below</string>
+    <string name="received_image">Received image</string>
+    <string name="open_lobby">Open Lobby</string>
+    <string name="scan_mode_discoverable">SCAN MODE DISCOVERABLE</string>
+    <string name="scan_mode_connectable_only">SCAN MODE CONNECTABLE ONLY</string>
+    <string name="scan_mode_none">SCAN MODE NONE</string>
+    <string name="enter_prompt_below">Enter something for someone to draw</string>
+    <string name="enter_prompt_here">Enter prompt here</string>
+    <string name="send_prompt">Send prompt</string>
+    <string name="waiting_for_other_players">Waiting For Other Players To Complete Their Turn</string>
+    <string name="invalid_successor">Invalid successor</string>
 </resources>
