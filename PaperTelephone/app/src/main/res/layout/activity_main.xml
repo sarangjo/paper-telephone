@@ -17,8 +17,8 @@
         android:text="@string/welcome" />
 
     <Button
-        android:id="@+id/button_open_lobby"
+        android:id="@+id/button_bluetooth"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/open_lobby" />
+        android:text="Bluetooth" />
 </LinearLayout>

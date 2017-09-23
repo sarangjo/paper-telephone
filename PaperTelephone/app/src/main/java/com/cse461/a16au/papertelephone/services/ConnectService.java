@@ -8,30 +8,43 @@ public abstract class ConnectService {
   public static final int STATE_STOPPED = 0;
   public static final int STATE_STARTED = 1;
 
-  int mState;
-  Handler mMainHandler;
-  Handler mGameHandler;
+  int state;
+  Handler mainHandler;
+  Handler gameHandler;
+  Handler packetHandler;
 
-  public abstract boolean write(byte[] data, String device);
+  public abstract boolean write(String device, byte[] data);
+
+  /**
+   * TODO: implement to simplify packet-sending
+   *
+   * @param device
+   * @param messageType
+   * @return
+   */
+  private boolean write(String device, int messageType) {
+    byte[] data = new byte[1];
+    return write(device, data);
+  }
 
   public void registerGameHandler(Handler handler) {
-    mGameHandler = handler;
+    gameHandler = handler;
   }
 
   public void unregisterGameHandler(Handler gameHandler) {
-    mGameHandler = (mGameHandler.equals(gameHandler) ? null : mGameHandler);
+    this.gameHandler = (this.gameHandler.equals(gameHandler) ? null : this.gameHandler);
   }
 
   public void registerMainHandler(Handler handler) {
-    mMainHandler = handler;
+    mainHandler = handler;
   }
 
   public synchronized int getState() {
-    return mState;
+    return state;
   }
 
   public synchronized void setState(int state) {
-    this.mState = state;
+    this.state = state;
   }
 
   public abstract void start();
@@ -39,4 +52,8 @@ public abstract class ConnectService {
   public abstract void stop();
 
   public abstract void connect(String address);
+
+  public void registerPacketHandler(Handler handler) {
+    this.packetHandler = handler;
+  }
 }

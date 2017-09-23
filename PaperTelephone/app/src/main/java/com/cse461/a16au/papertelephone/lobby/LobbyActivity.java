@@ -147,7 +147,9 @@ public class LobbyActivity extends AppCompatActivity
     // Setting up bluetooth
     mConnectService = ConnectServiceFactory.getService();
 
-    switch (ConnectServiceFactory.TYPE) {
+    int type = ConnectServiceFactory.BLUETOOTH;
+
+    switch (type) {
       case ConnectServiceFactory.BLUETOOTH:
         // Request that bluetooth be enabled if it is disabled
         if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
@@ -313,7 +315,7 @@ public class LobbyActivity extends AppCompatActivity
           @Override
           public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             if (!mGameData.getConnectedDevices().isEmpty()) {
-              mConnectService.write(HEADER_PING, mGameData.getConnectedDevices().get(position));
+              mConnectService.write(mGameData.getConnectedDevices().get(position), HEADER_PING);
             }
           }
         });
@@ -413,7 +415,7 @@ public class LobbyActivity extends AppCompatActivity
       buf.put(address.getBytes());
     }
 
-    mConnectService.write(buf.array(), deviceAddress);
+    mConnectService.write(deviceAddress, buf.array());
   }
 
   /** Establishes an ordering for the connected devices when the user hits the start button */
@@ -436,7 +438,7 @@ public class LobbyActivity extends AppCompatActivity
       mGameData.setStartDevice(Constants.WE_ARE_START);
 
       for (String currDevice : mGameData.getConnectedDevices()) {
-        mConnectService.write(HEADER_START, currDevice);
+        mConnectService.write(currDevice, HEADER_START);
       }
 
       mGameData.setupUnackedDevices();
@@ -480,7 +482,7 @@ public class LobbyActivity extends AppCompatActivity
     successor = nextDeviceAddress;
 
     for (String address : mGameData.getConnectedDevices()) {
-      mConnectService.write(msg.array(), address);
+      mConnectService.write(address, msg.array());
     }
 
     if (isLast) {
@@ -515,7 +517,7 @@ public class LobbyActivity extends AppCompatActivity
           mGameData.setStartDevice(deviceAddress);
 
           // Ack the new start device
-          mConnectService.write(Constants.HEADER_START_ACK, deviceAddress);
+          mConnectService.write(deviceAddress, Constants.HEADER_START_ACK);
         } else {
           String currentStartDevice;
           if (mGameData.getStartDevice().equals(WE_ARE_START)) {
@@ -530,7 +532,7 @@ public class LobbyActivity extends AppCompatActivity
             mGameData.setStartDevice(deviceAddress);
 
             // Re-ack the new start device
-            mConnectService.write(Constants.HEADER_START_ACK, deviceAddress);
+            mConnectService.write(deviceAddress, Constants.HEADER_START_ACK);
           } else {
             // We are still start device, so we ignore this
             return;

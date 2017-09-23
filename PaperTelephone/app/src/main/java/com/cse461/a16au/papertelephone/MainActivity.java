@@ -11,21 +11,28 @@ import android.widget.Toast;
 
 import com.cse461.a16au.papertelephone.lobby.LobbyActivity;
 
-public class MainActivity extends FragmentActivity {
+import static com.cse461.a16au.papertelephone.GameController.STATE_LOBBY;
+import static com.cse461.a16au.papertelephone.services.ConnectServiceFactory.BLUETOOTH;
+
+public class MainActivity extends FragmentActivity implements GameController.StateChangeListener {
   private static final String TAG = "MainActivity";
   private Button buttonStartGame;
+  private GameController controller;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-    buttonStartGame = (Button) findViewById(R.id.button_open_lobby);
+    controller = GameController.getInstance();
+    controller.registerStateChangeListener(this);
+
+    buttonStartGame = (Button) findViewById(R.id.button_bluetooth);
     buttonStartGame.setOnClickListener(
         new View.OnClickListener() {
           @Override
           public void onClick(View v) {
-            startActivity(new Intent(MainActivity.this, LobbyActivity.class));
+            controller.setConnectService(BLUETOOTH);
           }
         });
   }
@@ -45,6 +52,13 @@ public class MainActivity extends FragmentActivity {
           finish();
         }
         break;
+    }
+  }
+
+  @Override
+  public void onStateChange(int newState, int oldState) {
+    if (newState == STATE_LOBBY) {
+      startActivity(new Intent(MainActivity.this, LobbyActivity.class));
     }
   }
 }
