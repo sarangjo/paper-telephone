@@ -59,6 +59,7 @@ public class MainActivity extends FragmentActivity implements GameController.Sta
   public void onStateChange(int newState, int oldState) {
     if (newState == STATE_LOBBY) {
       startActivity(new Intent(MainActivity.this, LobbyActivity.class));
+      this.controller.unregisterStateChangeListener(this);
     }
   }
 }

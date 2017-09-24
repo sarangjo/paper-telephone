@@ -11,7 +11,8 @@ public abstract class ConnectService {
   int state;
   Handler mainHandler;
   Handler gameHandler;
-  Handler packetHandler;
+  protected Handler packetHandler;
+  protected Handler networkHandler;
 
   public abstract boolean write(String device, byte[] data);
 
@@ -39,6 +40,12 @@ public abstract class ConnectService {
     mainHandler = handler;
   }
 
+  public void registerPacketHandler(Handler handler) {
+    this.packetHandler = handler;
+  }
+
+  public void registerNetworkHandler(Handler handler) { this.networkHandler = handler; }
+
   public synchronized int getState() {
     return state;
   }
@@ -52,8 +59,4 @@ public abstract class ConnectService {
   public abstract void stop();
 
   public abstract void connect(String address);
-
-  public void registerPacketHandler(Handler handler) {
-    this.packetHandler = handler;
-  }
 }

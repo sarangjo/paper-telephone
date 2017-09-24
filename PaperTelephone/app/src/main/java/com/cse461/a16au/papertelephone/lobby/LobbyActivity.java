@@ -6,9 +6,7 @@ import android.content.Intent;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Message;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -20,11 +18,10 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.cse461.a16au.papertelephone.Constants;
+import com.cse461.a16au.papertelephone.GameController;
 import com.cse461.a16au.papertelephone.R;
 import com.cse461.a16au.papertelephone.game.EndGameActivity;
 import com.cse461.a16au.papertelephone.game.GameActivity;
-import com.cse461.a16au.papertelephone.game.GameData;
-import com.cse461.a16au.papertelephone.services.ConnectService;
 import com.cse461.a16au.papertelephone.services.ConnectServiceFactory;
 import com.cse461.a16au.papertelephone.services.WiFiConnectService;
 
@@ -33,17 +30,11 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 
 import static com.cse461.a16au.papertelephone.Constants.ADDRESS_LENGTH;
-import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
-import static com.cse461.a16au.papertelephone.Constants.DEVICE_NAME;
-import static com.cse461.a16au.papertelephone.Constants.HEADER_DEVICES;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_LENGTH;
-import static com.cse461.a16au.papertelephone.Constants.HEADER_PING;
-import static com.cse461.a16au.papertelephone.Constants.HEADER_START;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECTED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECT_FAILED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_DISCONNECTED;
-import static com.cse461.a16au.papertelephone.Constants.MESSAGE_READ;
 import static com.cse461.a16au.papertelephone.Constants.MIN_PLAYERS;
 import static com.cse461.a16au.papertelephone.Constants.NO_START;
 import static com.cse461.a16au.papertelephone.Constants.READ_DEVICES;
@@ -54,88 +45,21 @@ import static com.cse461.a16au.papertelephone.Constants.READ_START_ACK;
 import static com.cse461.a16au.papertelephone.Constants.READ_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_UNKNOWN;
 import static com.cse461.a16au.papertelephone.Constants.WE_ARE_START;
-import static com.cse461.a16au.papertelephone.game.GameData.lastSuccessorNumber;
-import static com.cse461.a16au.papertelephone.game.GameData.localAddress;
-import static com.cse461.a16au.papertelephone.game.GameData.successor;
-import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
-import static com.cse461.a16au.papertelephone.game.GameData.unplacedDevices;
 
-/** TODO: class documentation */
+/**
+ * TODO: class documentation
+ */
 public class LobbyActivity extends AppCompatActivity
-    implements DevicesFragment.ConnectDeviceListener {
+    implements DevicesFragment.ConnectDeviceListener, GameController.ConnectedDevicesListener {
   private static final String TAG = "LobbyActivity";
 
-  /** Adapter for connected devices view */
+  /**
+   * Adapter for connected devices view
+   */
   private ArrayAdapter<String> mConnectedDevicesNamesAdapter;
 
-  /** Our bluetooth service to handle all bluetooth connections */
-  private ConnectService mConnectService = null;
-
-  private GameData mGameData = null;
-
-  /** Main view. */
-  private View mView;
-
   private Button mStartGameButton;
-
-  private boolean isGameActive = false;
-  public final Handler mMainHandler =
-      new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-          String deviceName = msg.getData().getString(DEVICE_NAME);
-          String deviceAddress = msg.getData().getString(DEVICE_ADDRESS);
-          switch (msg.what) {
-            case MESSAGE_CONNECTED:
-              // Send a message describing which devices we are already connected to
-              sendConnectedDevices(deviceAddress);
-
-              mGameData.addConnectedDevice(deviceAddress, deviceName);
-              mGameData.addLobbiedDevice(deviceAddress);
-              mConnectedDevicesNamesAdapter.notifyDataSetChanged();
-              Toast.makeText(LobbyActivity.this, "Connected to " + deviceName, Toast.LENGTH_SHORT)
-                  .show();
-
-              // Update the button's enabled-ness
-              if (mGameData.getConnectedDevices().size() >= MIN_PLAYERS - 1 && !isGameActive) {
-                mStartGameButton.setEnabled(true);
-              } else {
-                mStartGameButton.setEnabled(false);
-              }
-              break;
-            case MESSAGE_DISCONNECTED:
-              mGameData.removeConnectedDevice(deviceAddress, deviceName);
-              mGameData.removeLobbiedDevice(deviceAddress);
-              mConnectedDevicesNamesAdapter.notifyDataSetChanged();
-              //                    Snackbar.make(mView, "Disconnected from " + deviceName,
-              // Snackbar.LENGTH_LONG).show();
-              Toast.makeText(
-                      LobbyActivity.this, "Disconnected from " + deviceName, Toast.LENGTH_SHORT)
-                  .show();
-
-              if (GameData.connectionChangeListener != null) {
-                GameData.connectionChangeListener.disconnection(deviceAddress);
-              }
-
-              if (mGameData.getConnectedDevices().size() >= MIN_PLAYERS - 1) {
-                mStartGameButton.setEnabled(true);
-              } else {
-                mStartGameButton.setEnabled(false);
-              }
-              break;
-            case MESSAGE_CONNECT_FAILED:
-              Snackbar.make(
-                      mView,
-                      "Unable to connect: " + deviceName + ". Please try again.",
-                      Snackbar.LENGTH_LONG)
-                  .show();
-              break;
-            case MESSAGE_READ:
-              handleRead(msg, deviceAddress, deviceName);
-              break;
-          }
-        }
-      };
+  private GameController mController;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -143,9 +67,6 @@ public class LobbyActivity extends AppCompatActivity
     setContentView(R.layout.activity_lobby);
     Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
     setSupportActionBar(toolbar);
-
-    // Setting up bluetooth
-    mConnectService = ConnectServiceFactory.getService();
 
     int type = ConnectServiceFactory.BLUETOOTH;
 
@@ -170,7 +91,7 @@ public class LobbyActivity extends AppCompatActivity
         NsdServiceInfo serviceInfo = new NsdServiceInfo();
         serviceInfo.setServiceName(serviceName);
         serviceInfo.setServiceType(serviceType);
-        serviceInfo.setPort(((WiFiConnectService) mConnectService).getPort());
+        serviceInfo.setPort(((WiFiConnectService) mController.getConnectService()).getPort());
 
         NsdManager.RegistrationListener mRegistrationListener =
             new NsdManager.RegistrationListener() {
@@ -296,46 +217,31 @@ public class LobbyActivity extends AppCompatActivity
         // TODO: Add failure method that gives feedback for use in debugging
     }
 
-    mConnectService.registerMainHandler(mMainHandler);
+    // TODO: do something with our own local MAC address
+    String localAddress = android.provider.Settings.Secure.getString(getContentResolver(), "bluetooth_address");
 
-    // Get out own local MAC address
-    localAddress =
-        android.provider.Settings.Secure.getString(getContentResolver(), "bluetooth_address");
-
-    mGameData = GameData.getInstance();
+    mController = GameController.getInstance();
 
     // Views
-    mConnectedDevicesNamesAdapter =
-        new ArrayAdapter<>(
-            this, android.R.layout.simple_list_item_1, mGameData.getConnectedDeviceNames());
+    mConnectedDevicesNamesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mController.getConnectedDeviceNames());
     ListView connectedListView = (ListView) findViewById(R.id.connected_devices);
     connectedListView.setAdapter(mConnectedDevicesNamesAdapter);
     connectedListView.setOnItemClickListener(
         new AdapterView.OnItemClickListener() {
           @Override
           public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            if (!mGameData.getConnectedDevices().isEmpty()) {
-              mConnectService.write(mGameData.getConnectedDevices().get(position), HEADER_PING);
-            }
+            mController.sendPing(mConnectedDevicesNamesAdapter.getItem(position));
           }
         });
-
-    mView = this.findViewById(android.R.id.content);
 
     mStartGameButton = (Button) findViewById(R.id.button_start_game);
     mStartGameButton.setOnClickListener(
         new View.OnClickListener() {
           @Override
           public void onClick(View v) {
-            startGameClicked();
+            mController.startGameClicked();
           }
         });
-
-    if (mGameData.getConnectedDevices().size() >= MIN_PLAYERS - 1) {
-      mStartGameButton.setEnabled(true);
-    } else {
-      mStartGameButton.setEnabled(false);
-    }
   }
 
   @Override
@@ -344,22 +250,14 @@ public class LobbyActivity extends AppCompatActivity
 
     // In the case that Bluetooth was disabled to start, onResume() will
     // be called when the ACTION_REQUEST_ENABLE activity has returned
-    if (mConnectService != null) {
-      if (mConnectService.getState() == ConnectService.STATE_STOPPED) {
-        // Start our BluetoothConnectionService
-        mConnectService.start();
-      }
-    }
+    mController.resumeConnectService();
   }
 
   @Override
   protected void onDestroy() {
     super.onDestroy();
 
-    // TODO: Stop connect service to stop connections and shut down?
-    if (mConnectService != null) {
-      mConnectService.stop();
-    }
+    mController.stopConnectService();
   }
 
   @Override
@@ -368,9 +266,6 @@ public class LobbyActivity extends AppCompatActivity
       case Constants.REQUEST_PLAY_GAME:
         if (resultCode == RESULT_OK) {
           // Game ended successfully
-          GameData.connectionChangeListener = null;
-          isGameActive = false;
-
           Toast.makeText(this, "Game over!", Toast.LENGTH_LONG).show();
           Intent intent = new Intent(this, EndGameActivity.class);
           startActivityForResult(intent, Constants.REQUEST_END_GAME);
@@ -379,114 +274,24 @@ public class LobbyActivity extends AppCompatActivity
         }
         break;
       case Constants.REQUEST_END_GAME:
-        if (resultCode == Constants.RESULT_LOBBY) {
-          // Back to lobby, reset stuff
-          mGameData.setStartDevice(NO_START);
-
-          // TODO anything else to restart?
-        } else if (resultCode == Constants.RESULT_RESTART) {
-          mGameData.setStartDevice(NO_START);
-          // TODO; do something here
-        } else {
-          Toast.makeText(this, "End game did not return correctly", Toast.LENGTH_LONG).show();
+        switch (resultCode) {
+          case Constants.RESULT_LOBBY:
+          case Constants.RESULT_RESTART:
+            mController.resetGameData();
+            break;
+          default:
+            Toast.makeText(this, "End game did not return correctly", Toast.LENGTH_LONG).show();
+            break;
         }
         break;
     }
   }
 
-  /**
-   * After establishing a connection with another device, send the already-connected devices with
-   * it.
-   */
-  private void sendConnectedDevices(String deviceAddress) {
-    ByteBuffer buf =
-        ByteBuffer.allocate(
-            HEADER_LENGTH + 4 + 4 + ADDRESS_LENGTH * mGameData.getConnectedDevices().size());
-    buf.put(HEADER_DEVICES);
-    // Tell the new device if we are in a game or not
-    if (GameData.connectionChangeListener == null) {
-      buf.putInt(0);
+  private void updateStartGameButton() {
+    if (mController.getConnectedDevices().size() >= MIN_PLAYERS - 1) {
+      mStartGameButton.setEnabled(true);
     } else {
-      buf.putInt(turnsLeft);
-    }
-
-    buf.putInt(mGameData.getConnectedDevices().size());
-    for (String address : mGameData.getConnectedDevices()) {
-      buf.put(address.getBytes());
-    }
-
-    mConnectService.write(deviceAddress, buf.array());
-  }
-
-  /** Establishes an ordering for the connected devices when the user hits the start button */
-  private void startGameClicked() {
-    boolean allLobbied = true;
-
-    //        for(String device: mGameData.getConnectedDevices()) {
-    //            allLobbied = allLobbied && mGameData.getLobbiedDevices().contains(device);
-    //        }
-
-    if (mGameData.getConnectedDevices().size() >= Constants.MIN_PLAYERS - 1 && allLobbied) {
-      mGameData.clearLobbiedDevices();
-
-      // TODO: this doesn't seem like the right way to check if someone else hit start...
-      if (mGameData.getStartDevice().length() == Constants.ADDRESS_LENGTH) {
-        Toast.makeText(this, "Someone else hit start", Toast.LENGTH_LONG).show();
-        return;
-      }
-
-      mGameData.setStartDevice(Constants.WE_ARE_START);
-
-      for (String currDevice : mGameData.getConnectedDevices()) {
-        mConnectService.write(currDevice, HEADER_START);
-      }
-
-      mGameData.setupUnackedDevices();
-    } else {
-      if (!allLobbied) {
-        Toast.makeText(
-                this, "All connected devices have not returned to the lobby.", Toast.LENGTH_LONG)
-            .show();
-      } else {
-        Toast.makeText(
-                this,
-                "You don't have enough players, the game requires " + "at least 3 players",
-                Toast.LENGTH_LONG)
-            .show();
-      }
-    }
-  }
-
-  /** Chooses which device we will be sending to. Also informs all other devices */
-  private void chooseSuccessor() {
-    Iterator<String> iter = unplacedDevices.iterator();
-
-    // If there are no more devices left, our successor is the start device
-    boolean isLast = !iter.hasNext();
-    String nextDeviceAddress;
-    if (!isLast) {
-      // Pick the next unplaced device as our successor
-      nextDeviceAddress = iter.next();
-      iter.remove();
-    } else {
-      nextDeviceAddress = mGameData.getStartDevice();
-    }
-
-    // Set up the successor packet
-    ByteBuffer msg = ByteBuffer.allocate(HEADER_LENGTH + 4 + ADDRESS_LENGTH);
-    msg.put(HEADER_SUCCESSOR);
-    msg.putInt(lastSuccessorNumber + 1);
-    msg.put(nextDeviceAddress.getBytes());
-
-    // Set nextDevice field to store which device we will send prompts and drawings to
-    successor = nextDeviceAddress;
-
-    for (String address : mGameData.getConnectedDevices()) {
-      mConnectService.write(address, msg.array());
-    }
-
-    if (isLast) {
-      transitionToGame();
+      mStartGameButton.setEnabled(false);
     }
   }
 
@@ -496,9 +301,9 @@ public class LobbyActivity extends AppCompatActivity
   }
 
   @Override
-  public void connectDevice(String address) {
+  public void onDeviceToConnectToSelected(String address) {
     // Connect to device
-    mConnectService.connect(address);
+    mController.getConnectService().connect(address);
   }
 
   private void handleRead(Message msg, String deviceAddress, String deviceName) {
@@ -550,16 +355,6 @@ public class LobbyActivity extends AppCompatActivity
       case READ_START_ACK:
         // TODO: do we always just blindly accept START ACK's? I think we do, I just don't remmeber
         // TODO: the logic behind that I guess
-        mGameData.removeUnackedDevice(deviceAddress);
-        if (mGameData.isDoneAcking()) {
-          // Setup unplaced devices, i.e. all devices except for us
-          unplacedDevices.clear();
-          for (String device : mGameData.getConnectedDevices()) {
-            unplacedDevices.add(device);
-          }
-
-          chooseSuccessor();
-        }
         break;
       case READ_SUCCESSOR:
         buf = ByteBuffer.wrap((byte[]) msg.obj);
@@ -582,7 +377,7 @@ public class LobbyActivity extends AppCompatActivity
         if ((mGameData.getStartDevice().equals(WE_ARE_START) && isUs)
             // If the loop has been completed and all devices have a successor, start game
             || (!mGameData.getStartDevice().equals(WE_ARE_START)
-                && successorAddress.equals(mGameData.getStartDevice()))) {
+            && successorAddress.equals(mGameData.getStartDevice()))) {
           transitionToGame();
           return;
         }
@@ -594,7 +389,7 @@ public class LobbyActivity extends AppCompatActivity
         break;
       case READ_RTL:
         Toast.makeText(
-                LobbyActivity.this, deviceName + " has returned to lobby", Toast.LENGTH_SHORT)
+            LobbyActivity.this, deviceName + " has returned to lobby", Toast.LENGTH_SHORT)
             .show();
         mGameData.addLobbiedDevice(deviceAddress);
         break;
@@ -619,7 +414,7 @@ public class LobbyActivity extends AppCompatActivity
             Log.d(TAG, "Already connected to " + addr);
           } else {
             mGameData.addDeviceToConnectTo(addr);
-            connectDevice(addr);
+            onDeviceToConnectToSelected(addr);
           }
         }
 
@@ -637,6 +432,34 @@ public class LobbyActivity extends AppCompatActivity
           intent.putExtra(Constants.JOIN_MID_GAME, true);
           startActivityForResult(intent, Constants.REQUEST_PLAY_GAME);
         }
+        break;
+    }
+  }
+
+  @Override
+  public void onDeviceStatusChanged(int status, String address, String name) {
+    switch (status) {
+      case MESSAGE_CONNECTED:
+        Toast.makeText(LobbyActivity.this, "Connected to " + name, Toast.LENGTH_SHORT).show();
+        break;
+      case MESSAGE_DISCONNECTED:
+        Toast.makeText(LobbyActivity.this, "Disconnected from " + name, Toast.LENGTH_SHORT).show();
+        break;
+      case MESSAGE_CONNECT_FAILED:
+        Toast.makeText(LobbyActivity.this, "Unable to connect: " + name + ". Please try again.", Toast.LENGTH_LONG)
+            .show();
+        break;
+    }
+    switch (status) {
+      case MESSAGE_CONNECTED:
+      case MESSAGE_DISCONNECTED:
+        mConnectedDevicesNamesAdapter.notifyDataSetChanged();
+
+        // if (GameData.connectionChangeListener != null) {
+        //   GameData.connectionChangeListener.disconnection(deviceAddress);
+        // }
+
+        this.updateStartGameButton();
         break;
     }
   }

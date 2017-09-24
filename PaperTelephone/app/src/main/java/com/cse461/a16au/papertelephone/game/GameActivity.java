@@ -210,71 +210,69 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
     mGameData = GameData.getInstance();
 
-    GameData.connectionChangeListener =
-        new ConnectionChangeListener() {
-          @Override
-          public void disconnection(String address) {
-            // Device was dropped in the middle of the game
-            if (mGameData.getConnectedDevices().size() < 2) {
-              mProgressDialog.dismiss();
-              Toast.makeText(
-                      GameActivity.this,
-                      "You no longer have enough players, going to summary page",
-                      Toast.LENGTH_LONG)
-                  .show();
-              setResult(RESULT_OK);
-              finish();
-              return;
-            }
+    // GameData.connectionChangeListener =
+    //     new ConnectionChangeListener() {
+    //       @Override
+    //       public void disconnection(String address) {
+    //         // Device was dropped in the middle of the game
+    //         if (mGameData.getConnectedDevices().size() < 2) {
+    //           mProgressDialog.dismiss();
+    //           Toast.makeText(
+    //                   GameActivity.this,
+    //                   "You no longer have enough players, going to summary page",
+    //                   Toast.LENGTH_LONG)
+    //               .show();
+    //           setResult(RESULT_OK);
+    //           finish();
+    //           return;
+    //         }
 
-            mGameData.deviceTurnFinished(address);
+    //         mGameData.deviceTurnFinished(address);
 
-            // In the case that the dropped address was our successor, we have to get a new
-            // successor
-            if (GameData.successor.equals(address)) {
-              successors = new CopyOnWriteArrayList<>();
+    //         // In the case that the dropped address was our successor, we have to get a new
+    //         // successor
+    //         if (GameData.successor.equals(address)) {
+    //           successors = new CopyOnWriteArrayList<>();
 
-              // Ask other devices for their successors
-              for (String device : mGameData.getConnectedDevices()) {
-                mConnectService.write(device, HEADER_REQUEST_SUCCESSOR);
-              }
-            }
-          }
+    //           // Ask other devices for their successors
+    //           for (String device : mGameData.getConnectedDevices()) {
+    //             mConnectService.write(device, HEADER_REQUEST_SUCCESSOR);
+    //           }
+    //         }
+    //       }
 
-          @Override
-          public void connection(String address) {
-            mGameData.addUnfinishedDevice(address);
+    //       @Override
+    //       public void connection(String address) {
+    //         mGameData.addUnfinishedDevice(address);
 
-            // New connection made, let it be our successor
-            if (mGameData.getStartDevice().equals(WE_ARE_START)) {
-              ByteBuffer buf =
-                  ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + 1 + 1);
-              buf.put(HEADER_GIVE_SUCCESSOR);
-              buf.put(GameData.successor.getBytes());
-              buf.put((byte) (mIsPromptMode ? 1 : 0));
-              buf.put((byte) (GameData.doesEndOnPrompt ? 1 : 0));
+    //         // New connection made, let it be our successor
+    //         if (mGameData.getStartDevice().equals(WE_ARE_START)) {
+    //           ByteBuffer buf =
+    //               ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + 1 + 1);
+    //           buf.put(HEADER_GIVE_SUCCESSOR);
+    //           buf.put(GameData.successor.getBytes());
+    //           buf.put((byte) (mIsPromptMode ? 1 : 0));
+    //           buf.put((byte) (GameData.doesEndOnPrompt ? 1 : 0));
 
-              mConnectService.write(address, buf.array());
+    //           mConnectService.write(address, buf.array());
 
-              // Send our current prompt/image to the new device
-              if (mDoneMsg != null) {
-                byte[] dataMsg = Arrays.copyOfRange(mDoneMsg, HEADER_LENGTH, mDoneMsg.length);
-                mConnectService.write(address, dataMsg);
-              }
+    //           // Send our current prompt/image to the new device
+    //           if (mDoneMsg != null) {
+    //             byte[] dataMsg = Arrays.copyOfRange(mDoneMsg, HEADER_LENGTH, mDoneMsg.length);
+    //             mConnectService.write(address, dataMsg);
+    //           }
 
-              GameData.successor = address;
-              mSuccessorView.setText(
-                  String.format(
-                      "%s",
-                      "Next: "
-                          + mGameData
-                              .getConnectedDeviceNames()
-                              .get(mGameData.getConnectedDevices().indexOf(GameData.successor))));
-            } else {
-              if (mDoneMsg != null) mConnectService.write(address, mDoneMsg);
-            }
-          }
-        };
+    //           GameData.successor = address;
+    //           mSuccessorView.setText(
+    //               "Next: "
+    //                  + mGameData
+    //                      .getConnectedDeviceNames()
+    //                      .get(mGameData.getConnectedDevices().indexOf(GameData.successor)));
+    //        } else {
+    //          if (mDoneMsg != null) mConnectService.write(address, mDoneMsg);
+    //        }
+    //      }
+    //    };
 
     // Set up game data
     addressToSummaries = new ConcurrentHashMap<>();
