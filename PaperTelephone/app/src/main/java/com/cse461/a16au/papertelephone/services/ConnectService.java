@@ -1,5 +1,7 @@
 package com.cse461.a16au.papertelephone.services;
 
+import android.app.Activity;
+import android.app.Application;
 import android.os.Handler;
 
 /** TODO: class documentation */
@@ -13,20 +15,10 @@ public abstract class ConnectService {
   Handler gameHandler;
   protected Handler packetHandler;
   protected Handler networkHandler;
+  protected Application applicationContext;
+  protected String localAddress;
 
   public abstract boolean write(String device, byte[] data);
-
-  /**
-   * TODO: implement to simplify packet-sending
-   *
-   * @param device
-   * @param messageType
-   * @return
-   */
-  private boolean write(String device, int messageType) {
-    byte[] data = new byte[1];
-    return write(device, data);
-  }
 
   public void registerGameHandler(Handler handler) {
     gameHandler = handler;
@@ -34,10 +26,6 @@ public abstract class ConnectService {
 
   public void unregisterGameHandler(Handler gameHandler) {
     this.gameHandler = (this.gameHandler.equals(gameHandler) ? null : this.gameHandler);
-  }
-
-  public void registerMainHandler(Handler handler) {
-    mainHandler = handler;
   }
 
   public void registerPacketHandler(Handler handler) {
@@ -59,4 +47,15 @@ public abstract class ConnectService {
   public abstract void stop();
 
   public abstract void connect(String address);
+
+  public abstract String getLocalAddress();
+
+  public void setApplication(Application applicationContext) {
+    this.applicationContext = applicationContext;
+    this.setLocalAddress();
+  }
+
+  public abstract void setLocalAddress();
+
+  public abstract void setupNetwork(Activity callbackActivity);
 }

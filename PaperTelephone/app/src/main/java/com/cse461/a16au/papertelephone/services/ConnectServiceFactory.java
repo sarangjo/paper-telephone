@@ -24,4 +24,8 @@ public class ConnectServiceFactory {
         return null;
     }
   }
+
+  public static String[] NETWORK_TYPES = new String[] {
+      "BLUETOOTH", "WI-FI", "INTERNET"
+  };
 }
