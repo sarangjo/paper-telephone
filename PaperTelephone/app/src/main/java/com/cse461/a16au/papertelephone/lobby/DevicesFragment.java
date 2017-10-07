@@ -68,7 +68,7 @@ public class DevicesFragment extends Fragment {
           // TODO Gross, get the MAC address from the BluetoothDevice object, not from the string
           String info = ((TextView) v).getText().toString();
 
-          mConnectDeviceListener.connectDevice(
+          mConnectDeviceListener.onDeviceToConnectToSelected(
               info.substring(info.length() - Constants.ADDRESS_LENGTH));
 
           return true;
@@ -180,7 +180,7 @@ public class DevicesFragment extends Fragment {
     mBluetoothAdapter.startDiscovery();
   }
 
-  interface ConnectDeviceListener {
-    void connectDevice(String address);
+  public interface ConnectDeviceListener {
+    void onDeviceToConnectToSelected(String address);
   }
 }

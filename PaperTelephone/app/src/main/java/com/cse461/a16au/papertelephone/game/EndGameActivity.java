@@ -40,7 +40,7 @@ public class EndGameActivity extends AppCompatActivity {
           public void onClick(View v) {
             GameData.getInstance().clearLobbiedDevices();
             for (String device : GameData.getInstance().getConnectedDevices()) {
-              mConnectService.write(Constants.HEADER_RETURN_TO_LOBBY, device);
+              mConnectService.write(device, Constants.HEADER_RETURN_TO_LOBBY);
             }
             setResult(RESULT_LOBBY);
             finish();

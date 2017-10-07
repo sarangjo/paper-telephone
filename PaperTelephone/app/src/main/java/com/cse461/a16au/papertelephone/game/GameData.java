@@ -42,11 +42,9 @@ public class GameData {
 
   /** The timer for each turn. */
   public static CountDownTimer turnTimer = null;
-  public static ConnectionChangeListener connectionChangeListener;
-
-  static List<String> devicesAtStartGame;
-  static List<String> namesAtStartGame;
-
+  // public static ConnectionChangeListener connectionChangeListener;
+  public static List<String> devicesAtStartGame;
+  public static List<String> namesAtStartGame;
   /**
    * Map from device addresses to their "Summaries" which store the original prompt, along with the
    * drawings and prompts that followed it

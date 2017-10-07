@@ -11,7 +11,7 @@ class InternetConnectService extends ConnectService {
   }
 
   @Override
-  public boolean write(byte[] data, String device) {
+  public boolean write(String device, byte[] data) {
     return false;
   }
 

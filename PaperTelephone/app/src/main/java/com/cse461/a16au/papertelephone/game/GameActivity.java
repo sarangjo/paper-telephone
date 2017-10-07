@@ -123,7 +123,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                 buf.put(HEADER_RESPONSE_SUCCESSOR);
                 buf.put(GameData.successor.getBytes());
 
-                mConnectService.write(buf.array(), address);
+                mConnectService.write(address, buf.array());
                 break;
               case READ_RESPONSE_SUCCESSOR:
                 // Getting the successors from all the other devices
@@ -143,7 +143,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
                   if (GameData.successor.equals(mGameData.getStartDevice())) {
                     for (String device : mGameData.getConnectedDevices()) {
-                      mConnectService.write(HEADER_NEW_START, device);
+                      mConnectService.write(device, HEADER_NEW_START);
                     }
                   }
 
@@ -162,7 +162,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                   // Send our current prompt/image to the new successor
                   if (mDoneMsg != null) {
                     byte[] dataMsg = Arrays.copyOfRange(mDoneMsg, HEADER_LENGTH, mDoneMsg.length);
-                    mConnectService.write(dataMsg, GameData.successor);
+                    mConnectService.write(GameData.successor, dataMsg);
                   }
                 }
 
@@ -210,71 +210,69 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
     mGameData = GameData.getInstance();
 
-    GameData.connectionChangeListener =
-        new ConnectionChangeListener() {
-          @Override
-          public void disconnection(String address) {
-            // Device was dropped in the middle of the game
-            if (mGameData.getConnectedDevices().size() < 2) {
-              mProgressDialog.dismiss();
-              Toast.makeText(
-                      GameActivity.this,
-                      "You no longer have enough players, going to summary page",
-                      Toast.LENGTH_LONG)
-                  .show();
-              setResult(RESULT_OK);
-              finish();
-              return;
-            }
+    // GameData.connectionChangeListener =
+    //     new ConnectionChangeListener() {
+    //       @Override
+    //       public void disconnection(String address) {
+    //         // Device was dropped in the middle of the game
+    //         if (mGameData.getConnectedDevices().size() < 2) {
+    //           mProgressDialog.dismiss();
+    //           Toast.makeText(
+    //                   GameActivity.this,
+    //                   "You no longer have enough players, going to summary page",
+    //                   Toast.LENGTH_LONG)
+    //               .show();
+    //           setResult(RESULT_OK);
+    //           finish();
+    //           return;
+    //         }
 
-            mGameData.deviceTurnFinished(address);
+    //         mGameData.deviceTurnFinished(address);
 
-            // In the case that the dropped address was our successor, we have to get a new
-            // successor
-            if (GameData.successor.equals(address)) {
-              successors = new CopyOnWriteArrayList<>();
+    //         // In the case that the dropped address was our successor, we have to get a new
+    //         // successor
+    //         if (GameData.successor.equals(address)) {
+    //           successors = new CopyOnWriteArrayList<>();
 
-              // Ask other devices for their successors
-              for (String device : mGameData.getConnectedDevices()) {
-                mConnectService.write(HEADER_REQUEST_SUCCESSOR, device);
-              }
-            }
-          }
+    //           // Ask other devices for their successors
+    //           for (String device : mGameData.getConnectedDevices()) {
+    //             mConnectService.write(device, HEADER_REQUEST_SUCCESSOR);
+    //           }
+    //         }
+    //       }
 
-          @Override
-          public void connection(String address) {
-            mGameData.addUnfinishedDevice(address);
+    //       @Override
+    //       public void connection(String address) {
+    //         mGameData.addUnfinishedDevice(address);
 
-            // New connection made, let it be our successor
-            if (mGameData.getStartDevice().equals(WE_ARE_START)) {
-              ByteBuffer buf =
-                  ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + 1 + 1);
-              buf.put(HEADER_GIVE_SUCCESSOR);
-              buf.put(GameData.successor.getBytes());
-              buf.put((byte) (mIsPromptMode ? 1 : 0));
-              buf.put((byte) (GameData.doesEndOnPrompt ? 1 : 0));
+    //         // New connection made, let it be our successor
+    //         if (mGameData.getStartDevice().equals(WE_ARE_START)) {
+    //           ByteBuffer buf =
+    //               ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + 1 + 1);
+    //           buf.put(HEADER_GIVE_SUCCESSOR);
+    //           buf.put(GameData.successor.getBytes());
+    //           buf.put((byte) (mIsPromptMode ? 1 : 0));
+    //           buf.put((byte) (GameData.doesEndOnPrompt ? 1 : 0));
 
-              mConnectService.write(buf.array(), address);
+    //           mConnectService.write(address, buf.array());
 
-              // Send our current prompt/image to the new device
-              if (mDoneMsg != null) {
-                byte[] dataMsg = Arrays.copyOfRange(mDoneMsg, HEADER_LENGTH, mDoneMsg.length);
-                mConnectService.write(dataMsg, address);
-              }
+    //           // Send our current prompt/image to the new device
+    //           if (mDoneMsg != null) {
+    //             byte[] dataMsg = Arrays.copyOfRange(mDoneMsg, HEADER_LENGTH, mDoneMsg.length);
+    //             mConnectService.write(address, dataMsg);
+    //           }
 
-              GameData.successor = address;
-              mSuccessorView.setText(
-                  String.format(
-                      "%s",
-                      "Next: "
-                          + mGameData
-                              .getConnectedDeviceNames()
-                              .get(mGameData.getConnectedDevices().indexOf(GameData.successor))));
-            } else {
-              if (mDoneMsg != null) mConnectService.write(mDoneMsg, address);
-            }
-          }
-        };
+    //           GameData.successor = address;
+    //           mSuccessorView.setText(
+    //               "Next: "
+    //                  + mGameData
+    //                      .getConnectedDeviceNames()
+    //                      .get(mGameData.getConnectedDevices().indexOf(GameData.successor)));
+    //        } else {
+    //          if (mDoneMsg != null) mConnectService.write(address, mDoneMsg);
+    //        }
+    //      }
+    //    };
 
     // Set up game data
     addressToSummaries = new ConcurrentHashMap<>();
@@ -306,7 +304,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
     if (getIntent().getBooleanExtra(JOIN_MID_GAME, false)) {
       // joining mid-game
       for (String device : mGameData.getConnectedDevices()) {
-        mConnectService.write(HEADER_DTG, device);
+        mConnectService.write(device, HEADER_DTG);
       }
 
       mWaitingDialog = new ProgressDialog(this);
@@ -422,7 +420,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
   @Override
   public void sendTurnData(byte[] data) {
     // Write this turn's data to our next device
-    mConnectService.write(Arrays.copyOf(data, data.length), GameData.successor);
+    mConnectService.write(GameData.successor, Arrays.copyOf(data, data.length));
 
     // Write done message to all devices
     ByteBuffer buf = ByteBuffer.allocate(HEADER_LENGTH + data.length);
@@ -433,7 +431,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
     for (String device : mGameData.getConnectedDevices()) {
       if (!device.equals(GameData.successor)) {
-        mConnectService.write(mDoneMsg, device);
+        mConnectService.write(device, mDoneMsg);
       }
     }
 

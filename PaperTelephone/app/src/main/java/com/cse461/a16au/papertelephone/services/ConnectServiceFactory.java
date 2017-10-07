@@ -8,13 +8,12 @@ public class ConnectServiceFactory {
   public static final int WI_FI = 1;
   public static final int INTERNET = 2;
 
-  public static int TYPE = BLUETOOTH;
-
-  // TODO: See if there is something other than null that we can return for default:, otherwise
-  // we should remove the @NonNull annotation
-  @NonNull
   public static ConnectService getService() {
-    switch (TYPE) {
+    return getService(BLUETOOTH);
+  }
+
+  public static ConnectService getService(int type) {
+    switch (type) {
       case BLUETOOTH:
         return BluetoothConnectService.getInstance();
       case WI_FI:
@@ -25,4 +24,8 @@ public class ConnectServiceFactory {
         return null;
     }
   }
+
+  public static String[] NETWORK_TYPES = new String[] {
+      "BLUETOOTH", "WI-FI", "INTERNET"
+  };
 }
