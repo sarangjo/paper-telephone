@@ -27,4 +27,5 @@
     <string name="send_prompt">Send prompt</string>
     <string name="waiting_for_other_players">Waiting For Other Players To Complete Their Turn</string>
     <string name="invalid_successor">Invalid successor</string>
+    <string name="bluetooth">Bluetooth</string>
 </resources>
