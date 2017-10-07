@@ -68,7 +68,7 @@ public class WiFiConnectService extends ConnectService {
   }
 
   @Override
-  public void setupNetwork(Activity callbackActivity) {
+  public boolean setupNetwork(Activity callbackActivity) {
     // Set up nearby service discovery
     // Useful guide for NSD,
     // https://developer.android.com/training/connect-devices-wirelessly/nsd.html
@@ -200,5 +200,7 @@ public class WiFiConnectService extends ConnectService {
 
     mNsdManager.discoverServices(serviceType, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
 
+    // TODO change
+    return false;
   }
 }

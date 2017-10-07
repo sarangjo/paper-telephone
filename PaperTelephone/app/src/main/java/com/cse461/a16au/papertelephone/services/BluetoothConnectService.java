@@ -161,10 +161,15 @@ class BluetoothConnectService extends ConnectService {
   }
 
   @Override
-  public void setupNetwork(Activity callbackActivity) {
+  public boolean setupNetwork(Activity callbackActivity) {
     if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
       Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
       callbackActivity.startActivityForResult(enableIntent, Constants.REQUEST_ENABLE_BT);
+      // Waiting on callback
+      return false;
+    } else {
+      // Transition to lobby!
+      return true;
     }
   }
 

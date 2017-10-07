@@ -57,5 +57,9 @@ public abstract class ConnectService {
 
   public abstract void setLocalAddress();
 
-  public abstract void setupNetwork(Activity callbackActivity);
+  /**
+   * TODO
+   * @return true if the network has been setup successfully
+   */
+  public abstract boolean setupNetwork(Activity callbackActivity);
 }

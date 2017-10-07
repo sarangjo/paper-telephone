@@ -34,9 +34,15 @@ public class MainActivity extends FragmentActivity implements GameController.Sta
     networkTypeSelector.setOnItemClickListener(new AdapterView.OnItemClickListener() {
       @Override
       public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-        mController.chooseNetworkType(i, MainActivity.this);
+        if (mController.chooseNetworkType(i, MainActivity.this)) {
+          transitionToLobby();
+        }
       }
     });
+  }
+
+  private void transitionToLobby() {
+    mController.setState(STATE_LOBBY);
   }
 
   @Override
@@ -46,7 +52,7 @@ public class MainActivity extends FragmentActivity implements GameController.Sta
         // Setup game and connect to other devices now that bluetooth is enabled
         if (resultCode == RESULT_OK) {
           Log.d(TAG, "Successfully enabled Bluetooth.");
-          mController.setState(STATE_LOBBY);
+          transitionToLobby();
         } else {
           // User did not enable Bluetooth or an error occurred
           Log.d(TAG, "BT not enabled");

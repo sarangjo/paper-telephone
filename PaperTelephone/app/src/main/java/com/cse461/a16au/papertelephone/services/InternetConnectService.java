@@ -1,10 +1,15 @@
 package com.cse461.a16au.papertelephone.services;
 
-/** TODO: class documentation */
+import android.app.Activity;
+
+/**
+ * TODO: class documentation
+ */
 class InternetConnectService extends ConnectService {
   private static ConnectService ourInstance = new InternetConnectService();
 
-  private InternetConnectService() {}
+  private InternetConnectService() {
+  }
 
   static ConnectService getInstance() {
     return ourInstance;
@@ -21,11 +26,29 @@ class InternetConnectService extends ConnectService {
   }
 
   @Override
-  public void start() {}
+  public void start() {
+  }
 
   @Override
-  public void stop() {}
+  public void stop() {
+  }
 
   @Override
-  public void connect(String address) {}
+  public void connect(String address) {
+  }
+
+  @Override
+  public String getLocalAddress() {
+    return null;
+  }
+
+  @Override
+  public void setLocalAddress() {
+
+  }
+
+  @Override
+  public boolean setupNetwork(Activity callbackActivity) {
+    return false;
+  }
 }

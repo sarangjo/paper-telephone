@@ -58,7 +58,7 @@ import static com.cse461.a16au.papertelephone.game.GameData.turnsLeft;
  * the receiving of game data from other devices in order to save it for the next phase of the game.
  */
 public class GameActivity extends AppCompatActivity implements GameFragment.DataSendListener {
-  private final String TAG = "GAME_ACTIVITY";
+  private final String TAG = "GameActivity";
 
   private ConnectService mConnectService;
   private GameData mGameData;
@@ -192,9 +192,6 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
                 GameData.doesEndOnPrompt = buf.get() == (byte) 1;
 
                 updateMode();
-                break;
-              case READ_DTG:
-                GameData.connectionChangeListener.connection(address);
                 break;
             }
           }

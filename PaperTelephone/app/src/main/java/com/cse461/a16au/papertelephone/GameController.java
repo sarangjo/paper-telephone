@@ -12,6 +12,8 @@ import com.cse461.a16au.papertelephone.services.ConnectService;
 import com.cse461.a16au.papertelephone.services.ConnectServiceFactory;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -44,15 +46,13 @@ public class GameController {
   private static final String TAG = "GameController";
 
   private static GameController ourInstance = new GameController();
-  /**
-   * The current state of the game.
-   */
+  // TODO: 10/7/2017 organize these fields
   private int state;
   private String startDevice;
   private boolean isStart;
+  private int lastSuccessorNumber;
   private ConnectService connectService;
   private Set<String> unplacedDevices;
-  private int lastSuccessorNumber;
   private List<String> connectedDevices;
   private List<String> connectedDeviceNames;
   private Set<String> lobbiedDevices;
@@ -70,6 +70,13 @@ public class GameController {
   }
 
   private GameController() {
+    this.stateChangeListeners = new HashSet<>();
+    this.connectedDevices = new ArrayList<>();
+    this.connectedDeviceNames = new ArrayList<>();
+    this.unplacedDevices = new HashSet<>();
+    this.lobbiedDevices = new HashSet<>();
+    this.unackedDevices = new HashSet<>();
+
     this.setState(STATE_PRE_LOBBY);
   }
 
@@ -414,10 +421,11 @@ public class GameController {
    *
    * @param type
    * @param callbackActivity TODO explain
+   * @return true if the network type has been successfully chosen and setup
    */
-  public void chooseNetworkType(int type, Activity callbackActivity) {
+  public boolean chooseNetworkType(int type, Activity callbackActivity) {
     this.setConnectService(type, callbackActivity.getApplication());
-    this.getConnectService().setupNetwork(callbackActivity);
+    return (this.getConnectService().setupNetwork(callbackActivity));
   }
 
   public interface ConnectedDevicesListener {
