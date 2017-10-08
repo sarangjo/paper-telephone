@@ -24,7 +24,7 @@ import com.cse461.a16au.papertelephone.R;
 
 import java.util.Set;
 
-/** TODO: class comment */
+/** {@link Fragment} for handling discovery of and connection to other devices. */
 public class DevicesFragment extends Fragment {
   private static final String TAG = "DevicesFragment";
 
@@ -54,6 +54,7 @@ public class DevicesFragment extends Fragment {
           }
         }
       };
+
   private Button mScanButton;
   private BluetoothAdapter mBluetoothAdapter;
   private ConnectDeviceListener mConnectDeviceListener;

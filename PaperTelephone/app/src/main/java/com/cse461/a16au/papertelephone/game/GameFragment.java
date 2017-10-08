@@ -4,10 +4,8 @@ import android.app.Activity;
 import android.app.Fragment;
 
 /**
- * Created by sgorti3 on 12/6/2016.
- *
- * <p>this thing is like for one method because two communocation not supported for cyclic
- * inheitience recursion
+ * This thing is like for one method because two communication not supported for cyclic inheritance
+ * recursion
  */
 public abstract class GameFragment extends Fragment {
   protected DataSendListener mListener;
@@ -30,7 +28,10 @@ public abstract class GameFragment extends Fragment {
     mListener = null;
   }
 
-  /** TODO: class documentation */
+
+  /**
+   * Sends the corresponding data to the next device, whether it be the prompt text, or drawing data
+   */
   interface DataSendListener {
     void sendTurnData(byte[] data);
   }

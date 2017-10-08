@@ -10,7 +10,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-/** TODO: class documentation */
+/** Displays list of paired devices and newly discovered devices. */
 class DevicesListAdapter extends BaseExpandableListAdapter {
   private List<String> pairedDevices;
   private List<String> newDevices;

@@ -19,7 +19,10 @@ import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
 import static com.cse461.a16au.papertelephone.game.GameData.devicesAtStartGame;
 import static com.cse461.a16au.papertelephone.game.GameData.namesAtStartGame;
 
-/** A simple {@link Fragment} subclass. */
+/**
+ * A simple {@link Fragment} displaying a summary of the game played, allowing the user to swipe
+ * through the "history" of each original prompt.
+ */
 public class SummaryFragment extends Fragment {
   private String mAddress;
 

@@ -15,7 +15,7 @@ import com.cse461.a16au.papertelephone.R;
 
 import java.util.List;
 
-/** TODO: class documentation */
+/** Converts game data into views to be displayed as the summary of a game in SummaryFragment */
 class SummaryAdapter extends ArrayAdapter<byte[]> {
   private final List<byte[]> mValues;
 

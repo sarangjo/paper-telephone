@@ -1,14 +1,9 @@
 package com.cse461.a16au.papertelephone.lobby;
 
-import android.bluetooth.BluetoothAdapter;
-import android.content.Context;
 import android.content.Intent;
-import android.net.nsd.NsdManager;
-import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -21,10 +16,6 @@ import com.cse461.a16au.papertelephone.GameController;
 import com.cse461.a16au.papertelephone.R;
 import com.cse461.a16au.papertelephone.game.EndGameActivity;
 import com.cse461.a16au.papertelephone.game.GameActivity;
-import com.cse461.a16au.papertelephone.services.ConnectServiceFactory;
-import com.cse461.a16au.papertelephone.services.WiFiConnectService;
-
-import java.net.InetAddress;
 
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECTED;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_CONNECT_FAILED;
@@ -34,15 +25,16 @@ import static com.cse461.a16au.papertelephone.GameController.STATE_IN_GAME_PROMP
 import static com.cse461.a16au.papertelephone.GameController.STATE_PLACEMENT;
 
 /**
- * TODO: class documentation
+ * Pre-game activity that allows users to discover and connect to other devices and launch a game
+ * once they are connected to at least two other devices.
  */
 public class LobbyActivity extends AppCompatActivity
-    implements DevicesFragment.ConnectDeviceListener, GameController.ConnectedDevicesListener, GameController.StateChangeListener {
+    implements DevicesFragment.ConnectDeviceListener,
+        GameController.ConnectedDevicesListener,
+        GameController.StateChangeListener {
   private static final String TAG = "LobbyActivity";
 
-  /**
-   * Adapter for connected devices view
-   */
+  /** Adapter for connected devices view */
   private ArrayAdapter<String> mConnectedDevicesNamesAdapter;
 
   private Button mStartGameButton;
@@ -60,7 +52,9 @@ public class LobbyActivity extends AppCompatActivity
     mController.setToaster(this);
 
     // Views
-    mConnectedDevicesNamesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mController.getConnectedDeviceNames());
+    mConnectedDevicesNamesAdapter =
+        new ArrayAdapter<>(
+            this, android.R.layout.simple_list_item_1, mController.getConnectedDeviceNames());
     ListView connectedListView = (ListView) findViewById(R.id.connected_devices);
     connectedListView.setAdapter(mConnectedDevicesNamesAdapter);
     connectedListView.setOnItemClickListener(
@@ -148,7 +142,10 @@ public class LobbyActivity extends AppCompatActivity
         Toast.makeText(LobbyActivity.this, "Disconnected from " + name, Toast.LENGTH_SHORT).show();
         break;
       case MESSAGE_CONNECT_FAILED:
-        Toast.makeText(LobbyActivity.this, "Unable to connect: " + name + ". Please try again.", Toast.LENGTH_LONG)
+        Toast.makeText(
+                LobbyActivity.this,
+                "Unable to connect: " + name + ". Please try again.",
+                Toast.LENGTH_LONG)
             .show();
         break;
     }

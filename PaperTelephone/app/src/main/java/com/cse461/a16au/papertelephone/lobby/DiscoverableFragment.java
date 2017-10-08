@@ -17,7 +17,8 @@ import android.widget.TextView;
 
 import com.cse461.a16au.papertelephone.R;
 
-/** A simple {@link Fragment} subclass. */
+/** TODO: class documentation
+ * A simple {@link Fragment} subclass. */
 public class DiscoverableFragment extends Fragment {
   private static final int REQUEST_MAKE_DISCOVERABLE = 1;
   private static final String TAG = "DiscoverableFragment";
