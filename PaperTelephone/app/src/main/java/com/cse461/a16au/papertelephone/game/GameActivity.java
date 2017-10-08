@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.cse461.a16au.papertelephone.Constants.ADDRESS_LENGTH;
 import static com.cse461.a16au.papertelephone.Constants.CREATOR_ADDRESS;
@@ -30,22 +29,18 @@ import static com.cse461.a16au.papertelephone.Constants.DEVICE_ADDRESS;
 import static com.cse461.a16au.papertelephone.Constants.DEVICE_NAME;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_DONE;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_DTG;
-import static com.cse461.a16au.papertelephone.Constants.HEADER_GIVE_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_LENGTH;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_NEW_START;
-import static com.cse461.a16au.papertelephone.Constants.HEADER_REQUEST_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.HEADER_RESPONSE_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.JOIN_MID_GAME;
 import static com.cse461.a16au.papertelephone.Constants.MESSAGE_READ;
 import static com.cse461.a16au.papertelephone.Constants.READ_DONE;
-import static com.cse461.a16au.papertelephone.Constants.READ_DTG;
 import static com.cse461.a16au.papertelephone.Constants.READ_GIVE_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_IMAGE;
 import static com.cse461.a16au.papertelephone.Constants.READ_NEW_START;
 import static com.cse461.a16au.papertelephone.Constants.READ_PROMPT;
 import static com.cse461.a16au.papertelephone.Constants.READ_REQUEST_SUCCESSOR;
 import static com.cse461.a16au.papertelephone.Constants.READ_RESPONSE_SUCCESSOR;
-import static com.cse461.a16au.papertelephone.Constants.WE_ARE_START;
 import static com.cse461.a16au.papertelephone.game.GameData.addressToSummaries;
 import static com.cse461.a16au.papertelephone.game.GameData.devicesAtStartGame;
 import static com.cse461.a16au.papertelephone.game.GameData.doesEndOnPrompt;
@@ -332,6 +327,9 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
   public void onBackPressed() {
     // TODO: ask for confirmation first
     // TODO: intentionally disconnect from other devices to signal leaving from gaming
+    // for(String device: mGameData.getConnectedDevices()) {
+    //   mConnectService.disconnect(device);
+    // }
   }
 
   /** Switches modes and moves on to the next turn. */

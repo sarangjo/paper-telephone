@@ -13,65 +13,69 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
-/** TODO: class documentation */
+/** Stores the game state, and information about play order. */
 public class GameData {
 
-  // TODO: Look into these fields, some of the comments describing them seem like they correspond
-  // to the wrong field, also this is a ridiculous number of fields, we should see if any of them
-  // are redundant
-  private static final GameData ourInstance = new GameData();
+  // TODO: Look into these fields, we should see if any of them are redundant
+  private static final GameData gameData = new GameData();
 
+  /** Whether or not this game ends with a prompt round. */
   public static boolean doesEndOnPrompt;
-  /** Index of this device's successor in the list of connectedDevices */
-  public static String successor = null;
+
   /** Keeps track of how many devices have been chosen so far in that start game process */
   public static int lastSuccessorNumber = 0;
 
-  // Devices we are currently connected to
   /** Set of devices that have not been chosen as a successor in the start game process */
   public static Set<String> unplacedDevices = new HashSet<>();
 
   /** Keeps track of how many turns remain until the end of the game */
   public static int turnsLeft = 0;
 
+  /** The timer for each turn. */
+  public static CountDownTimer turnTimer = null;
+
   /** This device's mac address */
   public static String localAddress = null;
 
-  /** Our name. */
+  /** This device's name. */
   public static String localName = BluetoothAdapter.getDefaultAdapter().getName();
 
-  /** The timer for each turn. */
-  public static CountDownTimer turnTimer = null;
   // public static ConnectionChangeListener connectionChangeListener;
-  public static List<String> devicesAtStartGame;
-  public static List<String> namesAtStartGame;
+
   /**
    * Map from device addresses to their "Summaries" which store the original prompt, along with the
    * drawings and prompts that followed it
    */
   static ConcurrentMap<String, List<byte[]>> addressToSummaries;
 
-  /** The String identifier of the start device */
+  // The String identifier of the start device
   private String startDevice;
-  /** List of all connected device address */
-  private List<String> connectedDevices;
+  /** This device's successor */
+  public static String successor = null;
 
-  /** Set of all lobbied devices */
+  // List of all connected device address
+  private List<String> connectedDevices;
+  // Set of all lobbied devices
   private Set<String> lobbiedDevices;
 
-  /** List of all connected device names */
+  // List of all connected device names
   private List<String> connectedDeviceNames;
 
-  /** Set of all devices names that still need to be connected to */
+  // Set of all devices names that still need to be connected to
   private Set<String> devicesToConnectTo;
 
-  /** Devices that have not acked our start yet. */
+  // Devices that have not acked our start yet.
   private Set<String> unackedDevices;
 
-  /** Stores whether or not this device has completed the current turn */
+  // Stores whether or not this device has completed the current turn
   private boolean isDone;
 
-  /** A list of the devices that have not finished the current turn. */
+  /** List of all connected devices at the start of the current game */
+  public static List<String> devicesAtStartGame;
+  /** List of the names of all connected devices at the start of the current game */
+  public static List<String> namesAtStartGame;
+
+  // A list of the devices that have not finished the current turn.
   private Set<String> unfinishedDeviceList;
 
   private GameData() {
@@ -86,7 +90,7 @@ public class GameData {
   }
 
   public static GameData getInstance() {
-    return ourInstance;
+    return gameData;
   }
 
   // Turn-based bookkeeping
