@@ -17,8 +17,10 @@ import android.widget.TextView;
 
 import com.cse461.a16au.papertelephone.R;
 
-/** TODO: class documentation
- * A simple {@link Fragment} subclass. */
+/**
+ * A simple {@link Fragment} subclass that allows the user to make their device discoverable and
+ * turn on discovery to find other devices.
+ */
 public class DiscoverableFragment extends Fragment {
   private static final int REQUEST_MAKE_DISCOVERABLE = 1;
   private static final String TAG = "DiscoverableFragment";
