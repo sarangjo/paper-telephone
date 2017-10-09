@@ -7,6 +7,7 @@ import java.util.UUID;
 public class Constants {
   public static final UUID APP_UUID = UUID.fromString("b914c3a4-e47f-4fa8-b23a-8e55a5981e5f");
   public static final String APP_NAME = "PaperTelephone";
+  public static final boolean IS_DEBUG = true;
 
   public static final String WE_ARE_START = "START";
   public static final String NO_START = "NOSTART";
@@ -74,8 +75,8 @@ public class Constants {
 
   public static final long TIMEOUT_MILLIS = 10000;
 
-  /** TODO: change back to 2 */
-  public static final int MIN_PLAYERS = 3;
+  /** Minimum players is set to 3. If IS_DEBUG is set 2 device is minimum for testing */
+  public static final int MIN_PLAYERS = IS_DEBUG ? 2 : 3;
 
   public static final String JOIN_MID_GAME = "join_mid_game";
 
