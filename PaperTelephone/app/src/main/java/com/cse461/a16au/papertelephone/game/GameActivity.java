@@ -1,10 +1,13 @@
 package com.cse461.a16au.papertelephone.game;
 
+import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.widget.TextView;
@@ -240,7 +243,8 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
     //         // New connection made, let it be our successor
     //         if (mGameData.getStartDevice().equals(WE_ARE_START)) {
     //           ByteBuffer buf =
-    //               ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + 1 + 1);
+    //               ByteBuffer.allocate(Constants.HEADER_LENGTH + Constants.ADDRESS_LENGTH + 1 +
+    // 1);
     //           buf.put(HEADER_GIVE_SUCCESSOR);
     //           buf.put(GameData.successor.getBytes());
     //           buf.put((byte) (mIsPromptMode ? 1 : 0));
@@ -325,13 +329,33 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
 
   @Override
   public void onBackPressed() {
-    // TODO: ask for confirmation first
+    DialogInterface.OnClickListener confirmationDialogListener =
+        new DialogInterface.OnClickListener() {
+          @Override
+          public void onClick(DialogInterface dialog, int which) {
+            switch (which) {
+              case DialogInterface.BUTTON_POSITIVE:
+                // Exit confirmed
 
-    // Stop connection service to intentionally disconnect from other devices
-    mConnectService.stop();
+                // Stop connection service to intentionally disconnect from other devices
+                mConnectService.stop();
 
-    // TODO: is there any other cleanup that needs to happen here? Clearing ConnectedDevices?
-    // we probably also want to switch activities
+                // TODO: is there any other cleanup that needs to happen here? Clearing ConnectedDevices?
+                finishActivity(Activity.RESULT_CANCELED);
+                break;
+
+              case DialogInterface.BUTTON_NEGATIVE:
+                // Exit canceled
+                break;
+            }
+          }
+        };
+
+    new AlertDialog.Builder(this)
+        .setMessage("Exit game?")
+        .setPositiveButton("Yes", confirmationDialogListener)
+        .setNegativeButton("No", confirmationDialogListener)
+        .show();
   }
 
   /** Switches modes and moves on to the next turn. */
