@@ -326,10 +326,12 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
   @Override
   public void onBackPressed() {
     // TODO: ask for confirmation first
-    // TODO: intentionally disconnect from other devices to signal leaving from gaming
-    // for(String device: mGameData.getConnectedDevices()) {
-    //   mConnectService.disconnect(device);
-    // }
+
+    // Stop connection service to intentionally disconnect from other devices
+    mConnectService.stop();
+
+    // TODO: is there any other cleanup that needs to happen here? Clearing ConnectedDevices?
+    // we probably also want to switch activities
   }
 
   /** Switches modes and moves on to the next turn. */
