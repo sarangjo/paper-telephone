@@ -11,8 +11,9 @@ public abstract class ConnectService {
   public static final int STATE_STARTED = 1;
 
   int state;
-  Handler mainHandler;
-  Handler gameHandler;
+  // TODO 12/17/17 - we should not need the gameHandler, right? Just the packet and network handlers
+  // should be sufficient
+  //Handler gameHandler;
   protected Handler packetHandler;
   protected Handler networkHandler;
   protected Application applicationContext;
@@ -20,13 +21,7 @@ public abstract class ConnectService {
 
   public abstract boolean write(String device, byte[] data);
 
-  public void registerGameHandler(Handler handler) {
-    gameHandler = handler;
-  }
-
-  public void unregisterGameHandler(Handler gameHandler) {
-    this.gameHandler = (this.gameHandler.equals(gameHandler) ? null : this.gameHandler);
-  }
+  // TODO: add unregister for handlers
 
   public void registerPacketHandler(Handler handler) {
     this.packetHandler = handler;
@@ -58,7 +53,10 @@ public abstract class ConnectService {
   public abstract void setLocalAddress();
 
   /**
-   * TODO
+   * Initiates the process to setup the network, if it hasn't been setup yet. It is possible that
+   * network setup will take an asynchronous callback on completion, in which case this method
+   * returns false.
+   *
    * @return true if the network has been setup successfully
    */
   public abstract boolean setupNetwork(Activity callbackActivity);

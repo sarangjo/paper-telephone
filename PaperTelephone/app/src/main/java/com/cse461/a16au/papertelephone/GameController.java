@@ -273,6 +273,12 @@ public class GameController {
     }
   };
 
+  /**
+   * Handles logic for any network updates such as device connection, disconnection,
+   * failed connection
+   *
+   * @param msg the message sent from the ConnectService
+   */
   private void handleNetworkUpdate(Message msg) {
     String deviceName = msg.getData().getString(DEVICE_NAME);
     String deviceAddress = msg.getData().getString(DEVICE_ADDRESS);
@@ -527,6 +533,8 @@ public class GameController {
           this.getConnectService().write(currDevice, HEADER_START);
           this.unackedDevices.add(currDevice);
         }
+
+        this.setState(STATE_SET_START);
       } else {
         Toast.makeText(this.getToaster(), "Someone else hit start", Toast.LENGTH_LONG).show();
       }

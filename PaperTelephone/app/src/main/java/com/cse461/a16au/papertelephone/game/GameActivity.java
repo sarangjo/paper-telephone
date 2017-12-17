@@ -276,7 +276,8 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
     namesAtStartGame = new ArrayList<>(mGameData.getConnectedDeviceNames());
 
     mConnectService = ConnectServiceFactory.getService();
-    mConnectService.registerGameHandler(mGameHandler);
+    // TODO replace with other handler register
+    //mConnectService.registerGameHandler(mGameHandler);
 
     mTimerTextView = (TextView) findViewById(R.id.timer);
     mSuccessorView = (TextView) findViewById(R.id.successor_text);
@@ -324,7 +325,8 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
   protected void onDestroy() {
     super.onDestroy();
 
-    mConnectService.unregisterGameHandler(mGameHandler);
+    // TODO replace with other handler unregister
+    //mConnectService.unregisterGameHandler(mGameHandler);
   }
 
   @Override

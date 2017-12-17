@@ -32,9 +32,10 @@ class BluetoothConnectService extends ConnectService {
   private static final String TAG = "BluetoothConnectService";
   private static ConnectService ourInstance = new BluetoothConnectService();
   private final BluetoothAdapter mAdapter;
+
+  // Threads
   private final Map<String, BluetoothThread> mConnectThreads;
   private final Map<String, BluetoothThread> mConnectedThreads;
-  // Threads
   private BluetoothThread mAcceptThread;
 
   private BluetoothConnectService() {
@@ -51,7 +52,7 @@ class BluetoothConnectService extends ConnectService {
   // SERVER FUNCTIONS: start() and stop()
 
   /**
-   * Starts the connect service. If any connections exist, closes them.
+   * Starts the connect service afresh. If any connections exist, closes them.
    */
   public void start() {
     Log.d(TAG, "Starting service");
@@ -102,8 +103,6 @@ class BluetoothConnectService extends ConnectService {
 
   // CLIENT FUNCTIONS: connect()
 
-  //    private CountDownTimer mConnectTimer;
-
   /**
    * Connects to the given BluetoothDevice.
    */
@@ -123,30 +122,30 @@ class BluetoothConnectService extends ConnectService {
     connectThread.start();
 
     // Set timeout for connect thread
-    //        mConnectTimer = new CountDownTimer(Constants.TIMEOUT_MILLIS, 1000) {
-    //            @Override
-    //            public void onTick(long millisUntilFinished) {
-    //            }
+    // mConnectTimer = new CountDownTimer(Constants.TIMEOUT_MILLIS, 1000) {
+    //     @Override
+    //     public void onTick(long millisUntilFinished) {
+    //     }
     //
-    //            @Override
-    //            public void onFinish() {
-    //                BluetoothThread thread;
-    //                synchronized (BluetoothConnectService.this) {
-    //                    thread = mConnectThreads.get(device.getAddress());
-    //                }
-    //                if (thread != null) {
-    //                    thread.cancel();
-    //                }
+    //     @Override
+    //     public void onFinish() {
+    //         BluetoothThread thread;
+    //         synchronized (BluetoothConnectService.this) {
+    //             thread = mConnectThreads.get(device.getAddress());
+    //         }
+    //         if (thread != null) {
+    //             thread.cancel();
+    //         }
     //
-    //                // Send error message back to UI
-    //                Message msg = mainHandler.obtainMessage(Constants.MESSAGE_CONNECT_FAILED);
-    //                Bundle bundle = new Bundle();
-    //                bundle.putString(Constants.DEVICE_ADDRESS, device.getAddress());
-    //                bundle.putString(Constants.DEVICE_NAME, device.getName());
-    //                msg.setData(bundle);
-    //                mainHandler.sendMessage(msg);
-    //            }
-    //        }.start();
+    //         // Send error message back to UI
+    //         Message msg = networkHandler.obtainMessage(Constants.MESSAGE_CONNECT_FAILED);
+    //         Bundle bundle = new Bundle();
+    //         bundle.putString(Constants.DEVICE_ADDRESS, device.getAddress());
+    //         bundle.putString(Constants.DEVICE_NAME, device.getName());
+    //         msg.setData(bundle);
+    //         networkHandler.sendMessage(msg);
+    //     }
+    // }.start();
   }
 
   @Override
@@ -175,6 +174,10 @@ class BluetoothConnectService extends ConnectService {
 
   // UNIVERSAL FUNCTIONS: connected(), connectionLost(), write()
 
+  /**
+   * Once a new device is connected, start a new ConnectedThread for this socket and send the update
+   * through the handler.
+   */
   private synchronized void connected(BluetoothSocket socket, BluetoothDevice remoteDevice) {
     // Start the new ConnectedThread
     BluetoothThread connectedThread = new ConnectedThread(socket, remoteDevice);
@@ -182,12 +185,12 @@ class BluetoothConnectService extends ConnectService {
     connectedThread.start();
 
     // Send the name back to UI
-    Message msg = mainHandler.obtainMessage(Constants.MESSAGE_CONNECTED);
+    Message msg = networkHandler.obtainMessage(Constants.MESSAGE_CONNECTED);
     Bundle bundle = new Bundle();
     bundle.putString(Constants.DEVICE_NAME, remoteDevice.getName());
     bundle.putString(Constants.DEVICE_ADDRESS, remoteDevice.getAddress());
     msg.setData(bundle);
-    mainHandler.sendMessage(msg);
+    networkHandler.sendMessage(msg);
   }
 
   /**
@@ -197,12 +200,12 @@ class BluetoothConnectService extends ConnectService {
     Log.d(TAG, "Connection was lost");
 
     // Send toast back to UI
-    Message msg = mainHandler.obtainMessage(Constants.MESSAGE_DISCONNECTED);
+    Message msg = networkHandler.obtainMessage(Constants.MESSAGE_DISCONNECTED);
     Bundle bundle = new Bundle();
     bundle.putString(Constants.DEVICE_ADDRESS, device.getAddress());
     bundle.putString(Constants.DEVICE_NAME, device.getName());
     msg.setData(bundle);
-    mainHandler.sendMessage(msg);
+    networkHandler.sendMessage(msg);
   }
 
   /**
@@ -210,12 +213,8 @@ class BluetoothConnectService extends ConnectService {
    *
    * @return success
    */
-  public boolean write(String address, byte[] out) {
-    ConnectedThread thread;
-
-    //            if (state != STATE_CONNECTED) return;
-    thread = (ConnectedThread) mConnectedThreads.get(address);
-
+  public synchronized boolean write(String address, byte[] out) {
+    ConnectedThread thread = (ConnectedThread) mConnectedThreads.get(address);
     return thread != null && thread.write(out);
   }
 
@@ -257,11 +256,9 @@ class BluetoothConnectService extends ConnectService {
             synchronized (BluetoothConnectService.this) {
               switch (state) {
                 case STATE_STARTED:
-                  //                            case STATE_CONNECTING:
                   connected(socket, socket.getRemoteDevice());
                   break;
                 case STATE_STOPPED:
-                  //                            case STATE_CONNECTED:
                   // Not ready or already connected
                   try {
                     socket.close();
@@ -329,12 +326,12 @@ class BluetoothConnectService extends ConnectService {
         Log.e(TAG, "Unable to connect to device", e);
 
         // Send error message back to UI
-        Message msg = mainHandler.obtainMessage(Constants.MESSAGE_CONNECT_FAILED);
+        Message msg = networkHandler.obtainMessage(Constants.MESSAGE_CONNECT_FAILED);
         Bundle bundle = new Bundle();
         bundle.putString(Constants.DEVICE_ADDRESS, mmDevice.getAddress());
         bundle.putString(Constants.DEVICE_NAME, mmDevice.getName());
         msg.setData(bundle);
-        mainHandler.sendMessage(msg);
+        networkHandler.sendMessage(msg);
 
         return;
       }
@@ -369,7 +366,6 @@ class BluetoothConnectService extends ConnectService {
     private final OutputStream mmOutStream;
 
     ConnectedThread(BluetoothSocket socket, BluetoothDevice device) {
-      //            Log.d(TAG, "Create connected thread");
       InputStream tmpIn = null;
       OutputStream tmpOut = null;
       mmDevice = device;
@@ -395,7 +391,6 @@ class BluetoothConnectService extends ConnectService {
       while (state == STATE_STARTED) {
         try {
           bytes = mmInStream.read(buffer);
-          //                    log("Received " + bytes + " bytes");
 
           handleRead(buffer, bytes);
         } catch (IOException e) {
@@ -414,7 +409,6 @@ class BluetoothConnectService extends ConnectService {
       // Message to be passed to the appropriate handler
       Message msg;
       Bundle bundle = new Bundle();
-      Handler currHandler = mainHandler;
       byte[] creatorAddressArr = new byte[Constants.ADDRESS_LENGTH];
 
       // Extracts header, if any
@@ -422,7 +416,6 @@ class BluetoothConnectService extends ConnectService {
         byte[] header = Arrays.copyOf(input, Constants.HEADER_LENGTH);
         log("Received: " + new String(header));
 
-        // ByteBuffer to wrap our input array
         ByteBuffer dataBuffer =
             ByteBuffer.wrap(Arrays.copyOfRange(input, Constants.HEADER_LENGTH, bytes));
 
@@ -439,9 +432,8 @@ class BluetoothConnectService extends ConnectService {
                   input);
 
           msg =
-              gameHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ, imgData.length, Constants.READ_IMAGE, imgData);
-          currHandler = gameHandler;
         } else if (Arrays.equals(header, Constants.HEADER_PROMPT)) {
           // Get Creator Address
           dataBuffer.get(creatorAddressArr);
@@ -450,9 +442,8 @@ class BluetoothConnectService extends ConnectService {
           input = new byte[bytes - Constants.ADDRESS_LENGTH - Constants.HEADER_LENGTH];
           dataBuffer.get(input);
           msg =
-              gameHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ, bytes, Constants.READ_PROMPT, input);
-          currHandler = gameHandler;
         } else if (Arrays.equals(header, Constants.HEADER_DONE)) {
           // Get the type of data that this DONE packet contains
           dataBuffer.get(header);
@@ -477,82 +468,74 @@ class BluetoothConnectService extends ConnectService {
           }
 
           msg =
-              gameHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ, bytes, Constants.READ_DONE, doneData);
-          currHandler = gameHandler;
         } else if (Arrays.equals(header, Constants.HEADER_REQUEST_SUCCESSOR)) {
           msg =
-              gameHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ,
                   bytes,
                   Constants.READ_REQUEST_SUCCESSOR,
                   dataBuffer.array());
-          currHandler = gameHandler;
         } else if (Arrays.equals(header, Constants.HEADER_RESPONSE_SUCCESSOR)) {
           msg =
-              gameHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ,
                   bytes,
                   Constants.READ_RESPONSE_SUCCESSOR,
                   dataBuffer.array());
-          currHandler = gameHandler;
         } else if (Arrays.equals(header, Constants.HEADER_NEW_START)) {
           msg =
-              gameHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ, bytes, Constants.READ_NEW_START, dataBuffer.array());
-          currHandler = gameHandler;
         } else if (Arrays.equals(header, Constants.HEADER_DTG)) {
           msg =
-              gameHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ, bytes, Constants.READ_DTG, dataBuffer.array());
-          currHandler = gameHandler;
         } else if (Arrays.equals(header, Constants.HEADER_GIVE_SUCCESSOR)) {
           msg =
-              gameHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ, bytes, Constants.READ_GIVE_SUCCESSOR, dataBuffer.array());
-          currHandler = gameHandler;
           // Main Handler
         } else if (Arrays.equals(header, Constants.HEADER_RETURN_TO_LOBBY)) {
           msg =
-              mainHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ, bytes, Constants.READ_RTL, dataBuffer.array());
         } else if (Arrays.equals(header, Constants.HEADER_START)) {
           msg =
-              mainHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ, bytes, Constants.READ_START, dataBuffer.array());
         } else if (Arrays.equals(header, Constants.HEADER_START_ACK)) {
           msg =
-              mainHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ, bytes, Constants.READ_START_ACK, dataBuffer.array());
         } else if (Arrays.equals(header, Constants.HEADER_SUCCESSOR)) {
           msg =
-              mainHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ, bytes, Constants.READ_SUCCESSOR, dataBuffer.array());
         } else if (Arrays.equals(header, Constants.HEADER_DEVICES)) {
           msg =
-              mainHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ, bytes, Constants.READ_DEVICES, dataBuffer.array());
         } else if (Arrays.equals(header, Constants.HEADER_PING)) {
           msg =
-              mainHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ, bytes, Constants.READ_PING, dataBuffer.array());
         } else {
           msg =
-              mainHandler.obtainMessage(
+              packetHandler.obtainMessage(
                   Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, dataBuffer.array());
         }
       } else {
         msg =
-            mainHandler.obtainMessage(
+            packetHandler.obtainMessage(
                 Constants.MESSAGE_READ, bytes, Constants.READ_UNKNOWN, input);
       }
 
-      if (currHandler != null) {
         bundle.putString(Constants.DEVICE_ADDRESS, mmDevice.getAddress());
         bundle.putString(Constants.DEVICE_NAME, mmDevice.getName());
         msg.setData(bundle);
-        currHandler.sendMessage(msg);
-      }
+        packetHandler.sendMessage(msg);
     }
 
     byte[] processImage(ByteBuffer input, int imgBytes, byte[] data) {
