@@ -8,6 +8,7 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.cse461.a16au.papertelephone.lobby.LobbyActivity;
 import com.cse461.a16au.papertelephone.services.ConnectService;
 import com.cse461.a16au.papertelephone.services.ConnectServiceFactory;
 
@@ -46,15 +47,21 @@ public class GameController {
   private static final String TAG = "GameController";
 
   private static GameController ourInstance = new GameController();
+
   // TODO: 10/7/2017 organize these fields
   private int state;
+  /**
+   * String representing the address of the start device.
+   */
   private String startDevice;
-  private boolean isStart;
   private int lastSuccessorNumber;
   private ConnectService connectService;
   private Set<String> unplacedDevices;
   private List<String> connectedDevices;
   private List<String> connectedDeviceNames;
+  /**
+   * All the lobbied devices, i.e.
+   */
   private Set<String> lobbiedDevices;
   private Set<String> unackedDevices;
   private Set<StateChangeListener> stateChangeListeners;
@@ -88,7 +95,6 @@ public class GameController {
   public static final int STATE_IN_GAME_DRAW = 5;
   public static final int STATE_POST_GAME = 6;
 
-
   public synchronized int getState() {
     return state;
   }
@@ -100,7 +106,7 @@ public class GameController {
     }
   }
 
-  // MESSAGE HANDLERS
+  //////////////////// MESSAGE HANDLERS ////////////////////
 
   private Handler packetHandler = new Handler() {
     @Override
@@ -116,56 +122,41 @@ public class GameController {
    */
   private void handlePacket(Message msg) {
     String deviceAddress = msg.getData().getString(DEVICE_ADDRESS);
+    if (deviceAddress == null) {
+      Toast.makeText(this.getToaster(), "Invalid device address in packet", Toast.LENGTH_LONG).show();
+      return;
+    }
 
     // TODO: switch this from msg.arg2 to msg.what since the msg.what's have been isolated
     if (msg.arg2 == READ_PING) {
       Toast.makeText(this.getToaster(), "Received PING from " + deviceAddress, Toast.LENGTH_LONG).show();
     } else {
       switch (this.getState()) {
-        case STATE_PRE_LOBBY:
-          switch (msg.arg2) {
-            default:
-              Log.e(TAG, "Illegal packet received.");
-              break;
-          }
-          break;
         case STATE_LOBBY:
           switch (msg.arg2) {
             case READ_START:
+              // Acknowledge this device as the start device
               this.setStartDevice(deviceAddress);
               this.getConnectService().write(deviceAddress, HEADER_START_ACK);
-              this.setupUnplacedDevices();
-
-              // Immediately jump into PLACEMENT mode
-              this.setState(STATE_PLACEMENT);
-              break;
+              this.transitionToPlacement();
+              return;
             case READ_DEVICES:
               ByteBuffer buf = ByteBuffer.wrap((byte[]) msg.obj);
-
-              // Logic for receiving devices mid-game
-              int newTurnsLeft = buf.getInt();
-              // this.setGameActive(newTurnsLeft > 0);
-              // if (this.getGameActive()) {
-              //   this.setTurnsLeft(newTurnsLeft + 1); // offset from GameActivity's setupRound
-              // }
 
               // Connect to all devices that we are not already connected to
               int numDevices = buf.getInt();
               for (int i = 0; i < numDevices; i++) {
-                byte[] address = new byte[ADDRESS_LENGTH];
-                buf.get(address);
-                String addr = new String(address);
+                byte[] addressBuffer = new byte[ADDRESS_LENGTH];
+                buf.get(addressBuffer);
+                String address = new String(addressBuffer);
 
-                if (this.getConnectedDevices().indexOf(addr) >= 0) {
-                  Log.d(TAG, "Already connected to " + addr);
+                if (this.getConnectedDevices().indexOf(address) >= 0) {
+                  Log.d(TAG, "Already connected to " + address);
                 } else {
-                  this.getConnectService().connect(addr);
+                  this.getConnectService().connect(address);
                 }
               }
-              break;
-            default:
-              Log.e(TAG, "Illegal packet received.");
-              break;
+              return;
           }
           break;
         case STATE_SET_START:
@@ -173,33 +164,20 @@ public class GameController {
             case READ_START:
               // Check preference by address comparison
               if (this.getStartDevice().compareTo(deviceAddress) > 0) {
-                // TODO: factor this out from LOBBY and PLACEMENT states
                 this.setStartDevice(deviceAddress);
                 this.getConnectService().write(deviceAddress, HEADER_START_ACK);
-                this.setupUnplacedDevices();
-
-                this.setState(STATE_PLACEMENT);
+                this.transitionToPlacement();
+              } else {
+                Log.d(TAG, "Received START from inferior device.");
               }
-              break;
+              return;
             case READ_START_ACK:
               this.removeUnackedDevice(deviceAddress);
               if (this.unackedDevices.isEmpty()) {
-                this.isStart = true;
-                // Setup unplaced devices, i.e. all devices except for us
-                unplacedDevices.clear();
-
-                for (String device : this.getConnectedDevices()) {
-                  unplacedDevices.add(device);
-                }
-
-                chooseSuccessor();
-
-                this.setState(STATE_PLACEMENT);
+                this.transitionToPlacement();
+                this.chooseSuccessor();
               }
-              break;
-            default:
-              Log.e(TAG, "Illegal packet received.");
-              break;
+              return;
           }
           break;
         case STATE_PLACEMENT:
@@ -208,7 +186,7 @@ public class GameController {
               if (this.getStartDevice().compareTo(deviceAddress) > 0) {
                 this.setStartDevice(deviceAddress);
                 this.getConnectService().write(deviceAddress, HEADER_START_ACK);
-                this.setupUnplacedDevices();
+                this.transitionToPlacement();
               }
               break;
             case READ_SUCCESSOR:
@@ -219,20 +197,16 @@ public class GameController {
               byte[] successorAddressArr = new byte[ADDRESS_LENGTH];
               buf.get(successorAddressArr);
 
+              // Remove this from our list of unplaced devices
               String successorAddress = new String(successorAddressArr);
               this.unplacedDevices.remove(successorAddress);
 
-              if (!this.unplacedDevices.isEmpty()) {
-                //// Check if we are the chosen successor
-                //boolean isUs = true;
-                //for (String address : this.getConnectedDevices()) {
-                //  isUs = isUs && !successorAddress.equals(address);
-                //}
+              if (this.unplacedDevices.isEmpty()) {
+                transitionToGame();
+              } else {
                 if (this.getLocalAddress().equals(successorAddress)) {
                   chooseSuccessor();
                 }
-              } else {
-                transitionToGame();
               }
 
 //              // If we are the start device and we are the new successor, start game
@@ -248,10 +222,7 @@ public class GameController {
 //              if (isUs) {
 //                chooseSuccessor();
 //              }
-              break;
-            default:
-              Log.e(TAG, "Illegal packet received.");
-              break;
+              return;
           }
           break;
         case STATE_IN_GAME_PROMPT:
@@ -259,11 +230,8 @@ public class GameController {
         case STATE_POST_GAME:
           break;
       }
+      Log.e(TAG, "Illegal packet received.");
     }
-  }
-
-  private void transitionToGame() {
-
   }
 
   private Handler networkHandler = new Handler() {
@@ -326,7 +294,7 @@ public class GameController {
     }
   }
 
-  // DATA MUTATION/RETRIEVAL
+  //////////////////// DATA MUTATION/RETRIEVAL ////////////////////
 
   private void addLobbiedDevice(String deviceAddress) {
     this.lobbiedDevices.add(deviceAddress);
@@ -348,19 +316,6 @@ public class GameController {
 
   private void removeUnackedDevice(String deviceAddress) {
     this.unackedDevices.remove(deviceAddress);
-  }
-
-  /**
-   * Adds all connected devices to the set of unplaced devices. Note that this does NOT include
-   * self.
-   */
-  private void setupUnplacedDevices() {
-    this.unplacedDevices.clear();
-    for (String device : this.getConnectedDevices()) {
-      if (!device.equals(this.getLocalAddress())) {
-        this.unplacedDevices.add(device);
-      }
-    }
   }
 
   private synchronized String getStartDevice() {
@@ -411,10 +366,6 @@ public class GameController {
     this.localAddress = address;
   }
 
-  public void setTurnsLeft(int turnsLeft) {
-    this.turnsLeft = turnsLeft;
-  }
-
   public Context getToaster() {
     return toaster;
   }
@@ -423,22 +374,7 @@ public class GameController {
     this.toaster = toaster;
   }
 
-  /**
-   *
-   * @param type
-   * @param callbackActivity TODO explain
-   * @return true if the network type has been successfully chosen and setup
-   */
-  public boolean chooseNetworkType(int type, Activity callbackActivity) {
-    this.setConnectService(type, callbackActivity.getApplication());
-    return (this.getConnectService().setupNetwork(callbackActivity));
-  }
-
-  public interface ConnectedDevicesListener {
-    void onDeviceStatusChanged(int status, String address, String name);
-  }
-
-  // STATE CHANGE
+  //////////////////// STATE CHANGE ////////////////////
 
   /**
    * TODO: make only listen for specific state changes eventually so as to not wastefully spawn
@@ -454,6 +390,16 @@ public class GameController {
     this.stateChangeListeners.remove(listener);
   }
 
+  public void registerConnectedDevicesListener(ConnectedDevicesListener listener) {
+    this.connectedDevicesListener = listener;
+  }
+
+  public void unregisterConnectedDevicesListener(ConnectedDevicesListener listener) {
+    if (this.connectedDevicesListener.equals(listener)) {
+      this.connectedDevicesListener = null;
+    }
+  }
+
   /**
    * A listener that will be called when the game state changes.
    */
@@ -461,7 +407,30 @@ public class GameController {
     void onStateChange(int newState, int oldState);
   }
 
-  // ACTUAL OPERATIONS
+  //////////////////// OPERATIONS ////////////////////
+
+  /**
+   * Adds all connected devices to the set of unplaced devices. Note that this does NOT include
+   * self.
+   */
+  private void transitionToPlacement() {
+    this.unplacedDevices.clear();
+    for (String device : this.getConnectedDevices()) {
+      if (!device.equals(this.getLocalAddress())) {
+        this.unplacedDevices.add(device);
+      }
+    }
+
+    this.setState(STATE_PLACEMENT);
+  }
+
+  /**
+   * Switches to IN_GAME_PROMPT state
+   */
+  private void transitionToGame() {
+    // TODO: implement
+    this.setState(STATE_IN_GAME_PROMPT);
+  }
 
   /**
    * After establishing a connection with another device, send the already-connected devices with
@@ -515,39 +484,40 @@ public class GameController {
     this.setStartDevice(null);
   }
 
+  /**
+   *
+   */
   public void startGameClicked() {
-    boolean allLobbied = true;
-
-    for (String device : this.getConnectedDevices()) {
-      allLobbied = allLobbied && this.getLobbiedDevices().contains(device);
+    // Check that there's a valid number of players connected
+    if (this.getConnectedDevices().size() < Constants.MIN_PLAYERS - 1) {
+      Toast.makeText(this.getToaster(), "You don't have enough players, the game requires " + "at least 3 players", Toast.LENGTH_LONG).show();
+      return;
     }
 
-    if (this.getConnectedDevices().size() >= Constants.MIN_PLAYERS - 1 && allLobbied) {
-      this.clearLobbiedDevices();
-
-      if (this.getState() == STATE_LOBBY) {
-        this.isStart = true;
-        this.setStartDevice(null);
-
-        for (String currDevice : this.getConnectedDevices()) {
-          this.getConnectService().write(currDevice, HEADER_START);
-          this.unackedDevices.add(currDevice);
-        }
-
-        this.setState(STATE_SET_START);
-      } else {
-        Toast.makeText(this.getToaster(), "Someone else hit start", Toast.LENGTH_LONG).show();
-      }
-    } else {
-      if (!allLobbied) {
-        Toast.makeText(this.getToaster(), "All connected devices have not returned to the lobby.", Toast.LENGTH_LONG)
-            .show();
-      } else {
-        Toast.makeText(this.getToaster(), "You don't have enough players, the game requires " + "at least 3 players", Toast.LENGTH_LONG)
-            .show();
-      }
+    // TODO: What is this?
+    // Check that lobbied devices contains connected devices
+    if (!this.getLobbiedDevices().containsAll(this.getConnectedDevices())) {
+      Toast.makeText(this.getToaster(), "All connected devices have not returned to the lobby.", Toast.LENGTH_LONG).show();
+      return;
     }
 
+    // Check that we're in the LOBBY state
+    if (this.getState() != STATE_LOBBY) {
+      Toast.makeText(this.getToaster(), "Not in LOBBY state.", Toast.LENGTH_LONG).show();
+      return;
+    }
+
+    // Set ourselves as the start device
+    this.setStartDevice(this.getConnectService().getLocalAddress());
+    this.clearLobbiedDevices();
+
+    // Send off START messages to all connected devices, add all devices to unacked
+    for (String currDevice : this.getConnectedDevices()) {
+      this.getConnectService().write(currDevice, HEADER_START);
+      this.unackedDevices.add(currDevice);
+    }
+
+    this.setState(STATE_SET_START);
   }
 
   /**
@@ -585,4 +555,17 @@ public class GameController {
     }
   }
 
+  /**
+   * @param type
+   * @param callbackActivity TODO explain
+   * @return true if the network type has been successfully chosen and setup
+   */
+  public boolean chooseNetworkType(int type, Activity callbackActivity) {
+    this.setConnectService(type, callbackActivity.getApplication());
+    return (this.getConnectService().setupNetwork(callbackActivity));
+  }
+
+  public interface ConnectedDevicesListener {
+    void onDeviceStatusChanged(int status, String address, String name);
+  }
 }

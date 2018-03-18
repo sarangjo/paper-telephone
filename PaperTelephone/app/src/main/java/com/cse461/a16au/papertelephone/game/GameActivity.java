@@ -74,6 +74,7 @@ public class GameActivity extends AppCompatActivity implements GameFragment.Data
   private TextView mSuccessorView;
   private List<String> successors;
   private byte[] mDoneMsg;
+
   /** Handles packets that the game receives from BluetoothConnectService */
   private final Handler mGameHandler =
       new Handler() {

@@ -11,13 +11,11 @@ public abstract class ConnectService {
   public static final int STATE_STARTED = 1;
 
   int state;
-  // TODO 12/17/17 - we should not need the gameHandler, right? Just the packet and network handlers
-  // should be sufficient
-  //Handler gameHandler;
-  protected Handler packetHandler;
-  protected Handler networkHandler;
-  protected Application applicationContext;
-  protected String localAddress;
+
+  Handler packetHandler;
+  Handler networkHandler;
+  Application applicationContext;
+  String localAddress;
 
   public abstract boolean write(String device, byte[] data);
 
@@ -42,6 +40,10 @@ public abstract class ConnectService {
   public abstract void stop();
 
   public abstract void connect(String address);
+
+  public abstract void joinLobby(String lobbyId);
+
+  public abstract void leaveLobby(String lobbyId);
 
   public abstract String getLocalAddress();
 

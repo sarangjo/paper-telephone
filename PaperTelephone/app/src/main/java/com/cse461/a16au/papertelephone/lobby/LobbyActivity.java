@@ -30,11 +30,13 @@ import static com.cse461.a16au.papertelephone.GameController.STATE_PLACEMENT;
  */
 public class LobbyActivity extends AppCompatActivity
     implements DevicesFragment.ConnectDeviceListener,
-        GameController.ConnectedDevicesListener,
-        GameController.StateChangeListener {
+    GameController.ConnectedDevicesListener,
+    GameController.StateChangeListener {
   private static final String TAG = "LobbyActivity";
 
-  /** Adapter for connected devices view */
+  /**
+   * Adapter for connected devices view
+   */
   private ArrayAdapter<String> mConnectedDevicesNamesAdapter;
 
   private Button mStartGameButton;
@@ -49,6 +51,7 @@ public class LobbyActivity extends AppCompatActivity
 
     mController = GameController.getInstance();
     mController.registerStateChangeListener(this);
+    mController.registerConnectedDevicesListener(this);
     mController.setToaster(this);
 
     // Views
@@ -73,6 +76,8 @@ public class LobbyActivity extends AppCompatActivity
             mController.startGameClicked();
           }
         });
+
+    this.updateStartGameButton();
   }
 
   @Override
@@ -118,6 +123,9 @@ public class LobbyActivity extends AppCompatActivity
     }
   }
 
+  /**
+   * Updates the Start Game button's enabled state depending on the number of connected devices.
+   */
   private void updateStartGameButton() {
     if (mController.getConnectedDevices().size() >= MIN_PLAYERS - 1) {
       mStartGameButton.setEnabled(true);
@@ -143,9 +151,9 @@ public class LobbyActivity extends AppCompatActivity
         break;
       case MESSAGE_CONNECT_FAILED:
         Toast.makeText(
-                LobbyActivity.this,
-                "Unable to connect: " + name + ". Please try again.",
-                Toast.LENGTH_LONG)
+            LobbyActivity.this,
+            "Unable to connect: " + name + ". Please try again.",
+            Toast.LENGTH_LONG)
             .show();
         break;
     }
@@ -153,10 +161,6 @@ public class LobbyActivity extends AppCompatActivity
       case MESSAGE_CONNECTED:
       case MESSAGE_DISCONNECTED:
         mConnectedDevicesNamesAdapter.notifyDataSetChanged();
-
-        // if (GameData.connectionChangeListener != null) {
-        //   GameData.connectionChangeListener.disconnection(deviceAddress);
-        // }
 
         this.updateStartGameButton();
         break;

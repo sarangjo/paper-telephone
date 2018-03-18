@@ -58,6 +58,16 @@ public class WiFiConnectService extends ConnectService {
   public void connect(String address) {}
 
   @Override
+  public void joinLobby(String lobbyId) {
+
+  }
+
+  @Override
+  public void leaveLobby(String lobbyId) {
+
+  }
+
+  @Override
   public String getLocalAddress() {
     return null;
   }

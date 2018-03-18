@@ -21,20 +21,28 @@ class InternetConnectService extends ConnectService {
   }
 
   @Override
-  public int getState() {
-    return 0;
-  }
-
-  @Override
   public void start() {
+
   }
 
   @Override
   public void stop() {
+
   }
 
   @Override
   public void connect(String address) {
+
+  }
+
+  @Override
+  public void joinLobby(String lobbyId) {
+
+  }
+
+  @Override
+  public void leaveLobby(String lobbyId) {
+
   }
 
   @Override

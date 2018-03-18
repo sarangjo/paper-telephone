@@ -13,6 +13,7 @@ import android.os.Message;
 import android.util.Log;
 
 import com.cse461.a16au.papertelephone.Constants;
+import com.cse461.a16au.papertelephone.game.Lobby;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,6 +38,9 @@ class BluetoothConnectService extends ConnectService {
   private final Map<String, BluetoothThread> mConnectThreads;
   private final Map<String, BluetoothThread> mConnectedThreads;
   private BluetoothThread mAcceptThread;
+
+  // Lobby
+  private Lobby currentLobby;
 
   private BluetoothConnectService() {
     mAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -146,6 +150,16 @@ class BluetoothConnectService extends ConnectService {
     //         networkHandler.sendMessage(msg);
     //     }
     // }.start();
+  }
+
+  @Override
+  public void joinLobby(String lobbyId) {
+
+  }
+
+  @Override
+  public void leaveLobby(String lobbyId) {
+
   }
 
   @Override
