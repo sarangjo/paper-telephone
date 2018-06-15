@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"strings"
 )
@@ -14,7 +15,7 @@ type Server struct {
 
 // Create a room on this server.
 func (this *Server) CreateRoom(w http.ResponseWriter, remoteAddr string) {
-    r := newRoom()
+    r := NewRoom()
     u := r.uuid.String()
     this.rooms[u] = r
     if this.JoinRoom(w, u, remoteAddr) {
@@ -72,10 +73,38 @@ func (this *Server) RoomHandler(w http.ResponseWriter, r *http.Request) {
     fmt.Printf("%v", this.rooms)
 }
 
+// A new remote has joined the game
+func (this *Server) HandleConnection(conn net.Conn) {
+	buf := make([]byte, 1024)
+
+	for {
+		len, err := conn.Read(buf)
+		if err != nil {
+			fmt.Printf("Read error: %v", err)
+			return
+		}
+
+	}
+}
+
 func (this *Server) Start() {
-    http.HandleFunc("/room/", this.RoomHandler)
+    // http.HandleFunc("/room/", this.RoomHandler)
+	ln, err := net.Listen("tcp", ":8080")
+	if err != nil {
+		log.Fatal(err)
+	}
+
     fmt.Println("Serving at 8080")
-    log.Fatal(http.ListenAndServe(":8080", nil))
+	for {
+		conn, err := ln.Accept()
+		if err != nil {
+			fmt.Printf("Accept error: %v", err)
+			return
+		}
+
+		go this.HandleConnection(conn)
+	}
+    // log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func main() {
