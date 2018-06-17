@@ -1,114 +1,160 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
+	"github.com/satori/go.uuid"
+	"io"
 	"log"
 	"net"
-	"net/http"
-	"strings"
+	"sync"
 )
 
-type Server struct {
-	rooms map[string]*Room
-    users map[string]*Room
-}
+var mutex *sync.Mutex
+var rooms map[string]*Room
+
+// TODO general: writing back to the player is pretty shoddy; distinguish
+// between errors and normal
 
 // Create a room on this server.
-func (this *Server) CreateRoom(w http.ResponseWriter, remoteAddr string) {
-    r := NewRoom()
-    u := r.uuid.String()
-    this.rooms[u] = r
-    if this.JoinRoom(w, u, remoteAddr) {
-        fmt.Fprintf(w, "%s", r.uuid)
-    }
-}
+func CreateRoom(player Player) {
+	fmt.Println("Creating a room")
 
-// Join a room on this server.
-func (this *Server) JoinRoom(w http.ResponseWriter, roomUuid string, remoteAddr string) bool {
-    if _, ok := this.rooms[roomUuid]; !ok {
-        fmt.Fprintf(w, "Room does not exist")
-        return false
-    }
-    if err := this.rooms[roomUuid].AddMember(remoteAddr); err != nil {
-        fmt.Fprintf(w, "%s", err)
-        return false
-    }
-    this.users[remoteAddr] = this.rooms[roomUuid]
-    return true
-}
-
-// Start a game for a room.
-func (this *Server) StartGame(w http.ResponseWriter, remoteAddr string) {
-    room, ok := this.users[remoteAddr]
-    if !ok {
-        fmt.Fprintf(w, "User has not joined a room")
-        return
-    }
-
-	room.StartGame()
-}
-
-// Handle room requests
-func (this *Server) RoomHandler(w http.ResponseWriter, r *http.Request) {
-    req := strings.Split(r.URL.Path, "/")
-
-	// TODO use only the IP address, not the port, of this remote address
-    fmt.Fprintf(w, "Request: %s", r.RemoteAddr)
-
-    switch req[2] {
-    case "create":
-        this.CreateRoom(w, r.RemoteAddr)
-        break
-    case "join":
-        this.JoinRoom(w, r.Header[http.CanonicalHeaderKey("room")][0], r.RemoteAddr)
-        break
-    case "start":
-		this.StartGame(w, r.RemoteAddr)
-		break
-    default:
-        fmt.Fprintf(w, "unknown request")
-        break
-    }
-
-    fmt.Printf("%v", this.rooms)
-}
-
-// A new remote has joined the game
-func (this *Server) HandleConnection(conn net.Conn) {
-	buf := make([]byte, 1024)
-
-	for {
-		len, err := conn.Read(buf)
-		if err != nil {
-			fmt.Printf("Read error: %v", err)
-			return
-		}
-
+	r := NewRoom()
+	u := r.uuid.String()
+	mutex.Lock()
+	rooms[u] = r
+	mutex.Unlock()
+	if JoinRoom(player, u) {
+		player.WriteBytes(r.uuid.Bytes())
 	}
 }
 
-func (this *Server) Start() {
-    // http.HandleFunc("/room/", this.RoomHandler)
-	ln, err := net.Listen("tcp", ":8080")
+// Join a room on this server.
+func JoinRoom(player Player, roomUuid string) bool {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if _, ok := rooms[roomUuid]; !ok {
+		player.WriteError("Room does not exist")
+		return false
+	}
+	if err := rooms[roomUuid].AddMember(player); err != nil {
+		player.WriteError(fmt.Sprintf("%s", err))
+		return false
+	}
+	fmt.Println("Joining a room")
+	player.room = rooms[roomUuid]
+
+	fmt.Println(rooms[roomUuid].String())
+
+	return true
+}
+
+const (
+	HEADER_ROOM_CREATE = iota
+	HEADER_ROOM_JOIN   = iota
+	HEADER_START_GAME  = iota
+)
+
+func HandlePacket(player Player, b *bytes.Buffer) {
+	fmt.Println("Received packet.")
+
+	// TODO copy this logic from the Android project
+	headerBytes := b.Next(4)
+	header := binary.BigEndian.Uint32(headerBytes)
+
+	fmt.Println("Header:", header)
+	fmt.Println(HEADER_ROOM_JOIN)
+
+	switch header {
+	case HEADER_ROOM_CREATE:
+		CreateRoom(player)
+		break
+	case HEADER_ROOM_JOIN:
+		JoinRoom(player, string(b.Next(uuid.Size)))
+		break
+	default:
+		// Dispatch this to the room-specific stuff
+		if player.room != nil {
+			player.room.HandlePacket(player, b)
+		}
+		break
+	}
+}
+
+// A new player has joined the server
+func HandleConnection(player Player) {
+	fmt.Println("Handled new connection:", player.GetAddr())
+
+	buf := make([]byte, 1024)
+	var b bytes.Buffer
+
+	for {
+		// Handling a single packet
+		for {
+			len, err := player.Read(buf)
+			if err != nil {
+				if err == io.EOF {
+					fmt.Println("Connection closed!")
+				} else {
+					fmt.Println("Read error:", err)
+				}
+
+				// Disconnect logic
+				player.Close()
+				if player.room != nil {
+					player.room.RemoveMember(player)
+					fmt.Println(player.room.String())
+					player.room = nil
+				}
+				return
+			}
+			b.Write(buf)
+
+			if len < 1024 {
+				break
+			}
+		}
+
+		// Packet has been fully read, dispatch
+		HandlePacket(player, &b)
+	}
+}
+
+const PORT = 8080
+
+func Spin() {
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", PORT))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-    fmt.Println("Serving at 8080")
+	fmt.Println("Serving at 8080")
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
 			fmt.Printf("Accept error: %v", err)
 			return
 		}
+		// Register the connection
+		player := Player{}
+		player.conn = conn
+		player.room = nil
 
-		go this.HandleConnection(conn)
+		go HandleConnection(player)
 	}
-    // log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func HandleUserCommands() {
+	// TODO implement
 }
 
 func main() {
-    s := Server{}
-    s.rooms = make(map[string]*Room)
-    s.Start()
+	mutex = &sync.Mutex{}
+	rooms = make(map[string]*Room)
+
+	go HandleUserCommands()
+	Spin()
 }
