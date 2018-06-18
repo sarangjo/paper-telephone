@@ -1,89 +1,131 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/satori/go.uuid"
 	"io"
 	"log"
 	"net"
+	"os"
+	"strings"
 	"sync"
 )
 
 var mutex *sync.Mutex
-var rooms map[string]*Room
+var rooms map[RoomID]*Room
 
-// TODO general: writing back to the player is pretty shoddy; distinguish
-// between errors and normal
-
-// Create a room on this server.
-func CreateRoom(player Player) {
-	fmt.Println("Creating a room")
-
+// Creates a room on this server. Returns the created room UUID
+func createRoom(player *Player) (RoomID, error) {
 	r := NewRoom()
-	u := r.uuid.String()
+	u := r.uuid
 	mutex.Lock()
 	rooms[u] = r
 	mutex.Unlock()
-	if JoinRoom(player, u) {
-		player.WriteBytes(r.uuid.Bytes())
+	if err := joinRoom(player, u); err != nil {
+		return u, err
 	}
+	return u, nil
 }
 
-// Join a room on this server.
-func JoinRoom(player Player, roomUuid string) bool {
+// Joins a room on this server.
+func joinRoom(player *Player, roomUUID RoomID) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	if _, ok := rooms[roomUuid]; !ok {
-		player.WriteError("Room does not exist")
-		return false
+	if _, ok := rooms[roomUUID]; !ok {
+		return fmt.Errorf("Room does not exist")
 	}
-	if err := rooms[roomUuid].AddMember(player); err != nil {
-		player.WriteError(fmt.Sprintf("%s", err))
-		return false
+	if err := rooms[roomUUID].AddMember(player); err != nil {
+		return fmt.Errorf("%s", err)
 	}
-	fmt.Println("Joining a room")
-	player.room = rooms[roomUuid]
+	player.room = rooms[roomUUID]
 
-	fmt.Println(rooms[roomUuid].String())
+	fmt.Println(rooms[roomUUID].String())
 
-	return true
+	return nil
 }
 
+// Header constants
 const (
-	HEADER_ROOM_CREATE = iota
-	HEADER_ROOM_JOIN   = iota
-	HEADER_START_GAME  = iota
+	HeaderRoomCreate = iota
+	HeaderRoomJoin   = iota
+	HeaderStartGame  = iota
+	HeaderSubmitTurn = iota
 )
 
-func HandlePacket(player Player, b *bytes.Buffer) {
-	fmt.Println("Buffer length:", b.Len())
+// Response codes
+const (
+	ResponseError   = iota
+	ResponseSuccess = iota
+)
 
+// Returns content and error, if any
+func handlePacket(player *Player, b *bytes.Buffer) (*bytes.Buffer, error) {
 	// TODO copy this logic from the Android project
+	len := b.Len()
 	headerBytes := b.Next(4)
 	header := binary.BigEndian.Uint32(headerBytes)
 
+	fmt.Println("Received packet of size", len, "with header", header)
+
+	var contentBuf bytes.Buffer
+	var err error
+
 	switch header {
-	case HEADER_ROOM_CREATE:
-		CreateRoom(player)
-		break
-	case HEADER_ROOM_JOIN:
-		roomUuid := uuid.FromBytesOrNil(b.Next(uuid.Size))
-		JoinRoom(player, roomUuid.String())
-		break
-	default:
-		// Dispatch this to the room-specific stuff
-		if player.room != nil {
-			player.room.HandlePacket(player, b)
+	case HeaderRoomCreate:
+		fmt.Println("Creating a room")
+		var u RoomID
+		u, err = createRoom(player)
+		if err == nil {
+			contentBuf.Write(u.Bytes())
 		}
 		break
+	case HeaderRoomJoin:
+		roomUUID := RoomIdFromBytes(b.Next(RoomIdSize()))
+		fmt.Println("Joining room", roomUUID.String())
+		err = joinRoom(player, roomUUID)
+		break
+	case HeaderStartGame:
+		if player.room != nil {
+			err = player.room.StartGame()
+		} else {
+			err = fmt.Errorf("Player not in room")
+		}
+		break
+	case HeaderSubmitTurn:
+		if player.room != nil {
+			// Extract the remainder of the bytes of the packet
+			data := b.Next(b.Len())
+			err = player.room.SubmitTurn(player, data)
+		} else {
+			err = fmt.Errorf("Player not in room")
+		}
+		break
+	default:
+		fmt.Println("Invalid header")
+		err = fmt.Errorf("Invalid header")
+		break
+	}
+
+	return &contentBuf, err
+}
+
+func disconnectPlayer(player *Player) {
+	player.Close()
+	if player.room != nil {
+		player.room.RemoveMember(player)
+		fmt.Println(player.room.String())
+
+		// TODO potentially close up room if empty?
+
+		player.room = nil
 	}
 }
 
 // A new player has joined the server
-func HandleConnection(player Player) {
+func handleConnection(player *Player) {
 	fmt.Println("Handled new connection:", player.GetAddr())
 
 	b := make([]byte, 1024)
@@ -101,15 +143,9 @@ func HandleConnection(player Player) {
 				}
 
 				// Disconnect logic
-				player.Close()
-				if player.room != nil {
-					player.room.RemoveMember(player)
-					fmt.Println(player.room.String())
-					player.room = nil
-				}
+				disconnectPlayer(player)
 				return
 			}
-			fmt.Println("Received packet of length", len)
 			buf.Write(b[:len])
 
 			if len < 1024 {
@@ -118,14 +154,27 @@ func HandleConnection(player Player) {
 		}
 
 		// Packet has been fully read, dispatch
-		HandlePacket(player, &buf)
+		contentBuf, err := handlePacket(player, &buf)
+		var responseBuf bytes.Buffer
+
+		responseCode := make([]byte, 4)
+		binary.BigEndian.PutUint32(responseCode, ResponseSuccess)
+		if err != nil {
+			fmt.Println(err)
+			binary.BigEndian.PutUint32(responseCode, ResponseError)
+		}
+		responseBuf.Write(responseCode)
+		responseBuf.Write(contentBuf.Bytes())
+
+		fmt.Println("Writing response of length", responseBuf.Len())
+		player.WriteBytes(responseBuf.Bytes())
 	}
 }
 
-const PORT = 8080
+const serverPort = 8080
 
-func Spin() {
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", PORT))
+func spin() {
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", serverPort))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -138,22 +187,39 @@ func Spin() {
 			return
 		}
 		// Register the connection
-		player := Player{}
+		player := &Player{}
 		player.conn = conn
 		player.room = nil
 
-		go HandleConnection(player)
+		go handleConnection(player)
 	}
 }
 
-func HandleUserCommands() {
+func handleUserCommands() {
 	// TODO implement
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		text, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Fprintf(os.Stderr, fmt.Sprint(err))
+			os.Exit(69)
+			return
+		}
+
+		switch strings.TrimSpace(text) {
+		case "r":
+			for _, room := range rooms {
+				fmt.Println(room.String())
+			}
+			break
+		}
+	}
 }
 
 func main() {
 	mutex = &sync.Mutex{}
-	rooms = make(map[string]*Room)
+	rooms = make(map[RoomID]*Room)
 
-	go HandleUserCommands()
-	Spin()
+	go handleUserCommands()
+	spin()
 }

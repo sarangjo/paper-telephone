@@ -4,32 +4,28 @@ import (
 	"net"
 )
 
+// Player represents a single player registered on the server
 type Player struct {
 	conn net.Conn
 	room *Room
 }
 
-func (this *Player) Read(b []byte) (int, error) {
-	return this.conn.Read(b)
+// nolint
+func (p *Player) Read(b []byte) (int, error) {
+	return p.conn.Read(b)
 }
 
-func (this *Player) WriteError(s string) (int, error) {
-	// TODO first write an error header
-	return this.WriteString(s)
+// nolint
+func (p *Player) WriteBytes(b []byte) (int, error) {
+	return p.conn.Write(b)
 }
 
-func (this *Player) WriteString(s string) (int, error) {
-	return this.WriteBytes([]byte(s))
+// nolint
+func (p *Player) Close() error {
+	return p.conn.Close()
 }
 
-func (this *Player) WriteBytes(b []byte) (int, error) {
-	return this.conn.Write(b)
-}
-
-func (this *Player) Close() error {
-	return this.conn.Close()
-}
-
-func (this *Player) GetAddr() string {
-	return this.conn.RemoteAddr().String()
+// nolint
+func (p *Player) GetAddr() string {
+	return p.conn.RemoteAddr().String()
 }

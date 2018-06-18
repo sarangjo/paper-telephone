@@ -1,178 +1,172 @@
 package main
 
 import (
-	"encoding/binary"
-	"bytes"
 	"container/ring"
 	"errors"
 	"fmt"
-	"github.com/satori/go.uuid"
 	"math/rand"
 	"sync"
 )
 
 // State of this game
 const (
-	STATE_LOBBY     = iota
-	STATE_PLACEMENT = iota
-	STATE_GAME      = iota
-	STATE_END_GAME  = iota
+	StateLobby     = iota
+	StatePlacement = iota
+	StateGame      = iota
+	StateEndGame   = iota
 )
 
-const MIN_PLAYERS = 2 // TODO 3
+// MinPlayers is the minimum number of players needed to play a game
+// TODO should be 3
+const MinPlayers = 2
 
+// Room represents a room hosted on the server
 type Room struct {
-	members    map[Player]bool
+	members    map[*Player]bool
 	mutex      *sync.Mutex
-	papers     map[Player][][]byte
+	papers     map[*Player][][]byte
 	ring       *ring.Ring
 	round      int
 	state      uint
-	uuid       uuid.UUID
-	waitingFor map[Player]bool
+	uuid       RoomID
+	waitingFor map[*Player]bool
 }
 
-// Create a new Room struct
+// NewRoom creates a new Room struct
 func NewRoom() *Room {
 	r := &Room{}
-	r.members = make(map[Player]bool)
+	r.members = make(map[*Player]bool)
 	r.mutex = &sync.Mutex{}
-	r.papers = make(map[Player][][]byte)
+	r.papers = make(map[*Player][][]byte)
 	r.ring = nil
 	r.round = 0
-	r.state = STATE_LOBBY
-	r.uuid = uuid.Must(uuid.NewV4())
-	r.waitingFor = make(map[Player]bool)
+	r.state = StateLobby
+	r.uuid = NewRoomId()
+	r.waitingFor = make(map[*Player]bool)
 
 	return r
 }
 
-func (this *Room) HandlePacket(player Player, b *bytes.Buffer) {
-	this.mutex.Lock()
-	defer this.mutex.Unlock()
-	// TODO copy this logic from the Android project
-	headerBytes := b.Next(4)
-	header := binary.BigEndian.Uint32(headerBytes)
+// AddMember adds a new player to this room
+func (r *Room) AddMember(player *Player) error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
-	switch header {
-	case HEADER_START_GAME:
-		this.StartGame()
-		break
-	}
-}
-
-// Add a new player to this room
-func (this *Room) AddMember(player Player) error {
-	this.mutex.Lock()
-	defer this.mutex.Unlock()
-
-	if this.state != STATE_LOBBY {
+	if r.state != StateLobby {
 		return errors.New("Room must be in lobby to join")
 	}
-	if _, ok := this.members[player]; ok {
+	if _, ok := r.members[player]; ok {
 		return errors.New("User already member of room")
 	}
-	this.members[player] = true
+	r.members[player] = true
 	return nil
 }
 
-// TODO implement
-func (this *Room) RemoveMember(player Player) error {
-	this.mutex.Lock()
-	defer this.mutex.Unlock()
+// RemoveMember removes a player from this room
+func (r *Room) RemoveMember(player *Player) error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	delete(r.members, player)
 
 	return nil
 }
 
-// Start the game for this room
-func (this *Room) StartGame() error {
-	this.mutex.Lock()
-	defer this.mutex.Unlock()
+// StartGame starts the game for r room
+func (r *Room) StartGame() error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	fmt.Println("Starting game")
 
 	// Error checking
-	if this.state != STATE_LOBBY {
+	if r.state != StateLobby {
 		return errors.New("Game can only start from lobby state")
 	}
-	if len(this.members) < MIN_PLAYERS {
+	if len(r.members) < MinPlayers {
 		return errors.New("Insufficient number of players")
 	}
 
-	// Set to STATE_PLACEMENT
-	this.state = STATE_PLACEMENT
+	// Set to StatePlacement
+	r.state = StatePlacement
 
 	// Place members in the ring
 	// 1. First convert the Set into an array (for indexing purposes)
-	keys := make([]Player, len(this.members))
+	keys := make([]*Player, len(r.members))
 	i := 0
-	for mem := range this.members {
+	for mem := range r.members {
 		keys[i] = mem
-		this.waitingFor[mem] = true
+		r.waitingFor[mem] = true
 		i++
 	}
 	// 2. Create a Ring and randomly place members into the ring
-	this.ring = ring.New(len(this.members))
-	order := rand.Perm(len(this.members))
-	for i = 0; i < len(this.members); i++ {
-		this.ring.Value = keys[order[i]]
-		this.ring = this.ring.Next()
+	r.ring = ring.New(len(r.members))
+	order := rand.Perm(len(r.members))
+	for i = 0; i < len(r.members); i++ {
+		r.ring.Value = keys[order[i]]
+		r.ring = r.ring.Next()
 
-		// Initialize this player's paper
-		this.papers[keys[order[i]]] = make([][]byte, len(this.members))
+		// Initialize r player's paper
+		r.papers[keys[order[i]]] = make([][]byte, len(r.members))
 	}
 
-	// Set to STATE_GAME
-	this.state = STATE_GAME
+	// Set to StateGame
+	r.state = StateGame
+
+	fmt.Println("Game started!")
 
 	return nil
 }
 
-// Creates a new Game struct and sets up the game data structures
-// Returns true if the overall turn is done
-func (this *Room) SubmitTurn(player Player, data []byte) bool {
-	this.mutex.Lock()
-	defer this.mutex.Unlock()
+// SubmitTurn submits a turn. Returns true if the overall turn is done
+func (r *Room) SubmitTurn(player *Player, data []byte) error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
-	paper := this.papers[player]
+	fmt.Println("Submitting turn:", string(data))
+	paper := r.papers[player]
 	// TODO check consistency of round number
-	// if this.round != len(paper) {
+	// if r.round != len(paper) {
 	// 	return errors.New("Inconsistent round # and submission")
 	// }
-	paper[this.round] = data
+	paper[r.round] = data
 
-	delete(this.waitingFor, player)
-	if len(this.waitingFor) == 0 {
+	delete(r.waitingFor, player)
+	if len(r.waitingFor) == 0 {
 		// done waiting, advance to the next turn
-		return true
+		fmt.Println("next turn!!")
+		return r.nextTurn()
 	}
 
-	return false
+	return nil
 }
 
-func (this *Room) NextTurn() {
-	this.mutex.Lock()
-	defer this.mutex.Unlock()
+// nextTurn advances this room's game to the next turn
+// NOTE: mutex must be held on entry
+func (r *Room) nextTurn() error {
+	r.round++
 
-	this.round++
-
-	for member := range this.members {
-		this.waitingFor[member] = true
+	for member := range r.members {
+		r.waitingFor[member] = true
 	}
 
 	// TODO broadcast next turn (including turn #) to all players
+
+	return nil
 }
 
 // Returns a string representation of the room
-func (this *Room) String() string {
-	this.mutex.Lock()
-	defer this.mutex.Unlock()
+func (r *Room) String() string {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
-	mems := make([]string, len(this.members))
+	mems := make([]string, len(r.members))
 	i := 0
-	for key, _ := range this.members {
+	for key := range r.members {
 		mems[i] = key.GetAddr()
 
 		i++
 	}
 
-	return fmt.Sprintf("%s\n%v", this.uuid.String(), mems)
+	return fmt.Sprintf("%s: %v", r.uuid.String(), mems)
 }
