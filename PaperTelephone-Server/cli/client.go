@@ -57,7 +57,8 @@ func main() {
 		case "c":
 			// Create room
 			binary.BigEndian.PutUint32(header, HEADER_ROOM_CREATE)
-			conn.Write(header)
+			len,_ := conn.Write(header)
+			fmt.Println("Bytes written:", len)
 
 			uuidBytes := make([]byte, uuid.Size)
 			conn.Read(uuidBytes)

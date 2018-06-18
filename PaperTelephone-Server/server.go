@@ -59,21 +59,19 @@ const (
 )
 
 func HandlePacket(player Player, b *bytes.Buffer) {
-	fmt.Println("Received packet.")
+	fmt.Println("Buffer length:", b.Len())
 
 	// TODO copy this logic from the Android project
 	headerBytes := b.Next(4)
 	header := binary.BigEndian.Uint32(headerBytes)
-
-	fmt.Println("Header:", header)
-	fmt.Println(HEADER_ROOM_JOIN)
 
 	switch header {
 	case HEADER_ROOM_CREATE:
 		CreateRoom(player)
 		break
 	case HEADER_ROOM_JOIN:
-		JoinRoom(player, string(b.Next(uuid.Size)))
+		roomUuid := uuid.FromBytesOrNil(b.Next(uuid.Size))
+		JoinRoom(player, roomUuid.String())
 		break
 	default:
 		// Dispatch this to the room-specific stuff
@@ -88,13 +86,13 @@ func HandlePacket(player Player, b *bytes.Buffer) {
 func HandleConnection(player Player) {
 	fmt.Println("Handled new connection:", player.GetAddr())
 
-	buf := make([]byte, 1024)
-	var b bytes.Buffer
+	b := make([]byte, 1024)
+	var buf bytes.Buffer
 
 	for {
 		// Handling a single packet
 		for {
-			len, err := player.Read(buf)
+			len, err := player.Read(b)
 			if err != nil {
 				if err == io.EOF {
 					fmt.Println("Connection closed!")
@@ -111,7 +109,8 @@ func HandleConnection(player Player) {
 				}
 				return
 			}
-			b.Write(buf)
+			fmt.Println("Received packet of length", len)
+			buf.Write(b[:len])
 
 			if len < 1024 {
 				break
@@ -119,7 +118,7 @@ func HandleConnection(player Player) {
 		}
 
 		// Packet has been fully read, dispatch
-		HandlePacket(player, &b)
+		HandlePacket(player, &buf)
 	}
 }
 
