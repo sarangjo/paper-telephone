@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strings"
@@ -14,6 +15,7 @@ import (
 
 const debug = 1
 
+// nolint
 const (
 	HEADER_ROOM_CREATE = iota
 	HEADER_ROOM_JOIN   = iota
@@ -21,34 +23,74 @@ const (
 	HEADER_SUBMIT_TURN = iota
 )
 
+// nolint
 const (
-	ResponseError   = iota
-	ResponseSuccess = iota
+	ResponseError       = iota
+	ResponseSuccess     = iota
+	ResponseStartedGame = iota
+	ResponseNextTurn    = iota
 )
 
+var conn net.Conn
+var response chan bool
+
+func listen() {
+	b := make([]byte, 1024)
+	for {
+		_, err := conn.Read(b)
+		if err != nil {
+			if err == io.EOF {
+				fmt.Println("Connection closed")
+			}
+		}
+
+		code := binary.BigEndian.Uint32(b[:4])
+
+		switch code {
+		case ResponseError:
+			fmt.Println("Error")
+			response <- false
+			break
+		case ResponseSuccess:
+			fmt.Println("Success!")
+			response <- true
+			break
+		case ResponseStartedGame:
+			fmt.Println("Game started")
+			break
+		case ResponseNextTurn:
+			fmt.Println("next turn")
+			break
+		}
+	}
+}
+
 func main() {
-	tcp_port := 8080
-	server_addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", tcp_port))
+	response = make(chan bool)
+	tcpPort := 8080
+	serverAddr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", tcpPort))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	// connect remote and local tcp ports
-	conn, err := net.DialTCP("tcp", nil, server_addr)
+	conn, err = net.DialTCP("tcp", nil, serverAddr)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
+	// Start listening
+	go listen()
+
 	// Start taking commands from user
 	reader := bufio.NewReader(os.Stdin)
 
 	header := make([]byte, 4)
-	response := make([]byte, 30)
-	done := false
 
-	for !done {
+Loop:
+	for {
 		fmt.Print("Enter command: ")
 		text, err := reader.ReadString('\n')
 		var buf bytes.Buffer
@@ -64,8 +106,6 @@ func main() {
 			binary.BigEndian.PutUint32(header, HEADER_ROOM_CREATE)
 			len, _ := conn.Write(header)
 			fmt.Println("Bytes written:", len)
-
-			conn.Read(response)
 			break
 		case "j":
 			// Join room
@@ -75,13 +115,10 @@ func main() {
 			buf.Write(uuid.FromStringOrNil(command[1]).Bytes())
 
 			conn.Write(buf.Bytes())
-			conn.Read(response)
-
 			fmt.Println("Joined room")
 		case "s":
 			binary.BigEndian.PutUint32(header, HEADER_START_GAME)
 			conn.Write(header)
-			conn.Read(response)
 			break
 		case "t":
 			binary.BigEndian.PutUint32(header, HEADER_SUBMIT_TURN)
@@ -91,11 +128,13 @@ func main() {
 			buf.WriteString(msg)
 
 			conn.Write(buf.Bytes())
-			conn.Read(response)
-
 			fmt.Println("submitted turn:", msg)
 		case "q":
-			done = true
+			break Loop
+		}
+
+		success := <-response
+		if !success {
 			break
 		}
 	}

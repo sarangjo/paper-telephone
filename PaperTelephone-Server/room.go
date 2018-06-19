@@ -2,6 +2,7 @@ package main
 
 import (
 	"container/ring"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -22,7 +23,7 @@ const MinPlayers = 2
 
 // Room represents a room hosted on the server
 type Room struct {
-	members    map[*Player]bool
+	players    map[*Player]bool
 	mutex      *sync.Mutex
 	papers     map[*Player][][]byte
 	ring       *ring.Ring
@@ -35,7 +36,7 @@ type Room struct {
 // NewRoom creates a new Room struct
 func NewRoom() *Room {
 	r := &Room{}
-	r.members = make(map[*Player]bool)
+	r.players = make(map[*Player]bool)
 	r.mutex = &sync.Mutex{}
 	r.papers = make(map[*Player][][]byte)
 	r.ring = nil
@@ -55,10 +56,11 @@ func (r *Room) AddMember(player *Player) error {
 	if r.state != StateLobby {
 		return errors.New("Room must be in lobby to join")
 	}
-	if _, ok := r.members[player]; ok {
+	if _, ok := r.players[player]; ok {
 		return errors.New("User already member of room")
 	}
-	r.members[player] = true
+	r.players[player] = true
+	player.room = r
 	return nil
 }
 
@@ -67,7 +69,7 @@ func (r *Room) RemoveMember(player *Player) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	delete(r.members, player)
+	delete(r.players, player)
 
 	return nil
 }
@@ -83,35 +85,42 @@ func (r *Room) StartGame() error {
 	if r.state != StateLobby {
 		return errors.New("Game can only start from lobby state")
 	}
-	if len(r.members) < MinPlayers {
+	if len(r.players) < MinPlayers {
 		return errors.New("Insufficient number of players")
 	}
 
 	// Set to StatePlacement
 	r.state = StatePlacement
 
-	// Place members in the ring
+	// Place players in the ring
 	// 1. First convert the Set into an array (for indexing purposes)
-	keys := make([]*Player, len(r.members))
+	keys := make([]*Player, len(r.players))
 	i := 0
-	for mem := range r.members {
-		keys[i] = mem
-		r.waitingFor[mem] = true
+	for p := range r.players {
+		keys[i] = p
+		r.waitingFor[p] = true
 		i++
 	}
-	// 2. Create a Ring and randomly place members into the ring
-	r.ring = ring.New(len(r.members))
-	order := rand.Perm(len(r.members))
-	for i = 0; i < len(r.members); i++ {
+	// 2. Create a Ring and randomly place players into the ring
+	r.ring = ring.New(len(r.players))
+	order := rand.Perm(len(r.players))
+	for i = 0; i < len(r.players); i++ {
 		r.ring.Value = keys[order[i]]
 		r.ring = r.ring.Next()
 
 		// Initialize r player's paper
-		r.papers[keys[order[i]]] = make([][]byte, len(r.members))
+		r.papers[keys[order[i]]] = make([][]byte, len(r.players))
 	}
 
 	// Set to StateGame
 	r.state = StateGame
+
+	// Broadcast start game to all
+	header := make([]byte, 4)
+	binary.BigEndian.PutUint32(header, ResponseStartedGame)
+	for p := range r.players {
+		p.WriteBytes(header)
+	}
 
 	fmt.Println("Game started!")
 
@@ -146,11 +155,14 @@ func (r *Room) SubmitTurn(player *Player, data []byte) error {
 func (r *Room) nextTurn() error {
 	r.round++
 
-	for member := range r.members {
-		r.waitingFor[member] = true
-	}
+	// TODO evaluate end of game
 
-	// TODO broadcast next turn (including turn #) to all players
+	header := make([]byte, 4)
+	binary.BigEndian.PutUint32(header, ResponseNextTurn)
+	for member := range r.players {
+		r.waitingFor[member] = true
+		member.WriteBytes(header)
+	}
 
 	return nil
 }
@@ -160,9 +172,9 @@ func (r *Room) String() string {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	mems := make([]string, len(r.members))
+	mems := make([]string, len(r.players))
 	i := 0
-	for key := range r.members {
+	for key := range r.players {
 		mems[i] = key.GetAddr()
 
 		i++

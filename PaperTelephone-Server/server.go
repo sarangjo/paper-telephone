@@ -40,10 +40,7 @@ func joinRoom(player *Player, roomUUID RoomID) error {
 	if err := rooms[roomUUID].AddMember(player); err != nil {
 		return fmt.Errorf("%s", err)
 	}
-	player.room = rooms[roomUUID]
-
 	fmt.Println(rooms[roomUUID].String())
-
 	return nil
 }
 
@@ -57,8 +54,10 @@ const (
 
 // Response codes
 const (
-	ResponseError   = iota
-	ResponseSuccess = iota
+	ResponseError       = iota
+	ResponseSuccess     = iota
+	ResponseStartedGame = iota
+	ResponseNextTurn    = iota
 )
 
 // Returns content and error, if any
