@@ -34,13 +34,13 @@ type Room struct {
 	broadcast      chan bool
 	broadcastQueue *list.List
 	mutex          *sync.Mutex
-	papers         map[*Player][][]byte // player -> array of []byte
-	players        map[*Player]bool
+	papers         map[Player][][]byte // player -> array of []byte
+	players        map[Player]bool
 	ring           *ring.Ring
 	round          int
 	state          uint
 	uuid           RoomID
-	waitingFor     map[*Player]bool // players who have not submitted a turn yet
+	waitingFor     map[Player]bool // players who have not submitted a turn yet
 }
 
 // NewRoom creates a new Room struct
@@ -49,19 +49,19 @@ func NewRoom() *Room {
 	r.broadcast = make(chan bool)
 	r.broadcastQueue = list.New()
 	r.mutex = &sync.Mutex{}
-	r.papers = make(map[*Player][][]byte)
-	r.players = make(map[*Player]bool)
+	r.papers = make(map[Player][][]byte)
+	r.players = make(map[Player]bool)
 	r.ring = nil
 	r.round = 0
 	r.state = StateLobby
 	r.uuid = NewRoomId()
-	r.waitingFor = make(map[*Player]bool)
+	r.waitingFor = make(map[Player]bool)
 
 	return r
 }
 
 // AddMember adds a new player to this room
-func (r *Room) AddMember(player *Player) error {
+func (r *Room) AddMember(player Player) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -72,12 +72,12 @@ func (r *Room) AddMember(player *Player) error {
 		return errors.New("User already member of room")
 	}
 	r.players[player] = true
-	player.room = r
+	player.SetRoom(r)
 	return nil
 }
 
 // RemoveMember removes a player from this room
-func (r *Room) RemoveMember(player *Player) error {
+func (r *Room) RemoveMember(player Player) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -106,7 +106,7 @@ func (r *Room) StartGame() error {
 
 	// Place players in the ring
 	// 1. First convert the Set into an array (for indexing purposes)
-	keys := make([]*Player, len(r.players))
+	keys := make([]Player, len(r.players))
 	i := 0
 	for p := range r.players {
 		keys[i] = p
@@ -140,7 +140,7 @@ func (r *Room) StartGame() error {
 }
 
 // SubmitTurn submits a turn. Returns true if the overall turn is done
-func (r *Room) SubmitTurn(player *Player, data []byte) error {
+func (r *Room) SubmitTurn(player Player, data []byte) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -182,7 +182,7 @@ func (r *Room) nextTurn() error {
 		binary.BigEndian.PutUint32(header, ResponseNextTurn)
 		// for player := range r.players {
 		for i := 0; i < len(r.players); i++ {
-			player := r.ring.Value.(*Player)
+			player := r.ring.Value.(Player)
 
 			r.waitingFor[player] = true
 
@@ -195,7 +195,7 @@ func (r *Room) nextTurn() error {
 			binary.BigEndian.PutUint32(prevType, TypeSentence)
 			buf.Write(prevType)
 
-			prevMsg := r.papers[r.ring.Prev().Value.(*Player)][r.round-1]
+			prevMsg := r.papers[r.ring.Prev().Value.(Player)][r.round-1]
 			buf.Write(prevMsg)
 
 			r.broadcastQueue.PushBack(BroadcastMessage{player: player, msg: buf.Bytes()})
@@ -226,7 +226,7 @@ func (r *Room) String() string {
 // BroadcastMessage represents a message that is part of a broadcast. Might not
 // be the cleanest design, but at least a start.
 type BroadcastMessage struct {
-	player *Player
+	player Player
 	msg    []byte
 }
 

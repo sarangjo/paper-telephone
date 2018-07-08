@@ -87,7 +87,7 @@ func listen() {
 
 func main() {
 	response = make(chan bool)
-	tcpPort := 8080
+	tcpPort := 8181
 	serverAddr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", tcpPort))
 	if err != nil {
 		fmt.Println(err)

@@ -7,8 +7,11 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"strings"
+
+	"github.com/gorilla/websocket"
 )
 
 // Header constants
@@ -30,8 +33,12 @@ const (
 
 var server Server
 
+// TCP
+
+const serverPort = 8181
+
 // A new player has joined the server
-func handleConnection(player *Player) {
+func handleConnectionTCP(player *PlayerTCP) {
 	fmt.Println("Handled new connection:", player.GetAddr())
 
 	b := make([]byte, 1024)
@@ -65,20 +72,18 @@ func handleConnection(player *Player) {
 		fmt.Println("Writing response of length", response.Len())
 		player.Write(response.Bytes())
 
-		// Trigger broadcast if any
-		player.room.broadcast <- true
+		// Trigger broadcast, if any
+		player.Room().broadcast <- true
 	}
 }
 
-const serverPort = 8080
-
-func spin() {
+func spinTCP() {
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", serverPort))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Serving at 8080")
+	fmt.Println("Serving at 8181")
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
@@ -86,12 +91,37 @@ func spin() {
 			return
 		}
 
-		player := NewPlayer(conn)
+		player := NewPlayerTCP(conn)
 
-		go handleConnection(player)
+		go handleConnectionTCP(player)
 	}
 }
 
+// WebSocket
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
+func handleConnectionWs(player Player) {
+}
+
+func spinWs() {
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		player := NewPlayerWs(conn)
+
+		go handleConnectionWs(player)
+	})
+}
+
+// For testing purposes
 func handleUserCommands() {
 	// TODO implement
 	reader := bufio.NewReader(os.Stdin)
@@ -117,5 +147,5 @@ func main() {
 	server = NewServer()
 
 	go handleUserCommands()
-	spin()
+	spinTCP()
 }

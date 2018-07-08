@@ -14,7 +14,7 @@ type Server struct {
 }
 
 // createRoom creates a room on this server. Returns the created room UUID
-func (s *Server) createRoom(player *Player) (RoomID, error) {
+func (s *Server) createRoom(player Player) (RoomID, error) {
 	r := NewRoom()
 	go r.Broadcaster()
 	u := r.uuid
@@ -28,7 +28,7 @@ func (s *Server) createRoom(player *Player) (RoomID, error) {
 }
 
 // joinRoom joins a room on this server.
-func (s *Server) joinRoom(player *Player, roomUUID RoomID) error {
+func (s *Server) joinRoom(player Player, roomUUID RoomID) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -44,7 +44,7 @@ func (s *Server) joinRoom(player *Player, roomUUID RoomID) error {
 
 // HandlePacket handles a single packet sent from a player.
 // Returns content and error, if any
-func (s *Server) HandlePacket(player *Player, b *bytes.Buffer) *bytes.Buffer {
+func (s *Server) HandlePacket(player Player, b *bytes.Buffer) *bytes.Buffer {
 	// TODO copy this logic from the Android project
 	header := binary.BigEndian.Uint32(b.Next(4))
 
@@ -68,17 +68,17 @@ func (s *Server) HandlePacket(player *Player, b *bytes.Buffer) *bytes.Buffer {
 		err = s.joinRoom(player, roomUUID)
 		break
 	case HeaderStartGame:
-		if player.room != nil {
-			err = player.room.StartGame()
+		if player.Room() != nil {
+			err = player.Room().StartGame()
 		} else {
 			err = fmt.Errorf("Player not in room")
 		}
 		break
 	case HeaderSubmitTurn:
-		if player.room != nil {
+		if player.Room() != nil {
 			// Extract the remainder of the bytes of the packet
 			data := b.Next(b.Len())
-			err = player.room.SubmitTurn(player, data)
+			err = player.Room().SubmitTurn(player, data)
 		} else {
 			err = fmt.Errorf("Player not in room")
 		}
