@@ -29,6 +29,13 @@ const (
 	ResponseSuccess     = iota
 	ResponseStartedGame = iota
 	ResponseNextTurn    = iota
+	ResponseEndGame     = iota
+)
+
+// nolint
+const (
+	TypeSentence = iota
+	TypeDrawing  = iota
 )
 
 var conn net.Conn
@@ -37,7 +44,7 @@ var response chan bool
 func listen() {
 	b := make([]byte, 1024)
 	for {
-		_, err := conn.Read(b)
+		n, err := conn.Read(b)
 		if err != nil {
 			if err == io.EOF {
 				fmt.Println("Connection closed")
@@ -60,6 +67,19 @@ func listen() {
 			break
 		case ResponseNextTurn:
 			fmt.Println("next turn")
+			prevType := binary.BigEndian.Uint32(b[4:8])
+			fmt.Println("Type:", prevType)
+			if prevType == TypeSentence {
+				prevMsg := string(b[8:n])
+				fmt.Println("Prev msg:", prevMsg)
+			} else {
+				// TODO not implemented
+			}
+			break
+		case ResponseEndGame:
+			fmt.Println("end game!")
+			conn.Close()
+			os.Exit(0)
 			break
 		}
 	}
@@ -117,10 +137,12 @@ Loop:
 			conn.Write(buf.Bytes())
 			fmt.Println("Joined room")
 		case "s":
+			// Start game
 			binary.BigEndian.PutUint32(header, HEADER_START_GAME)
 			conn.Write(header)
 			break
 		case "t":
+			// Turn submission
 			binary.BigEndian.PutUint32(header, HEADER_SUBMIT_TURN)
 			buf.Write(header)
 

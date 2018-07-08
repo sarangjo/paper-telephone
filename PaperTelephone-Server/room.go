@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"container/ring"
 	"encoding/binary"
 	"errors"
@@ -17,6 +18,12 @@ const (
 	StateEndGame   = iota
 )
 
+// Types of messages
+const (
+	TypeSentence = iota
+	TypeDrawing  = iota
+)
+
 // MinPlayers is the minimum number of players needed to play a game
 // TODO should be 3
 const MinPlayers = 2
@@ -25,12 +32,12 @@ const MinPlayers = 2
 type Room struct {
 	players    map[*Player]bool
 	mutex      *sync.Mutex
-	papers     map[*Player][][]byte
+	papers     map[*Player][][]byte // player -> array of []byte
 	ring       *ring.Ring
 	round      int
 	state      uint
 	uuid       RoomID
-	waitingFor map[*Player]bool
+	waitingFor map[*Player]bool // players who have not submitted a turn yet
 }
 
 // NewRoom creates a new Room struct
@@ -155,13 +162,40 @@ func (r *Room) SubmitTurn(player *Player, data []byte) error {
 func (r *Room) nextTurn() error {
 	r.round++
 
-	// TODO evaluate end of game
-
 	header := make([]byte, 4)
-	binary.BigEndian.PutUint32(header, ResponseNextTurn)
-	for member := range r.players {
-		r.waitingFor[member] = true
-		member.WriteBytes(header)
+	if r.round == len(r.players) {
+		// evaluate end of game
+		binary.BigEndian.PutUint32(header, ResponseEndGame)
+
+		r.state = StateEndGame
+
+		for player := range r.players {
+			player.WriteBytes(header)
+		}
+	} else {
+		binary.BigEndian.PutUint32(header, ResponseNextTurn)
+		// for player := range r.players {
+		for i := 0; i < len(r.players); i++ {
+			player := r.ring.Value.(*Player)
+
+			r.waitingFor[player] = true
+
+			// TODO lmao actually pass on the relevant previous turn to the player
+			var buf bytes.Buffer
+
+			buf.Write(header)
+			// Write type, perhaps?
+			prevType := make([]byte, 4)
+			binary.BigEndian.PutUint32(prevType, TypeSentence)
+			buf.Write(prevType)
+
+			prevMsg := r.papers[r.ring.Prev().Value.(*Player)][r.round-1]
+			buf.Write(prevMsg)
+
+			player.WriteBytes(buf.Bytes())
+
+			r.ring = r.ring.Next()
+		}
 	}
 
 	return nil

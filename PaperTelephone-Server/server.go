@@ -58,6 +58,7 @@ const (
 	ResponseSuccess     = iota
 	ResponseStartedGame = iota
 	ResponseNextTurn    = iota
+	ResponseEndGame     = iota
 )
 
 // Returns content and error, if any
@@ -153,6 +154,8 @@ func handleConnection(player *Player) {
 		}
 
 		// Packet has been fully read, dispatch
+		// TODO collect any other packets that need to be sent separately and
+		// send AFTER the success is sent
 		contentBuf, err := handlePacket(player, &buf)
 		var responseBuf bytes.Buffer
 
