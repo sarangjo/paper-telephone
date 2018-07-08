@@ -1,3 +1,3 @@
 all:
-	go.exe build server.go room.go room_id.go player.go
-	./server.exe
+	go.exe build main.go server.go room.go room_id.go player.go
+	./main.exe

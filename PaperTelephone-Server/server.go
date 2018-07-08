@@ -1,74 +1,54 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"io"
-	"log"
-	"net"
-	"os"
-	"strings"
 	"sync"
 )
 
-var mutex *sync.Mutex
-var rooms map[RoomID]*Room
+// Server represents a connection type agnostic Paper Telephone server.
+type Server struct {
+	mutex *sync.Mutex
+	Rooms map[RoomID]*Room
+}
 
-// Creates a room on this server. Returns the created room UUID
-func createRoom(player *Player) (RoomID, error) {
+// createRoom creates a room on this server. Returns the created room UUID
+func (s *Server) createRoom(player *Player) (RoomID, error) {
 	r := NewRoom()
+	go r.Broadcaster()
 	u := r.uuid
-	mutex.Lock()
-	rooms[u] = r
-	mutex.Unlock()
-	if err := joinRoom(player, u); err != nil {
+	s.mutex.Lock()
+	s.Rooms[u] = r
+	s.mutex.Unlock()
+	if err := s.joinRoom(player, u); err != nil {
 		return u, err
 	}
 	return u, nil
 }
 
-// Joins a room on this server.
-func joinRoom(player *Player, roomUUID RoomID) error {
-	mutex.Lock()
-	defer mutex.Unlock()
+// joinRoom joins a room on this server.
+func (s *Server) joinRoom(player *Player, roomUUID RoomID) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 
-	if _, ok := rooms[roomUUID]; !ok {
+	if _, ok := s.Rooms[roomUUID]; !ok {
 		return fmt.Errorf("Room does not exist")
 	}
-	if err := rooms[roomUUID].AddMember(player); err != nil {
+	if err := s.Rooms[roomUUID].AddMember(player); err != nil {
 		return fmt.Errorf("%s", err)
 	}
-	fmt.Println(rooms[roomUUID].String())
+	fmt.Println(s.Rooms[roomUUID].String())
 	return nil
 }
 
-// Header constants
-const (
-	HeaderRoomCreate = iota
-	HeaderRoomJoin   = iota
-	HeaderStartGame  = iota
-	HeaderSubmitTurn = iota
-)
-
-// Response codes
-const (
-	ResponseError       = iota
-	ResponseSuccess     = iota
-	ResponseStartedGame = iota
-	ResponseNextTurn    = iota
-	ResponseEndGame     = iota
-)
-
+// HandlePacket handles a single packet sent from a player.
 // Returns content and error, if any
-func handlePacket(player *Player, b *bytes.Buffer) (*bytes.Buffer, error) {
+func (s *Server) HandlePacket(player *Player, b *bytes.Buffer) *bytes.Buffer {
 	// TODO copy this logic from the Android project
-	len := b.Len()
-	headerBytes := b.Next(4)
-	header := binary.BigEndian.Uint32(headerBytes)
+	header := binary.BigEndian.Uint32(b.Next(4))
 
-	fmt.Println("Received packet of size", len, "with header", header)
+	fmt.Println("Received packet of size", b.Len()+4, "with header", header)
 
 	var contentBuf bytes.Buffer
 	var err error
@@ -77,7 +57,7 @@ func handlePacket(player *Player, b *bytes.Buffer) (*bytes.Buffer, error) {
 	case HeaderRoomCreate:
 		fmt.Println("Creating a room")
 		var u RoomID
-		u, err = createRoom(player)
+		u, err = s.createRoom(player)
 		if err == nil {
 			contentBuf.Write(u.Bytes())
 		}
@@ -85,7 +65,7 @@ func handlePacket(player *Player, b *bytes.Buffer) (*bytes.Buffer, error) {
 	case HeaderRoomJoin:
 		roomUUID := RoomIdFromBytes(b.Next(RoomIdSize()))
 		fmt.Println("Joining room", roomUUID.String())
-		err = joinRoom(player, roomUUID)
+		err = s.joinRoom(player, roomUUID)
 		break
 	case HeaderStartGame:
 		if player.room != nil {
@@ -104,124 +84,29 @@ func handlePacket(player *Player, b *bytes.Buffer) (*bytes.Buffer, error) {
 		}
 		break
 	default:
-		fmt.Println("Invalid header")
 		err = fmt.Errorf("Invalid header")
 		break
 	}
 
-	return &contentBuf, err
-}
-
-func disconnectPlayer(player *Player) {
-	player.Close()
-	if player.room != nil {
-		player.room.RemoveMember(player)
-		fmt.Println(player.room.String())
-
-		// TODO potentially close up room if empty?
-
-		player.room = nil
-	}
-}
-
-// A new player has joined the server
-func handleConnection(player *Player) {
-	fmt.Println("Handled new connection:", player.GetAddr())
-
-	b := make([]byte, 1024)
-	var buf bytes.Buffer
-
-	for {
-		// Handling a single packet
-		for {
-			len, err := player.Read(b)
-			if err != nil {
-				if err == io.EOF {
-					fmt.Println("Connection closed!")
-				} else {
-					fmt.Println("Read error:", err)
-				}
-
-				// Disconnect logic
-				disconnectPlayer(player)
-				return
-			}
-			buf.Write(b[:len])
-
-			if len < 1024 {
-				break
-			}
-		}
-
-		// Packet has been fully read, dispatch
-		// TODO collect any other packets that need to be sent separately and
-		// send AFTER the success is sent
-		contentBuf, err := handlePacket(player, &buf)
-		var responseBuf bytes.Buffer
-
-		responseCode := make([]byte, 4)
+	responseCode := make([]byte, 4)
+	if err == nil {
 		binary.BigEndian.PutUint32(responseCode, ResponseSuccess)
-		if err != nil {
-			fmt.Println(err)
-			binary.BigEndian.PutUint32(responseCode, ResponseError)
-		}
-		responseBuf.Write(responseCode)
-		responseBuf.Write(contentBuf.Bytes())
-
-		fmt.Println("Writing response of length", responseBuf.Len())
-		player.WriteBytes(responseBuf.Bytes())
+	} else {
+		fmt.Println(err)
+		binary.BigEndian.PutUint32(responseCode, ResponseError)
 	}
+	var responseBuf bytes.Buffer
+	responseBuf.Write(responseCode)
+	responseBuf.Write(contentBuf.Bytes())
+
+	return &responseBuf
 }
 
-const serverPort = 8080
+// NewServer creates a new server
+func NewServer() Server {
+	s := Server{}
+	s.mutex = &sync.Mutex{}
+	s.Rooms = make(map[RoomID]*Room)
 
-func spin() {
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", serverPort))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Serving at 8080")
-	for {
-		conn, err := ln.Accept()
-		if err != nil {
-			fmt.Printf("Accept error: %v", err)
-			return
-		}
-		// Register the connection
-		player := &Player{}
-		player.conn = conn
-		player.room = nil
-
-		go handleConnection(player)
-	}
-}
-
-func handleUserCommands() {
-	// TODO implement
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		text, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Fprintf(os.Stderr, fmt.Sprint(err))
-			os.Exit(69)
-			return
-		}
-
-		switch strings.TrimSpace(text) {
-		case "r":
-			for _, room := range rooms {
-				fmt.Println(room.String())
-			}
-			break
-		}
-	}
-}
-
-func main() {
-	mutex = &sync.Mutex{}
-	rooms = make(map[RoomID]*Room)
-
-	go handleUserCommands()
-	spin()
+	return s
 }

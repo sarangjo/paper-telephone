@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"container/list"
 	"container/ring"
 	"encoding/binary"
 	"errors"
@@ -30,22 +31,26 @@ const MinPlayers = 2
 
 // Room represents a room hosted on the server
 type Room struct {
-	players    map[*Player]bool
-	mutex      *sync.Mutex
-	papers     map[*Player][][]byte // player -> array of []byte
-	ring       *ring.Ring
-	round      int
-	state      uint
-	uuid       RoomID
-	waitingFor map[*Player]bool // players who have not submitted a turn yet
+	broadcast      chan bool
+	broadcastQueue *list.List
+	mutex          *sync.Mutex
+	papers         map[*Player][][]byte // player -> array of []byte
+	players        map[*Player]bool
+	ring           *ring.Ring
+	round          int
+	state          uint
+	uuid           RoomID
+	waitingFor     map[*Player]bool // players who have not submitted a turn yet
 }
 
 // NewRoom creates a new Room struct
 func NewRoom() *Room {
 	r := &Room{}
-	r.players = make(map[*Player]bool)
+	r.broadcast = make(chan bool)
+	r.broadcastQueue = list.New()
 	r.mutex = &sync.Mutex{}
 	r.papers = make(map[*Player][][]byte)
+	r.players = make(map[*Player]bool)
 	r.ring = nil
 	r.round = 0
 	r.state = StateLobby
@@ -126,7 +131,7 @@ func (r *Room) StartGame() error {
 	header := make([]byte, 4)
 	binary.BigEndian.PutUint32(header, ResponseStartedGame)
 	for p := range r.players {
-		p.WriteBytes(header)
+		r.broadcastQueue.PushBack(BroadcastMessage{player: p, msg: header})
 	}
 
 	fmt.Println("Game started!")
@@ -170,7 +175,8 @@ func (r *Room) nextTurn() error {
 		r.state = StateEndGame
 
 		for player := range r.players {
-			player.WriteBytes(header)
+			r.broadcastQueue.PushBack(BroadcastMessage{player: player, msg: header})
+			// TODO also write the player's full room?
 		}
 	} else {
 		binary.BigEndian.PutUint32(header, ResponseNextTurn)
@@ -192,7 +198,7 @@ func (r *Room) nextTurn() error {
 			prevMsg := r.papers[r.ring.Prev().Value.(*Player)][r.round-1]
 			buf.Write(prevMsg)
 
-			player.WriteBytes(buf.Bytes())
+			r.broadcastQueue.PushBack(BroadcastMessage{player: player, msg: buf.Bytes()})
 
 			r.ring = r.ring.Next()
 		}
@@ -215,4 +221,25 @@ func (r *Room) String() string {
 	}
 
 	return fmt.Sprintf("%s: %v", r.uuid.String(), mems)
+}
+
+// BroadcastMessage represents a message that is part of a broadcast. Might not
+// be the cleanest design, but at least a start.
+type BroadcastMessage struct {
+	player *Player
+	msg    []byte
+}
+
+// nolint
+func (r *Room) Broadcaster() error {
+	for {
+		select {
+		case <-r.broadcast:
+			for e := r.broadcastQueue.Front(); e != nil; e = r.broadcastQueue.Front() {
+				fmt.Println("message broadcast")
+				m := r.broadcastQueue.Remove(e).(BroadcastMessage)
+				m.player.Write(m.msg)
+			}
+		}
+	}
 }
